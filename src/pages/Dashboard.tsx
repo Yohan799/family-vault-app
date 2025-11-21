@@ -1,10 +1,32 @@
 import { Home, Settings, FileText, Users, Clock, Shield, ChevronRight, Bell, User, Vault, UserPlus, Timer, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const [profileData, setProfileData] = useState({
+    fullName: "Raj Kumar",
+    email: "raj@example.com",
+    profileImage: null as string | null,
+  });
+
+  useEffect(() => {
+    const savedProfile = localStorage.getItem("profileData");
+    if (savedProfile) {
+      const data = JSON.parse(savedProfile);
+      setProfileData({
+        fullName: data.fullName || "Raj Kumar",
+        email: data.email || "raj@example.com",
+        profileImage: null,
+      });
+    }
+    const savedPhoto = localStorage.getItem("currentProfilePhoto");
+    if (savedPhoto) {
+      setProfileData(prev => ({ ...prev, profileImage: savedPhoto }));
+    }
+  }, []);
 
   const stats = [
     { icon: FileText, label: "128 Documents", color: "text-primary" },
@@ -34,7 +56,7 @@ const Dashboard = () => {
         <div className="flex justify-between items-start mb-6">
           <div>
             <p className="text-sm opacity-90 mb-1">Welcome,</p>
-            <h1 className="text-2xl font-bold">Sandeep</h1>
+            <h1 className="text-2xl font-bold">{profileData.fullName.split(' ')[0]}</h1>
           </div>
           <div className="flex gap-2">
             <Button variant="ghost" size="icon" className="text-primary-foreground" onClick={() => navigate("/notifications")}>
@@ -42,8 +64,9 @@ const Dashboard = () => {
             </Button>
             <Button variant="ghost" size="icon" className="text-primary-foreground p-0" onClick={() => navigate("/profile")}>
               <Avatar className="w-9 h-9 bg-primary-foreground">
+                {profileData.profileImage && <AvatarImage src={profileData.profileImage} alt="Profile" />}
                 <AvatarFallback className="bg-primary-foreground text-primary font-semibold text-sm">
-                  RK
+                  {profileData.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
             </Button>
