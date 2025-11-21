@@ -33,6 +33,10 @@ const EditProfile = () => {
     if (savedCurrentPhoto) {
       setProfileImage(savedCurrentPhoto);
     }
+    const savedProfile = localStorage.getItem("profileData");
+    if (savedProfile) {
+      setFormData(JSON.parse(savedProfile));
+    }
   }, []);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -94,6 +98,7 @@ const EditProfile = () => {
   };
 
   const handleSave = () => {
+    localStorage.setItem("profileData", JSON.stringify(formData));
     toast({
       title: "Profile updated!",
       description: "Your changes have been saved successfully",
@@ -118,7 +123,7 @@ const EditProfile = () => {
             <Avatar className="w-24 h-24 bg-primary-foreground">
               {profileImage && <AvatarImage src={profileImage} alt="Profile" />}
               <AvatarFallback className="bg-primary-foreground text-primary font-bold text-2xl">
-                RK
+                {formData.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
               </AvatarFallback>
             </Avatar>
             <input
