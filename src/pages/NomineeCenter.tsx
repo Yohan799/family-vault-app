@@ -136,26 +136,28 @@ const NomineeCenter = () => {
           </div>
         )}
 
-        {/* Your Nominees Section - Only show when not in add form */}
-        {!showAddForm && (
-          <div className="space-y-4">
-            <div className="bg-card rounded-2xl p-8 text-center">
-              <div className="w-24 h-24 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center">
-                <Users className="w-12 h-12 text-primary" />
-              </div>
-              <h3 className="text-xl font-bold text-foreground mb-2">No Nominees Yet</h3>
-              <p className="text-sm text-muted-foreground mb-6">
-                Add trusted contacts who can access your vault in emergencies.
-              </p>
+        {/* Your Nominees Section */}
+        <div className="space-y-4">
+          <h2 className="text-lg font-bold text-foreground">Your Nominees</h2>
+          
+          <div className="bg-card rounded-2xl p-8 text-center">
+            <div className="w-24 h-24 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center">
+              <Users className="w-12 h-12 text-primary" />
+            </div>
+            <h3 className="text-xl font-bold text-foreground mb-2">No Nominees Yet</h3>
+            <p className="text-sm text-muted-foreground mb-6">
+              Add trusted contacts who can access your vault in emergencies.
+            </p>
+            {!showAddForm && (
               <Button 
                 onClick={() => setShowAddForm(true)}
                 className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-8"
               >
                 + Add Nominee
               </Button>
-            </div>
+            )}
           </div>
-        )}
+        </div>
 
         {/* Info Box */}
         <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 flex gap-3">
