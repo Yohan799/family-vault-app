@@ -4,6 +4,20 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 
+interface QuickAction {
+  id: string;
+  title: string;
+  subtitle: string;
+  icon: string;
+  path?: string;
+  isDefault: boolean;
+  isEnabled: boolean;
+}
+
+const iconMap: { [key: string]: any } = {
+  Vault, UserPlus, Shield, Timer, Plus, Clock, Users, Bell
+};
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const [profileData, setProfileData] = useState({
@@ -11,6 +25,15 @@ const Dashboard = () => {
     email: "raj@example.com",
     profileImage: null as string | null,
   });
+
+  const defaultQuickActions: QuickAction[] = [
+    { id: "1", title: "Digital Vault", subtitle: "Manage your secure documents", icon: "Vault", path: "/vault", isDefault: true, isEnabled: true },
+    { id: "2", title: "Nominee Center", subtitle: "Manage trusted contacts", icon: "UserPlus", path: "/nominee-center", isDefault: true, isEnabled: true },
+    { id: "3", title: "Inactivity Triggers", subtitle: "Set up activity monitoring", icon: "Shield", path: "/inactivity-triggers", isDefault: true, isEnabled: true },
+    { id: "4", title: "Time Capsule", subtitle: "Create legacy messages", icon: "Timer", path: "/time-capsule", isDefault: true, isEnabled: true },
+  ];
+
+  const [quickActions, setQuickActions] = useState<QuickAction[]>(defaultQuickActions);
 
   useEffect(() => {
     const savedProfile = localStorage.getItem("profileData");
@@ -26,6 +49,11 @@ const Dashboard = () => {
     if (savedPhoto) {
       setProfileData(prev => ({ ...prev, profileImage: savedPhoto }));
     }
+
+    const savedActions = localStorage.getItem("quickActions");
+    if (savedActions) {
+      setQuickActions(JSON.parse(savedActions));
+    }
   }, []);
 
   const stats = [
@@ -35,12 +63,20 @@ const Dashboard = () => {
     { icon: Shield, label: "Trigger On", color: "text-primary" },
   ];
 
-  const quickActions = [
-    { icon: Vault, title: "Digital Vault", subtitle: "Manage your secure documents", color: "bg-accent", onClick: () => navigate("/vault") },
-    { icon: UserPlus, title: "Nominee Center", subtitle: "Manage trusted contacts", color: "bg-accent", onClick: () => navigate("/nominee-center") },
-    { icon: Shield, title: "Inactivity Triggers", subtitle: "Set up activity monitoring", color: "bg-accent", onClick: () => navigate("/inactivity-triggers") },
-    { icon: Timer, title: "Time Capsule", subtitle: "Create legacy messages", color: "bg-accent", onClick: () => navigate("/time-capsule") },
-    { icon: Plus, title: "Customize Quick Actions", subtitle: "Add your own shortcuts", color: "bg-accent", onClick: () => navigate("/customize-quick-actions") },
+  const enabledActions = quickActions.filter(action => action.isEnabled);
+  const hasCustomizeAction = enabledActions.some(a => a.title === "Customize Quick Actions");
+  
+  const displayActions = [
+    ...enabledActions,
+    ...(!hasCustomizeAction ? [{ 
+      id: "customize", 
+      title: "Customize Quick Actions", 
+      subtitle: "Add your own shortcuts", 
+      icon: "Plus", 
+      path: "/customize-quick-actions",
+      isDefault: false,
+      isEnabled: true 
+    }] : [])
   ];
 
   const recentDocs = [
@@ -125,15 +161,15 @@ const Dashboard = () => {
         <div>
           <h2 className="text-lg font-bold text-foreground mb-4">Quick Actions</h2>
           <div className="space-y-3">
-            {quickActions.map((action, index) => {
-              const Icon = action.icon;
+            {displayActions.map((action, index) => {
+              const Icon = iconMap[action.icon] || Plus;
               return (
                 <button
-                  key={index}
-                  onClick={action.onClick}
+                  key={action.id || index}
+                  onClick={() => action.path && navigate(action.path)}
                   className="w-full bg-card rounded-2xl p-4 flex items-center gap-4 hover:bg-accent transition-colors"
                 >
-                  <div className={`w-12 h-12 ${action.color} rounded-full flex items-center justify-center flex-shrink-0`}>
+                  <div className="w-12 h-12 bg-accent rounded-full flex items-center justify-center flex-shrink-0">
                     <Icon className="w-6 h-6 text-primary" />
                   </div>
                   <div className="flex-1 text-left">
