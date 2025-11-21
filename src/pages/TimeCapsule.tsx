@@ -130,8 +130,8 @@ const TimeCapsule = () => {
               <label className="text-sm font-medium text-foreground">Attachment (Optional)</label>
               <div className="border-2 border-dashed border-border rounded-xl p-6 text-center">
                 <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-                <p className="text-sm text-muted-foreground mb-3">Upload from your device or Google Drive</p>
-                <div className="flex gap-3 justify-center">
+                <p className="text-sm text-muted-foreground mb-3">Upload from your device, Google Drive, or DigiLocker</p>
+                <div className="flex gap-3 justify-center flex-wrap">
                   <Button
                     type="button"
                     variant="outline"
@@ -171,6 +171,23 @@ const TimeCapsule = () => {
                       <path d="M12.545 10.239v3.821h5.445c-.712 2.315-2.647 3.972-5.445 3.972a6.033 6.033 0 110-12.064c1.498 0 2.866.549 3.921 1.453l2.814-2.814A9.969 9.969 0 0012.545 2C7.021 2 2.543 6.477 2.543 12s4.478 10 10.002 10c8.396 0 10.249-7.85 9.426-11.748l-9.426-.013z"/>
                     </svg>
                     Google Drive
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="gap-2"
+                    onClick={() => {
+                      window.open('https://digilocker.gov.in/', '_blank');
+                      toast({
+                        title: "Opening DigiLocker",
+                        description: "Select your file and share it with the app",
+                      });
+                    }}
+                  >
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V7.3l7-3.11v8.8z"/>
+                    </svg>
+                    DigiLocker
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground mt-3">Maximum file size: 10MB</p>
