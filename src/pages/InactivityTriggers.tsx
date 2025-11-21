@@ -121,10 +121,52 @@ const InactivityTriggers = () => {
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Attachment (Optional)</label>
-              <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:bg-accent/50 transition-colors cursor-pointer">
-                <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground mb-1">Click to upload image, PDF, or video</p>
-                <p className="text-xs text-muted-foreground">Maximum file size: 10MB</p>
+              <div className="border-2 border-dashed border-border rounded-xl p-6 text-center">
+                <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+                <p className="text-sm text-muted-foreground mb-3">Upload from your device or Google Drive</p>
+                <div className="flex gap-3 justify-center">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="gap-2"
+                    onClick={() => {
+                      const input = document.createElement('input');
+                      input.type = 'file';
+                      input.accept = 'image/*,application/pdf,video/*';
+                      input.onchange = (e: any) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          toast({
+                            title: "File uploaded",
+                            description: `${file.name} has been attached`,
+                          });
+                        }
+                      };
+                      input.click();
+                    }}
+                  >
+                    <Upload className="w-4 h-4" />
+                    Device
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="gap-2"
+                    onClick={() => {
+                      window.open('https://drive.google.com/drive/my-drive', '_blank');
+                      toast({
+                        title: "Opening Google Drive",
+                        description: "Select your file and share it with the app",
+                      });
+                    }}
+                  >
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12.545 10.239v3.821h5.445c-.712 2.315-2.647 3.972-5.445 3.972a6.033 6.033 0 110-12.064c1.498 0 2.866.549 3.921 1.453l2.814-2.814A9.969 9.969 0 0012.545 2C7.021 2 2.543 6.477 2.543 12s4.478 10 10.002 10c8.396 0 10.249-7.85 9.426-11.748l-9.426-.013z"/>
+                    </svg>
+                    Google Drive
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-3">Maximum file size: 10MB</p>
               </div>
             </div>
 
