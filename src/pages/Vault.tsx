@@ -1,6 +1,5 @@
-import { Home, FolderOpen, Settings, Search, Filter, Plus, HomeIcon, Stethoscope, GraduationCap, FileText, User } from "lucide-react";
+import { Home, FolderOpen, Settings, Search, SlidersHorizontal, Plus, HomeIcon, Stethoscope, GraduationCap, FileText, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 
 const Vault = () => {
@@ -18,21 +17,19 @@ const Vault = () => {
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
       <div className="bg-card border-b border-border p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold text-foreground">My Vault</h1>
-          <Button variant="ghost" size="icon">
-            <Filter className="w-5 h-5" />
-          </Button>
-        </div>
+        <h1 className="text-2xl font-bold text-foreground mb-4">My Vault</h1>
 
-        {/* Search */}
+        {/* Search with Filter */}
         <div className="relative">
-          <Search className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
-          <Input
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+          <input
             type="search"
             placeholder="Search documents..."
-            className="pl-10"
+            className="w-full pl-10 pr-12 py-3 bg-background border border-border rounded-2xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           />
+          <Button variant="ghost" size="icon" className="absolute right-2 top-1/2 -translate-y-1/2">
+            <SlidersHorizontal className="w-4 h-4" />
+          </Button>
         </div>
 
         <p className="text-sm text-muted-foreground mt-3">Family Vault Vault Screen</p>
