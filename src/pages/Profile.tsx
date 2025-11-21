@@ -1,10 +1,29 @@
 import { ArrowLeft, User, Mail, Phone, Calendar, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 
 const Profile = () => {
   const navigate = useNavigate();
+  const [profileData, setProfileData] = useState({
+    fullName: "Raj Kumar",
+    email: "raj@example.com",
+    phone: "+91 98765 43210",
+    location: "Mumbai, India",
+    profileImage: null as string | null,
+  });
+
+  useEffect(() => {
+    const savedProfile = localStorage.getItem("profileData");
+    if (savedProfile) {
+      setProfileData(JSON.parse(savedProfile));
+    }
+    const savedPhoto = localStorage.getItem("currentProfilePhoto");
+    if (savedPhoto) {
+      setProfileData(prev => ({ ...prev, profileImage: savedPhoto }));
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -20,12 +39,13 @@ const Profile = () => {
         {/* Profile Avatar */}
         <div className="flex flex-col items-center">
           <Avatar className="w-24 h-24 bg-primary-foreground mb-4">
+            {profileData.profileImage && <AvatarImage src={profileData.profileImage} alt="Profile" />}
             <AvatarFallback className="bg-primary-foreground text-primary font-bold text-2xl">
-              RK
+              {profileData.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
             </AvatarFallback>
           </Avatar>
-          <h2 className="text-2xl font-bold mb-1">Raj Kumar</h2>
-          <p className="text-sm opacity-90">raj@example.com</p>
+          <h2 className="text-2xl font-bold mb-1">{profileData.fullName}</h2>
+          <p className="text-sm opacity-90">{profileData.email}</p>
         </div>
       </div>
 
@@ -38,7 +58,7 @@ const Profile = () => {
             </div>
             <div className="flex-1">
               <p className="text-xs text-muted-foreground">Full Name</p>
-              <p className="font-medium text-foreground">Raj Kumar</p>
+              <p className="font-medium text-foreground">{profileData.fullName}</p>
             </div>
           </div>
 
@@ -48,7 +68,7 @@ const Profile = () => {
             </div>
             <div className="flex-1">
               <p className="text-xs text-muted-foreground">Email</p>
-              <p className="font-medium text-foreground">raj@example.com</p>
+              <p className="font-medium text-foreground">{profileData.email}</p>
             </div>
           </div>
 
@@ -58,7 +78,7 @@ const Profile = () => {
             </div>
             <div className="flex-1">
               <p className="text-xs text-muted-foreground">Phone</p>
-              <p className="font-medium text-foreground">+91 98765 43210</p>
+              <p className="font-medium text-foreground">{profileData.phone}</p>
             </div>
           </div>
 
@@ -78,7 +98,7 @@ const Profile = () => {
             </div>
             <div className="flex-1">
               <p className="text-xs text-muted-foreground">Location</p>
-              <p className="font-medium text-foreground">Mumbai, India</p>
+              <p className="font-medium text-foreground">{profileData.location}</p>
             </div>
           </div>
         </div>
