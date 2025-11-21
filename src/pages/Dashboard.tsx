@@ -1,4 +1,4 @@
-import { Home, FolderOpen, Settings, FileText, Users, Clock, Zap, Shield, ChevronRight, Bell, User } from "lucide-react";
+import { Home, FolderOpen, Settings, FileText, Users, Clock, Shield, ChevronRight, Bell, User, Image, UserPlus, Timer, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
@@ -10,15 +10,15 @@ const Dashboard = () => {
     { icon: FileText, label: "128 Documents", color: "text-primary" },
     { icon: Users, label: "3 Nominees", color: "text-primary" },
     { icon: Clock, label: "1 Time Capsule", color: "text-primary" },
-    { icon: Zap, label: "Trigger On", color: "text-primary" },
+    { icon: Shield, label: "Trigger On", color: "text-primary" },
   ];
 
   const quickActions = [
-    { icon: Shield, title: "Digital Vault", subtitle: "Manage your secure documents", color: "bg-accent", onClick: () => navigate("/vault") },
-    { icon: Users, title: "Nominee Center", subtitle: "Manage trusted contacts", color: "bg-accent", onClick: () => navigate("/nominee-center") },
-    { icon: Bell, title: "Inactivity Triggers", subtitle: "Set up activity monitoring", color: "bg-accent", onClick: () => navigate("/inactivity-triggers") },
-    { icon: Clock, title: "Time Capsule", subtitle: "Create legacy messages", color: "bg-accent", onClick: () => navigate("/time-capsule") },
-    { icon: Zap, title: "Customize Quick Actions", subtitle: "Add your own shortcuts", color: "bg-accent", onClick: () => navigate("/customize-quick-actions") },
+    { icon: Image, title: "Digital Vault", subtitle: "Manage your secure documents", color: "bg-accent", onClick: () => navigate("/vault") },
+    { icon: UserPlus, title: "Nominee Center", subtitle: "Manage trusted contacts", color: "bg-accent", onClick: () => navigate("/nominee-center") },
+    { icon: Shield, title: "Inactivity Triggers", subtitle: "Set up activity monitoring", color: "bg-accent", onClick: () => navigate("/inactivity-triggers") },
+    { icon: Timer, title: "Time Capsule", subtitle: "Create legacy messages", color: "bg-accent", onClick: () => navigate("/time-capsule") },
+    { icon: Plus, title: "Customize Quick Actions", subtitle: "Add your own shortcuts", color: "bg-accent", onClick: () => navigate("/customize-quick-actions") },
   ];
 
   const recentDocs = [
