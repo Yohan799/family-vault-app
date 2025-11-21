@@ -9,6 +9,11 @@ import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
 import Dashboard from "./pages/Dashboard";
 import Vault from "./pages/Vault";
+import VaultHome from "./pages/vault/VaultHome";
+import CategoryView from "./pages/vault/CategoryView";
+import SubcategoryView from "./pages/vault/SubcategoryView";
+import CreateCategory from "./pages/vault/CreateCategory";
+import ManageAccess from "./pages/vault/ManageAccess";
 import SettingsPage from "./pages/SettingsPage";
 import NomineeCenter from "./pages/NomineeCenter";
 import InactivityTriggers from "./pages/InactivityTriggers";
@@ -42,6 +47,11 @@ const App = () => (
           <Route path="/signin" element={<SignIn />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/vault" element={<Vault />} />
+          <Route path="/vault/home" element={<VaultHome />} />
+          <Route path="/vault/create-category" element={<CreateCategory />} />
+          <Route path="/vault/:categoryId" element={<CategoryView />} />
+          <Route path="/vault/:categoryId/:subcategoryId" element={<SubcategoryView />} />
+          <Route path="/vault/manage-access/:documentId" element={<ManageAccess />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/nominee-center" element={<NomineeCenter />} />
           <Route path="/inactivity-triggers" element={<InactivityTriggers />} />
