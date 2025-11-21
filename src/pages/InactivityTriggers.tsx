@@ -63,16 +63,6 @@ const InactivityTriggers = () => {
       </div>
 
       <div className="p-6 space-y-6">
-        {/* Create Trigger Button */}
-        {!showCreateForm && (
-          <Button 
-            onClick={() => setShowCreateForm(true)}
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl h-14 text-base font-semibold"
-          >
-            + Create Trigger
-          </Button>
-        )}
-
         {/* Create Trigger Form */}
         {showCreateForm && (
           <div className="bg-card rounded-2xl p-6 space-y-4">
@@ -159,14 +149,12 @@ const InactivityTriggers = () => {
             <p className="text-sm text-muted-foreground mb-6">
               Create inactivity triggers to monitor your account and alert nominees when needed.
             </p>
-            {!showCreateForm && (
-              <Button 
-                onClick={() => setShowCreateForm(true)}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-8"
-              >
-                + Create Trigger
-              </Button>
-            )}
+            <Button 
+              onClick={() => setShowCreateForm(true)}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-8"
+            >
+              + Create Trigger
+            </Button>
           </div>
         </div>
 

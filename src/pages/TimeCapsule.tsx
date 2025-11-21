@@ -63,16 +63,6 @@ const TimeCapsule = () => {
       </div>
 
       <div className="p-6 space-y-6">
-        {/* Create Capsule Button */}
-        {!showCreateForm && (
-          <Button 
-            onClick={() => setShowCreateForm(true)}
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl h-14 text-base font-semibold"
-          >
-            + Create Time Capsule
-          </Button>
-        )}
-
         {/* Create Form */}
         {showCreateForm && (
           <div className="bg-card rounded-2xl p-6 space-y-4">
@@ -167,14 +157,12 @@ const TimeCapsule = () => {
             <p className="text-sm text-muted-foreground mb-6">
               Create your first time capsule to send messages to the future.
             </p>
-            {!showCreateForm && (
-              <Button 
-                onClick={() => setShowCreateForm(true)}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-8"
-              >
-                + Create Time Capsule
-              </Button>
-            )}
+            <Button 
+              onClick={() => setShowCreateForm(true)}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-8"
+            >
+              + Create Time Capsule
+            </Button>
           </div>
         </div>
 

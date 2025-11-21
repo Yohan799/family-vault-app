@@ -1,11 +1,81 @@
-import { ArrowLeft, Home, Lock as LockIcon, Settings, Plus, GripVertical, Trash2 } from "lucide-react";
+import { ArrowLeft, Home, Lock as LockIcon, Settings, Plus, GripVertical, Trash2, Shield, Users, Bell, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+
+interface QuickAction {
+  id: string;
+  title: string;
+  subtitle: string;
+  icon: any;
+  isDefault: boolean;
+  isEnabled: boolean;
+}
 
 const CustomizeQuickActions = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [newActionTitle, setNewActionTitle] = useState("");
+  const [newActionSubtitle, setNewActionSubtitle] = useState("");
+  
+  const [actions, setActions] = useState<QuickAction[]>([
+    { id: "1", title: "Digital Vault", subtitle: "Manage your secure documents", icon: Shield, isDefault: true, isEnabled: true },
+    { id: "2", title: "Nominee Center", subtitle: "Manage trusted contacts", icon: Users, isDefault: true, isEnabled: true },
+    { id: "3", title: "Inactivity Triggers", subtitle: "Set up activity monitoring", icon: Bell, isDefault: true, isEnabled: true },
+    { id: "4", title: "Time Capsule", subtitle: "Create legacy messages", icon: Clock, isDefault: true, isEnabled: true },
+  ]);
+
+  const handleToggle = (id: string) => {
+    setActions(actions.map(action => 
+      action.id === id ? { ...action, isEnabled: !action.isEnabled } : action
+    ));
+    toast({
+      title: "Quick action updated",
+      description: "Your changes have been applied",
+    });
+  };
+
+  const handleDelete = (id: string) => {
+    setActions(actions.filter(action => action.id !== id));
+    toast({
+      title: "Action removed",
+      description: "Quick action has been deleted",
+    });
+  };
+
+  const handleAddNew = () => {
+    if (!newActionTitle.trim()) {
+      toast({
+        title: "Title required",
+        description: "Please enter a title for your quick action",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const newAction: QuickAction = {
+      id: Date.now().toString(),
+      title: newActionTitle,
+      subtitle: newActionSubtitle || "Custom action",
+      icon: Plus,
+      isDefault: false,
+      isEnabled: true
+    };
+    
+    setActions([...actions, newAction]);
+    setNewActionTitle("");
+    setNewActionSubtitle("");
+    setShowAddDialog(false);
+    toast({
+      title: "Action added!",
+      description: "New quick action has been created",
+    });
+  };
 
   const handleSave = () => {
     toast({
@@ -28,37 +98,96 @@ const CustomizeQuickActions = () => {
       </div>
 
       <div className="p-6 space-y-6">
-        <p className="text-muted-foreground">Drag to reorder or remove actions. Add new shortcuts to personalize your dashboard.</p>
+        <p className="text-muted-foreground">Drag to reorder, toggle to enable/disable. Add custom shortcuts to personalize your dashboard.</p>
 
         {/* Current Actions */}
         <div className="space-y-3">
-          {[
-            { title: "Digital Vault", subtitle: "Manage your secure documents" },
-            { title: "Nominee Center", subtitle: "Manage trusted contacts" },
-            { title: "Inactivity Triggers", subtitle: "Set up activity monitoring" },
-            { title: "Time Capsule", subtitle: "Create legacy messages" },
-          ].map((action, index) => (
-            <div key={index} className="bg-card rounded-xl p-4 flex items-center gap-4">
-              <GripVertical className="w-5 h-5 text-muted-foreground" />
-              <div className="flex-1">
-                <h3 className="font-semibold text-foreground">{action.title}</h3>
-                <p className="text-sm text-muted-foreground">{action.subtitle}</p>
+          {actions.map((action) => {
+            const Icon = action.icon;
+            return (
+              <div key={action.id} className="bg-card rounded-xl p-4 flex items-center gap-4">
+                <GripVertical className="w-5 h-5 text-muted-foreground" />
+                <div className="w-10 h-10 bg-accent rounded-full flex items-center justify-center flex-shrink-0">
+                  <Icon className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-foreground">{action.title}</h3>
+                  <p className="text-sm text-muted-foreground">{action.subtitle}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch 
+                    checked={action.isEnabled}
+                    onCheckedChange={() => handleToggle(action.id)}
+                  />
+                  {!action.isDefault && (
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => handleDelete(action.id)}
+                      className="text-destructive"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </Button>
+                  )}
+                </div>
               </div>
-              <Button variant="ghost" size="icon" className="text-destructive">
-                <Trash2 className="w-5 h-5" />
-              </Button>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
-        {/* Add Action Button */}
-        <Button 
-          variant="outline" 
-          className="w-full rounded-xl h-14 border-dashed border-2 gap-2"
-        >
-          <Plus className="w-5 h-5" />
-          Add New Action
-        </Button>
+        {/* Add Action Dialog */}
+        <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+          <DialogTrigger asChild>
+            <Button 
+              variant="outline" 
+              className="w-full rounded-xl h-14 border-dashed border-2 gap-2"
+            >
+              <Plus className="w-5 h-5" />
+              Add New Action
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add New Quick Action</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 pt-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Action Title *</label>
+                <Input
+                  placeholder="Enter action title"
+                  value={newActionTitle}
+                  onChange={(e) => setNewActionTitle(e.target.value)}
+                  className="bg-background"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Subtitle</label>
+                <Input
+                  placeholder="Enter subtitle (optional)"
+                  value={newActionSubtitle}
+                  onChange={(e) => setNewActionSubtitle(e.target.value)}
+                  className="bg-background"
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <Button onClick={handleAddNew} className="flex-1 bg-primary hover:bg-primary/90">
+                  Add Action
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setShowAddDialog(false);
+                    setNewActionTitle("");
+                    setNewActionSubtitle("");
+                  }}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Save Button */}
         <Button 
