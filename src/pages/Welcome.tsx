@@ -14,19 +14,19 @@ const Welcome = () => {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="text-center space-y-8 max-w-md">
+    <div className="min-h-screen bg-vault-bg flex items-center justify-center p-4">
+      <div className="text-center space-y-6 max-w-md">
         <div className="flex justify-center">
-          <div className="w-24 h-24 bg-white rounded-3xl shadow-lg flex items-center justify-center">
-            <Shield className="w-12 h-12 text-primary" />
+          <div className="w-28 h-28 bg-card rounded-[2rem] shadow-lg flex items-center justify-center">
+            <Shield className="w-14 h-14 text-primary" strokeWidth={2.5} />
           </div>
         </div>
         
-        <div className="space-y-3">
-          <h1 className="text-3xl font-bold text-foreground">
+        <div className="space-y-2">
+          <h1 className="text-4xl font-bold text-foreground">
             Welcome to Family Vault
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-lg">
             Your Digital Vault & Legacy Planner
           </p>
         </div>

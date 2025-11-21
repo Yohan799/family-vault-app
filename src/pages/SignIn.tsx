@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Shield, Mail, Lock } from "lucide-react";
+import { Shield, Mail, Lock, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 const SignIn = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -25,54 +26,63 @@ const SignIn = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="bg-card rounded-3xl shadow-xl p-8 space-y-6">
+    <div className="min-h-screen bg-vault-bg flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-card rounded-3xl shadow-xl p-8">
+        <div className="space-y-6">
           <div className="text-center space-y-4">
-            <h2 className="text-2xl font-bold text-foreground">Sign In</h2>
+            <h1 className="text-3xl font-bold text-foreground">
+              Sign In
+            </h1>
             <div className="flex justify-center">
-              <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center">
-                <Shield className="w-8 h-8 text-primary" />
+              <div className="w-20 h-20 bg-accent rounded-full flex items-center justify-center">
+                <Shield className="w-10 h-10 text-primary" strokeWidth={2.5} />
               </div>
             </div>
-            <p className="text-sm text-muted-foreground">Secure Your Family's Legacy</p>
+            <p className="text-muted-foreground text-base">Secure Your Family's Legacy</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="relative">
-              <Mail className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
                 type="email"
                 placeholder="Enter your email"
-                className="pl-10"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="pl-12 bg-input border-0 h-14 rounded-2xl text-base"
                 required
               />
             </div>
 
             <div className="relative">
-              <Lock className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
-                className="pl-10"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                className="pl-12 pr-12 bg-input border-0 h-14 rounded-2xl text-base"
                 required
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <Eye className="w-5 h-5" />
+              </button>
             </div>
 
             <div className="text-right">
               <button
                 type="button"
-                className="text-sm text-primary hover:underline"
+                className="text-sm text-primary hover:underline font-medium"
               >
                 Forgot Password?
               </button>
             </div>
 
-            <Button type="submit" className="w-full" size="lg">
+            <Button type="submit" className="w-full h-14 text-base font-semibold rounded-2xl">
               Sign In
             </Button>
 
@@ -80,12 +90,19 @@ const SignIn = () => {
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-border"></div>
               </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">OR</span>
+              <div className="relative flex justify-center text-sm">
+                <span className="bg-card px-3 text-muted-foreground">OR</span>
               </div>
             </div>
 
-            <Button type="button" variant="outline" className="w-full" size="lg">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full h-14 text-base font-semibold rounded-2xl bg-input border-0"
+              onClick={() => {
+                toast({ title: "Google sign-in would open here" });
+              }}
+            >
               <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                 <path
                   fill="currentColor"

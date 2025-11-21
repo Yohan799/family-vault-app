@@ -84,15 +84,14 @@ const Dashboard = () => {
 
       <div className="p-6 space-y-6">
         {/* Stats Grid */}
-        <div className="bg-card rounded-2xl p-4">
-          <div className="flex items-center justify-start gap-6">
+        <div className="bg-card rounded-2xl p-5">
+          <div className="space-y-4">
             {stats.map((stat, index) => {
               const Icon = stat.icon;
               return (
-                <div key={index} className="flex flex-col items-center gap-1">
+                <div key={index} className="flex items-center gap-4">
                   <Icon className={`w-6 h-6 ${stat.color}`} />
-                  <span className="text-xs font-medium text-foreground text-center leading-tight whitespace-nowrap">{stat.label.split(' ')[0]}</span>
-                  <span className="text-xs text-muted-foreground">{stat.label.split(' ').slice(1).join(' ')}</span>
+                  <span className="text-base font-medium text-foreground">{stat.label}</span>
                 </div>
               );
             })}
