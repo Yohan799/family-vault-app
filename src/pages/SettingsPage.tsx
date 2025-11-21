@@ -1,7 +1,13 @@
-import { Home, FolderOpen, Settings, ChevronRight, MoreVertical, User, Lock, Mail, Shield, Fingerprint, Smartphone, Bell, Clock, AlertTriangle, Users, Star, HelpCircle, MessageSquare, LogOut, Trash2 } from "lucide-react";
+import { Home, FolderOpen, Settings, ChevronRight, MoreVertical, User, Lock, Mail, Shield, Fingerprint, Smartphone, Bell, Clock, AlertTriangle, Users, Star, HelpCircle, MessageSquare, LogOut, Trash2, FileText, Download, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -10,6 +16,7 @@ const SettingsPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [toggleStates, setToggleStates] = useState({
+    twoFactorAuth: false,
     biometric: false,
     pushNotifications: true,
     emailNotifications: false,
@@ -34,7 +41,7 @@ const SettingsPage = () => {
   ];
 
   const securitySettings = [
-    { icon: Shield, title: "Two-Factor Authentication", subtitle: "Add an extra layer of security", arrow: true, path: "/two-factor-auth" },
+    { icon: Shield, title: "Two-Factor Authentication", subtitle: "Add an extra layer of security", toggle: "twoFactorAuth" },
     { icon: Fingerprint, title: "Biometric Login", subtitle: "Use fingerprint or face ID", toggle: "biometric" },
     { icon: Smartphone, title: "Active Sessions", arrow: true, path: "/active-sessions" },
   ];
@@ -56,7 +63,7 @@ const SettingsPage = () => {
   const vaultSettings = [
     { icon: Clock, title: "Auto Lock Timeout", subtitle: "5 minutes", arrow: true, path: "/auto-lock-timeout" },
     { icon: Clock, title: "Backup Frequency", subtitle: "Weekly", arrow: true, path: "/backup-frequency" },
-    { title: "App Version", subtitle: "2.0" },
+    { title: "App Version", subtitle: "2.0", showRight: true },
   ];
 
   return (
@@ -65,9 +72,27 @@ const SettingsPage = () => {
       <div className="bg-card border-b border-border p-6">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold text-foreground">Settings</h1>
-          <Button variant="ghost" size="icon">
-            <MoreVertical className="w-5 h-5" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <MoreVertical className="w-5 h-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={() => toast({ title: "Export Data", description: "Your data export has started" })}>
+                <Download className="w-4 h-4 mr-2" />
+                Export Data
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => toast({ title: "Share Profile", description: "Profile sharing options opened" })}>
+                <Share2 className="w-4 h-4 mr-2" />
+                Share Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => toast({ title: "Privacy Policy", description: "Opening privacy policy" })}>
+                <FileText className="w-4 h-4 mr-2" />
+                Privacy Policy
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -205,10 +230,13 @@ const SettingsPage = () => {
                   {Icon && <Icon className="w-5 h-5 text-primary" />}
                   <div className="flex-1 text-left">
                     <h3 className="font-medium text-foreground">{setting.title}</h3>
-                    {setting.subtitle && (
+                    {setting.subtitle && !setting.showRight && (
                       <p className="text-sm text-muted-foreground">{setting.subtitle}</p>
                     )}
                   </div>
+                  {setting.showRight && setting.subtitle && (
+                    <span className="text-sm text-muted-foreground">{setting.subtitle}</span>
+                  )}
                   {setting.arrow && <ChevronRight className="w-5 h-5 text-muted-foreground" />}
                 </button>
               );
@@ -242,7 +270,7 @@ const SettingsPage = () => {
                     description: "Your account has been permanently deleted",
                     variant: "destructive"
                   });
-                  navigate("/");
+                  navigate("/welcome");
                 }
               }}
               className="w-full p-4 flex items-center gap-4 hover:bg-destructive/10 transition-colors"

@@ -25,7 +25,7 @@ const Profile = () => {
             </AvatarFallback>
           </Avatar>
           <h2 className="text-2xl font-bold mb-1">Raj Kumar</h2>
-          <p className="text-sm opacity-90">Premium Member</p>
+          <p className="text-sm opacity-90">raj@example.com</p>
         </div>
       </div>
 
