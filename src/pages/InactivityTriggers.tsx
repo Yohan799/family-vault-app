@@ -11,6 +11,7 @@ const InactivityTriggers = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [triggers, setTriggers] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -27,6 +28,11 @@ const InactivityTriggers = () => {
       });
       return;
     }
+    const newTrigger = {
+      id: Date.now(),
+      ...formData
+    };
+    setTriggers([...triggers, newTrigger]);
     toast({
       title: "Trigger created successfully!",
       description: `${formData.name} has been activated`,
@@ -137,10 +143,27 @@ const InactivityTriggers = () => {
           </div>
         )}
 
-        {/* Your Triggers Section */}
-        <div className="space-y-4">
-          <h2 className="text-lg font-bold text-foreground">Your Triggers</h2>
-          
+        {/* Your Triggers Section - Only show when triggers exist */}
+        {triggers.length > 0 && (
+          <div className="space-y-4">
+            <h2 className="text-lg font-bold text-foreground">Your Triggers</h2>
+            
+            {triggers.map((trigger) => (
+              <div key={trigger.id} className="bg-card rounded-2xl p-4">
+                <h3 className="font-semibold text-foreground mb-1">{trigger.name}</h3>
+                <p className="text-sm text-muted-foreground mb-2">{trigger.description}</p>
+                <div className="flex gap-2 text-xs text-muted-foreground">
+                  <span>Type: {trigger.type}</span>
+                  <span>•</span>
+                  <span>Duration: {trigger.duration} days</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Create Trigger Button - Show when no form and no triggers */}
+        {!showCreateForm && triggers.length === 0 && (
           <div className="bg-card rounded-2xl p-8 text-center">
             <div className="w-24 h-24 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center">
               <Shield className="w-12 h-12 text-primary" />
@@ -156,7 +179,17 @@ const InactivityTriggers = () => {
               + Create Trigger
             </Button>
           </div>
-        </div>
+        )}
+        
+        {/* Create Button when triggers exist */}
+        {!showCreateForm && triggers.length > 0 && (
+          <Button 
+            onClick={() => setShowCreateForm(true)}
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12"
+          >
+            + Create New Trigger
+          </Button>
+        )}
 
         {/* Info Box */}
         <div className="bg-yellow-500/5 border border-yellow-500/20 rounded-2xl p-4 flex gap-3">

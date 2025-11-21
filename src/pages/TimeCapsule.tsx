@@ -10,6 +10,7 @@ const TimeCapsule = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [capsules, setCapsules] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     title: "",
     message: "",
@@ -27,6 +28,11 @@ const TimeCapsule = () => {
       });
       return;
     }
+    const newCapsule = {
+      id: Date.now(),
+      ...formData
+    };
+    setCapsules([...capsules, newCapsule]);
     toast({
       title: "Time capsule created!",
       description: `${formData.title} will be released on ${formData.releaseDate}`,
@@ -145,10 +151,27 @@ const TimeCapsule = () => {
           </div>
         )}
 
-        {/* Your Capsules Section */}
-        <div className="space-y-4">
-          <h2 className="text-lg font-bold text-foreground">Your Time Capsules</h2>
-          
+        {/* Your Capsules Section - Only show when capsules exist */}
+        {capsules.length > 0 && (
+          <div className="space-y-4">
+            <h2 className="text-lg font-bold text-foreground">Your Time Capsules</h2>
+            
+            {capsules.map((capsule) => (
+              <div key={capsule.id} className="bg-card rounded-2xl p-4">
+                <h3 className="font-semibold text-foreground mb-1">{capsule.title}</h3>
+                <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{capsule.message}</p>
+                <div className="flex gap-2 text-xs text-muted-foreground">
+                  <span>Release: {capsule.releaseDate}</span>
+                  <span>•</span>
+                  <span>{capsule.recipientEmail}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Create Capsule Button - Show when no form and no capsules */}
+        {!showCreateForm && capsules.length === 0 && (
           <div className="bg-card rounded-2xl p-8 text-center">
             <div className="w-24 h-24 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
               <Clock className="w-12 h-12 text-muted-foreground" />
@@ -164,7 +187,18 @@ const TimeCapsule = () => {
               + Create Time Capsule
             </Button>
           </div>
-        </div>
+        )}
+        
+        {/* Create Button when capsules exist */}
+        {!showCreateForm && capsules.length > 0 && (
+          <Button 
+            onClick={() => setShowCreateForm(true)}
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12 gap-2"
+          >
+            <Send className="w-4 h-4" />
+            Create New Time Capsule
+          </Button>
+        )}
 
         {/* Info Box */}
         <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 flex gap-3">
