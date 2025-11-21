@@ -1,7 +1,7 @@
 import { Home, Settings, ChevronRight, MoreVertical, User, Lock, Mail, Shield, Fingerprint, Smartphone, Bell, Clock, AlertTriangle, Users, HelpCircle, MessageSquare, LogOut, Trash2, FileText, Download, Share2, Vault, ShieldCheck, ShieldAlert, LockKeyhole, Database, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +15,11 @@ import { useToast } from "@/hooks/use-toast";
 const SettingsPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [profileData, setProfileData] = useState({
+    fullName: "Raj Kumar",
+    email: "raj@example.com",
+    profileImage: null as string | null,
+  });
   const [toggleStates, setToggleStates] = useState({
     twoFactorAuth: false,
     biometric: false,
@@ -35,9 +40,28 @@ const SettingsPage = () => {
 
   // Update state when returning from settings pages
   useEffect(() => {
-    const handleStorageChange = () => {
+    const loadProfileData = () => {
+      const savedProfile = localStorage.getItem("profileData");
+      if (savedProfile) {
+        const data = JSON.parse(savedProfile);
+        setProfileData({
+          fullName: data.fullName || "Raj Kumar",
+          email: data.email || "raj@example.com",
+          profileImage: null,
+        });
+      }
+      const savedPhoto = localStorage.getItem("currentProfilePhoto");
+      if (savedPhoto) {
+        setProfileData(prev => ({ ...prev, profileImage: savedPhoto }));
+      }
       setAutoLockTimeout(localStorage.getItem("autoLockTimeout") || "5 minutes");
       setBackupFrequency(localStorage.getItem("backupFrequency") || "Weekly");
+    };
+    
+    loadProfileData();
+    
+    const handleStorageChange = () => {
+      loadProfileData();
     };
     
     window.addEventListener("storage", handleStorageChange);
@@ -165,13 +189,14 @@ const SettingsPage = () => {
           className="w-full bg-card rounded-2xl p-4 flex items-center gap-4 hover:bg-accent transition-colors"
         >
           <Avatar className="w-12 h-12 bg-primary">
+            {profileData.profileImage && <AvatarImage src={profileData.profileImage} alt="Profile" />}
             <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
-              RK
+              {profileData.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 text-left">
-            <h3 className="font-semibold text-foreground">Raj Kumar</h3>
-            <p className="text-sm text-muted-foreground">raj@example.com</p>
+            <h3 className="font-semibold text-foreground">{profileData.fullName}</h3>
+            <p className="text-sm text-muted-foreground">{profileData.email}</p>
           </div>
           <ChevronRight className="w-5 h-5 text-muted-foreground" />
         </button>
