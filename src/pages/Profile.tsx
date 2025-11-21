@@ -11,6 +11,7 @@ const Profile = () => {
     email: "raj@example.com",
     phone: "+91 98765 43210",
     location: "Mumbai, India",
+    dateOfBirth: "",
     profileImage: null as string | null,
   });
 
@@ -99,6 +100,16 @@ const Profile = () => {
             <div className="flex-1">
               <p className="text-xs text-muted-foreground">Location</p>
               <p className="font-medium text-foreground">{profileData.location}</p>
+            </div>
+          </div>
+
+          <div className="p-4 flex items-center gap-4">
+            <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+              <Calendar className="w-5 h-5 text-primary" />
+            </div>
+            <div className="flex-1">
+              <p className="text-xs text-muted-foreground">Date of Birth</p>
+              <p className="font-medium text-foreground">{profileData.dateOfBirth || "Not set"}</p>
             </div>
           </div>
         </div>
