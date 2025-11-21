@@ -1,10 +1,25 @@
-import { Home, FolderOpen, Settings, FileText, Users, Clock, Shield, ChevronRight, Bell, User, Image, UserPlus, Timer, Plus } from "lucide-react";
+import { Home, FolderOpen, Settings, FileText, Users, Clock, Shield, ChevronRight, Bell, User, UserPlus, Timer, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import vaultIcon from "@/assets/vault-icon.jpg";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const [enabledActions, setEnabledActions] = useState<string[]>([]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('quickActions');
+    if (saved) {
+      const actions = JSON.parse(saved);
+      const enabled = actions.filter((a: any) => a.isEnabled).map((a: any) => a.id);
+      setEnabledActions(enabled);
+    } else {
+      // Default to all enabled
+      setEnabledActions(['vault', 'nominee', 'triggers', 'capsule', 'customize']);
+    }
+  }, []);
 
   const stats = [
     { icon: FileText, label: "128 Documents", color: "text-primary" },
@@ -13,13 +28,15 @@ const Dashboard = () => {
     { icon: Shield, label: "Trigger On", color: "text-primary" },
   ];
 
-  const quickActions = [
-    { icon: Image, title: "Digital Vault", subtitle: "Manage your secure documents", color: "bg-accent", onClick: () => navigate("/vault") },
-    { icon: UserPlus, title: "Nominee Center", subtitle: "Manage trusted contacts", color: "bg-accent", onClick: () => navigate("/nominee-center") },
-    { icon: Shield, title: "Inactivity Triggers", subtitle: "Set up activity monitoring", color: "bg-accent", onClick: () => navigate("/inactivity-triggers") },
-    { icon: Timer, title: "Time Capsule", subtitle: "Create legacy messages", color: "bg-accent", onClick: () => navigate("/time-capsule") },
-    { icon: Plus, title: "Customize Quick Actions", subtitle: "Add your own shortcuts", color: "bg-accent", onClick: () => navigate("/customize-quick-actions") },
+  const allQuickActions = [
+    { id: 'vault', icon: null, isImage: true, title: "Digital Vault", subtitle: "Manage your secure documents", color: "bg-accent", onClick: () => navigate("/vault") },
+    { id: 'nominee', icon: UserPlus, isImage: false, title: "Nominee Center", subtitle: "Manage trusted contacts", color: "bg-accent", onClick: () => navigate("/nominee-center") },
+    { id: 'triggers', icon: Shield, isImage: false, title: "Inactivity Triggers", subtitle: "Set up activity monitoring", color: "bg-accent", onClick: () => navigate("/inactivity-triggers") },
+    { id: 'capsule', icon: Timer, isImage: false, title: "Time Capsule", subtitle: "Create legacy messages", color: "bg-accent", onClick: () => navigate("/time-capsule") },
+    { id: 'customize', icon: Plus, isImage: false, title: "Customize Quick Actions", subtitle: "Add your own shortcuts", color: "bg-accent", onClick: () => navigate("/customize-quick-actions") },
   ];
+
+  const quickActions = allQuickActions.filter(action => enabledActions.includes(action.id));
 
   const recentDocs = [
     { name: "Last Will & Testament.pdf", category: "Sandeep Sharma", date: "May 15, 2024" },
@@ -103,15 +120,21 @@ const Dashboard = () => {
           <h2 className="text-lg font-bold text-foreground mb-4">Quick Actions</h2>
           <div className="space-y-3">
             {quickActions.map((action, index) => {
-              const Icon = action.icon;
               return (
                 <button
                   key={index}
                   onClick={action.onClick}
                   className="w-full bg-card rounded-2xl p-4 flex items-center gap-4 hover:bg-accent transition-colors"
                 >
-                  <div className={`w-12 h-12 ${action.color} rounded-full flex items-center justify-center flex-shrink-0`}>
-                    <Icon className="w-6 h-6 text-primary" />
+                  <div className={`w-12 h-12 ${action.color} rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden`}>
+                    {action.isImage ? (
+                      <img src={vaultIcon} alt="Vault" className="w-8 h-8 object-contain" style={{ filter: 'brightness(0) saturate(100%) invert(45%) sepia(89%) saturate(2204%) hue-rotate(201deg) brightness(95%) contrast(101%)' }} />
+                    ) : (
+                      (() => {
+                        const Icon = action.icon;
+                        return <Icon className="w-6 h-6 text-primary" />;
+                      })()
+                    )}
                   </div>
                   <div className="flex-1 text-left">
                     <h3 className="font-semibold text-foreground">{action.title}</h3>
