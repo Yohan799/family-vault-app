@@ -43,8 +43,11 @@ const EditProfile = () => {
     if (savedProfile) {
       const data = JSON.parse(savedProfile);
       setFormData(data);
-      if (data.dateOfBirth) {
-        setDateOfBirth(new Date(data.dateOfBirth));
+      if (data.dateOfBirth && data.dateOfBirth.trim() !== "") {
+        const parsedDate = new Date(data.dateOfBirth);
+        if (!isNaN(parsedDate.getTime())) {
+          setDateOfBirth(parsedDate);
+        }
       }
     }
   }, []);
@@ -211,7 +214,7 @@ const EditProfile = () => {
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dateOfBirth ? format(dateOfBirth, "PPP") : <span>Pick a date</span>}
+                  {dateOfBirth && !isNaN(dateOfBirth.getTime()) ? format(dateOfBirth, "PPP") : <span>Pick a date</span>}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
