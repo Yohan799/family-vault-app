@@ -26,11 +26,8 @@ const SubcategoryView = () => {
 
   const SubIcon = subcategory.icon;
 
-  // Sample documents
-  const documents = [
-    { id: "1", name: "Sale_Deed.pdf", size: "2.5 MB", date: "24/05/2024" },
-    { id: "2", name: "Tax_Receipt.docx", size: "512 KB", date: "23/05/2024" },
-  ];
+  // Documents state - starts empty, populates when users upload
+  const [documents, setDocuments] = useState<Array<{ id: string; name: string; size: string; date: string }>>([]);
 
   const handleDocumentOptions = (doc: any) => {
     setSelectedDoc(doc);
@@ -86,26 +83,38 @@ const SubcategoryView = () => {
 
           {/* Documents List */}
           <div>
-            <h2 className="font-bold text-[#1F2121] mb-3">Uploaded Document</h2>
-            <div className="space-y-3">
-              {documents.map((doc) => (
-                <div key={doc.id} className="bg-card rounded-xl p-4 flex items-center gap-4">
-                  <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
-                    <FileText className="w-6 h-6 text-red-500" />
+            <h2 className="font-bold text-[#1F2121] mb-3">Uploaded Documents</h2>
+            {documents.length > 0 ? (
+              <div className="space-y-3">
+                {documents.map((doc) => (
+                  <div key={doc.id} className="bg-card rounded-xl p-4 flex items-center gap-4">
+                    <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+                      <FileText className="w-6 h-6 text-red-500" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-[#1F2121]">{doc.name}</h3>
+                      <p className="text-sm text-[#626C71]">{doc.size} - {doc.date}</p>
+                    </div>
+                    <button
+                      onClick={() => handleDocumentOptions(doc)}
+                      className="p-2 hover:bg-muted rounded-lg"
+                    >
+                      <MoreVertical className="w-5 h-5 text-[#626C71]" />
+                    </button>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-[#1F2121]">{doc.name}</h3>
-                    <p className="text-sm text-[#626C71]">{doc.size} - {doc.date}</p>
-                  </div>
-                  <button
-                    onClick={() => handleDocumentOptions(doc)}
-                    className="p-2 hover:bg-muted rounded-lg"
-                  >
-                    <MoreVertical className="w-5 h-5 text-[#626C71]" />
-                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-card rounded-xl p-8 text-center">
+                <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
+                  <FileText className="w-8 h-8 text-muted-foreground" />
                 </div>
-              ))}
-            </div>
+                <h3 className="font-semibold text-[#1F2121] mb-2">No Documents Yet</h3>
+                <p className="text-sm text-[#626C71]">
+                  Upload your first document to get started
+                </p>
+              </div>
+            )}
           </div>
         </div>
 

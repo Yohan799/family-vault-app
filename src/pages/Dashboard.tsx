@@ -7,8 +7,8 @@ import { useState, useEffect } from "react";
 const Dashboard = () => {
   const navigate = useNavigate();
   const [profileData, setProfileData] = useState({
-    fullName: "Raj Kumar",
-    email: "raj@example.com",
+    fullName: "Guest User",
+    email: "guest@example.com",
     profileImage: null as string | null,
   });
 
@@ -17,8 +17,8 @@ const Dashboard = () => {
     if (savedProfile) {
       const data = JSON.parse(savedProfile);
       setProfileData({
-        fullName: data.fullName || "Raj Kumar",
-        email: data.email || "raj@example.com",
+        fullName: data.fullName || "Guest User",
+        email: data.email || "guest@example.com",
         profileImage: null,
       });
     }
@@ -29,9 +29,9 @@ const Dashboard = () => {
   }, []);
 
   const stats = [
-    { icon: FileText, label: "128 Documents", color: "text-primary" },
-    { icon: Users, label: "3 Nominees", color: "text-primary" },
-    { icon: Clock, label: "1 Time Capsule", color: "text-primary" },
+    { icon: FileText, label: "0 Documents", color: "text-primary" },
+    { icon: Users, label: "0 Nominees", color: "text-primary" },
+    { icon: Clock, label: "0 Time Capsule", color: "text-primary" },
     { icon: Shield, label: "Trigger On", color: "text-primary" },
   ];
 
@@ -43,11 +43,7 @@ const Dashboard = () => {
     { icon: Plus, title: "Customize Quick Actions", subtitle: "Add your own shortcuts", color: "bg-accent", onClick: () => navigate("/customize-quick-actions") },
   ];
 
-  const recentDocs = [
-    { name: "Last Will & Testament.pdf", category: "Sandeep Sharma", date: "May 15, 2024" },
-    { name: "Home Mortgage Deed.docx", category: "Sandeep Sharma", date: "Apr 28, 2024" },
-    { name: "Birth Certificate-Sandeep.jpg", category: "Sandeep Sharma", date: "Mar 20, 2024" },
-  ];
+  const recentDocs: Array<{ name: string; category: string; date: string }> = [];
 
   return (
     <div className="min-h-screen bg-background pb-20">

@@ -16,21 +16,21 @@ const SettingsPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [profileData, setProfileData] = useState({
-    fullName: "Raj Kumar",
-    email: "raj@example.com",
+    fullName: "Guest User",
+    email: "guest@example.com",
     profileImage: null as string | null,
   });
   const [toggleStates, setToggleStates] = useState({
     twoFactorAuth: false,
     biometric: false,
-    pushNotifications: true,
+    pushNotifications: false,
     emailNotifications: false,
-    timeCapsuleAlerts: true,
-    securityAlerts: true,
-    nomineeUpdates: true,
+    timeCapsuleAlerts: false,
+    securityAlerts: false,
+    nomineeUpdates: false,
     vaultReminders: false,
   });
-  
+
   const [autoLockTimeout, setAutoLockTimeout] = useState(
     localStorage.getItem("autoLockTimeout") || "5 minutes"
   );
@@ -45,8 +45,8 @@ const SettingsPage = () => {
       if (savedProfile) {
         const data = JSON.parse(savedProfile);
         setProfileData({
-          fullName: data.fullName || "Raj Kumar",
-          email: data.email || "raj@example.com",
+          fullName: data.fullName || "Guest User",
+          email: data.email || "guest@example.com",
           profileImage: null,
         });
       }
@@ -57,16 +57,16 @@ const SettingsPage = () => {
       setAutoLockTimeout(localStorage.getItem("autoLockTimeout") || "5 minutes");
       setBackupFrequency(localStorage.getItem("backupFrequency") || "Weekly");
     };
-    
+
     loadProfileData();
-    
+
     const handleStorageChange = () => {
       loadProfileData();
     };
-    
+
     window.addEventListener("storage", handleStorageChange);
     window.addEventListener("focus", handleStorageChange);
-    
+
     return () => {
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener("focus", handleStorageChange);
@@ -76,39 +76,39 @@ const SettingsPage = () => {
   const handleToggle = (key: string) => {
     const newState = !toggleStates[key as keyof typeof toggleStates];
     setToggleStates(prev => ({ ...prev, [key]: newState }));
-    
+
     const messages: { [key: string]: { enabled: string; disabled: string } } = {
-      twoFactorAuth: { 
-        enabled: "Two-Factor Authentication Enabled", 
-        disabled: "Two-Factor Authentication Disabled" 
+      twoFactorAuth: {
+        enabled: "Two-Factor Authentication Enabled",
+        disabled: "Two-Factor Authentication Disabled"
       },
-      biometric: { 
-        enabled: "Biometric Login Enabled", 
-        disabled: "Biometric Login Disabled" 
+      biometric: {
+        enabled: "Biometric Login Enabled",
+        disabled: "Biometric Login Disabled"
       },
-      pushNotifications: { 
-        enabled: "Push Notifications Enabled", 
-        disabled: "Push Notifications Disabled" 
+      pushNotifications: {
+        enabled: "Push Notifications Enabled",
+        disabled: "Push Notifications Disabled"
       },
-      emailNotifications: { 
-        enabled: "Email Notifications Enabled", 
-        disabled: "Email Notifications Disabled" 
+      emailNotifications: {
+        enabled: "Email Notifications Enabled",
+        disabled: "Email Notifications Disabled"
       },
-      timeCapsuleAlerts: { 
-        enabled: "Time Capsule Alerts Enabled", 
-        disabled: "Time Capsule Alerts Disabled" 
+      timeCapsuleAlerts: {
+        enabled: "Time Capsule Alerts Enabled",
+        disabled: "Time Capsule Alerts Disabled"
       },
-      securityAlerts: { 
-        enabled: "Security Alerts Enabled", 
-        disabled: "Security Alerts Disabled" 
+      securityAlerts: {
+        enabled: "Security Alerts Enabled",
+        disabled: "Security Alerts Disabled"
       },
-      nomineeUpdates: { 
-        enabled: "Nominee Updates Enabled", 
-        disabled: "Nominee Updates Disabled" 
+      nomineeUpdates: {
+        enabled: "Nominee Updates Enabled",
+        disabled: "Nominee Updates Disabled"
       },
-      vaultReminders: { 
-        enabled: "Vault Reminders Enabled", 
-        disabled: "Vault Reminders Disabled" 
+      vaultReminders: {
+        enabled: "Vault Reminders Enabled",
+        disabled: "Vault Reminders Disabled"
       },
     };
 
@@ -184,7 +184,7 @@ const SettingsPage = () => {
 
       <div className="p-6 space-y-6">
         {/* Profile Section */}
-        <button 
+        <button
           onClick={() => navigate("/profile")}
           className="w-full bg-card rounded-2xl p-4 flex items-center gap-4 hover:bg-accent transition-colors"
         >
@@ -242,8 +242,8 @@ const SettingsPage = () => {
                     )}
                   </div>
                   {setting.toggle ? (
-                    <Switch 
-                      checked={toggleStates[setting.toggle as keyof typeof toggleStates]} 
+                    <Switch
+                      checked={toggleStates[setting.toggle as keyof typeof toggleStates]}
                       onCheckedChange={() => handleToggle(setting.toggle as string)}
                     />
                   ) : setting.arrow ? (
@@ -271,8 +271,8 @@ const SettingsPage = () => {
                     <h3 className="font-medium text-foreground">{setting.title}</h3>
                     <p className="text-sm text-muted-foreground">{setting.subtitle}</p>
                   </div>
-                  <Switch 
-                    checked={toggleStates[setting.toggle as keyof typeof toggleStates]} 
+                  <Switch
+                    checked={toggleStates[setting.toggle as keyof typeof toggleStates]}
                     onCheckedChange={() => handleToggle(setting.toggle as string)}
                   />
                 </div>
