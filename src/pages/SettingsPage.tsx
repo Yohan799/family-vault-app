@@ -1,4 +1,4 @@
-import { Home, Settings, ChevronRight, MoreVertical, User, Lock, Mail, Shield, Fingerprint, Smartphone, Bell, Clock, AlertTriangle, Users, HelpCircle, MessageSquare, LogOut, Trash2, FileText, Download, Share2, Vault, ShieldCheck, ShieldAlert, LockKeyhole, Database } from "lucide-react";
+import { Home, Settings, ChevronRight, MoreVertical, User, Lock, Mail, Shield, Fingerprint, Smartphone, Bell, Clock, AlertTriangle, Users, HelpCircle, MessageSquare, LogOut, Trash2, FileText, Download, Share2, Vault, ShieldCheck, ShieldAlert, LockKeyhole, Database, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -124,7 +124,7 @@ const SettingsPage = () => {
   const vaultSettings = [
     { icon: LockKeyhole, title: "Auto Lock Timeout", subtitle: autoLockTimeout, arrow: true, path: "/auto-lock-timeout" },
     { icon: Database, title: "Backup Frequency", subtitle: backupFrequency, arrow: true, path: "/backup-frequency" },
-    { icon: Clock, title: "Backup History", subtitle: "View & restore", arrow: true, path: "/backup-history" },
+    { icon: History, title: "Backup History", subtitle: "View & restore", arrow: true, path: "/backup-history" },
     { title: "App Version", subtitle: "2.0", showRight: true },
   ];
 
