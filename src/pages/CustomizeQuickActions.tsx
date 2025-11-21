@@ -1,19 +1,17 @@
-import { ArrowLeft, Home, Lock as LockIcon, Settings, Plus, GripVertical, Trash2, Shield, UserPlus, Timer } from "lucide-react";
+import { ArrowLeft, Home, Lock as LockIcon, Settings, Plus, GripVertical, Trash2, Shield, Users, Bell, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect } from "react";
-import vaultIcon from "@/assets/vault-icon.jpg";
+import { useState } from "react";
 
 interface QuickAction {
   id: string;
   title: string;
   subtitle: string;
   icon: any;
-  isImage?: boolean;
   isDefault: boolean;
   isEnabled: boolean;
 }
@@ -25,31 +23,17 @@ const CustomizeQuickActions = () => {
   const [newActionTitle, setNewActionTitle] = useState("");
   const [newActionSubtitle, setNewActionSubtitle] = useState("");
   
-  const [actions, setActions] = useState<QuickAction[]>([]);
-
-  useEffect(() => {
-    const saved = localStorage.getItem('quickActions');
-    if (saved) {
-      setActions(JSON.parse(saved));
-    } else {
-      const defaultActions = [
-        { id: "vault", title: "Digital Vault", subtitle: "Manage your secure documents", icon: null, isImage: true, isDefault: true, isEnabled: true },
-        { id: "nominee", title: "Nominee Center", subtitle: "Manage trusted contacts", icon: UserPlus, isImage: false, isDefault: true, isEnabled: true },
-        { id: "triggers", title: "Inactivity Triggers", subtitle: "Set up activity monitoring", icon: Shield, isImage: false, isDefault: true, isEnabled: true },
-        { id: "capsule", title: "Time Capsule", subtitle: "Create legacy messages", icon: Timer, isImage: false, isDefault: true, isEnabled: true },
-        { id: "customize", title: "Customize Quick Actions", subtitle: "Add your own shortcuts", icon: Plus, isImage: false, isDefault: true, isEnabled: true },
-      ];
-      setActions(defaultActions);
-      localStorage.setItem('quickActions', JSON.stringify(defaultActions));
-    }
-  }, []);
+  const [actions, setActions] = useState<QuickAction[]>([
+    { id: "1", title: "Digital Vault", subtitle: "Manage your secure documents", icon: Shield, isDefault: true, isEnabled: true },
+    { id: "2", title: "Nominee Center", subtitle: "Manage trusted contacts", icon: Users, isDefault: true, isEnabled: true },
+    { id: "3", title: "Inactivity Triggers", subtitle: "Set up activity monitoring", icon: Bell, isDefault: true, isEnabled: true },
+    { id: "4", title: "Time Capsule", subtitle: "Create legacy messages", icon: Clock, isDefault: true, isEnabled: true },
+  ]);
 
   const handleToggle = (id: string) => {
-    const updatedActions = actions.map(action => 
+    setActions(actions.map(action => 
       action.id === id ? { ...action, isEnabled: !action.isEnabled } : action
-    );
-    setActions(updatedActions);
-    localStorage.setItem('quickActions', JSON.stringify(updatedActions));
+    ));
     toast({
       title: "Quick action updated",
       description: "Your changes have been applied",
@@ -57,9 +41,7 @@ const CustomizeQuickActions = () => {
   };
 
   const handleDelete = (id: string) => {
-    const updatedActions = actions.filter(action => action.id !== id);
-    setActions(updatedActions);
-    localStorage.setItem('quickActions', JSON.stringify(updatedActions));
+    setActions(actions.filter(action => action.id !== id));
     toast({
       title: "Action removed",
       description: "Quick action has been deleted",
@@ -81,14 +63,11 @@ const CustomizeQuickActions = () => {
       title: newActionTitle,
       subtitle: newActionSubtitle || "Custom action",
       icon: Plus,
-      isImage: false,
       isDefault: false,
       isEnabled: true
     };
     
-    const updatedActions = [...actions, newAction];
-    setActions(updatedActions);
-    localStorage.setItem('quickActions', JSON.stringify(updatedActions));
+    setActions([...actions, newAction]);
     setNewActionTitle("");
     setNewActionSubtitle("");
     setShowAddDialog(false);
@@ -124,18 +103,12 @@ const CustomizeQuickActions = () => {
         {/* Current Actions */}
         <div className="space-y-3">
           {actions.map((action) => {
+            const Icon = action.icon;
             return (
               <div key={action.id} className="bg-card rounded-xl p-4 flex items-center gap-4">
                 <GripVertical className="w-5 h-5 text-muted-foreground" />
-                <div className="w-10 h-10 bg-accent rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
-                  {action.isImage ? (
-                    <img src={vaultIcon} alt="Vault" className="w-6 h-6 object-contain" style={{ filter: 'brightness(0) saturate(100%) invert(45%) sepia(89%) saturate(2204%) hue-rotate(201deg) brightness(95%) contrast(101%)' }} />
-                  ) : (
-                    (() => {
-                      const Icon = action.icon;
-                      return <Icon className="w-5 h-5 text-primary" />;
-                    })()
-                  )}
+                <div className="w-10 h-10 bg-accent rounded-full flex items-center justify-center flex-shrink-0">
+                  <Icon className="w-5 h-5 text-primary" />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-foreground">{action.title}</h3>
