@@ -20,6 +20,10 @@ import ChangePassword from "./pages/ChangePassword";
 import AutoLockTimeout from "./pages/AutoLockTimeout";
 import BackupFrequency from "./pages/BackupFrequency";
 import Notifications from "./pages/Notifications";
+import EmailPreferences from "./pages/EmailPreferences";
+import ActiveSessions from "./pages/ActiveSessions";
+import HelpCenter from "./pages/HelpCenter";
+import ContactSupport from "./pages/ContactSupport";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -48,6 +52,10 @@ const App = () => (
           <Route path="/auto-lock-timeout" element={<AutoLockTimeout />} />
           <Route path="/backup-frequency" element={<BackupFrequency />} />
           <Route path="/notifications" element={<Notifications />} />
+          <Route path="/email-preferences" element={<EmailPreferences />} />
+          <Route path="/active-sessions" element={<ActiveSessions />} />
+          <Route path="/help-center" element={<HelpCenter />} />
+          <Route path="/contact-support" element={<ContactSupport />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
