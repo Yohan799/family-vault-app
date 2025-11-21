@@ -1,9 +1,17 @@
 import { Shield } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 const Welcome = () => {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      navigate("/onboarding");
+    }, 1700);
+
+    return () => clearTimeout(timer);
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -22,14 +30,6 @@ const Welcome = () => {
             Your Digital Vault & Legacy Planner
           </p>
         </div>
-
-        <Button 
-          onClick={() => navigate("/onboarding")}
-          className="w-full max-w-xs mx-auto"
-          size="lg"
-        >
-          Get Started
-        </Button>
       </div>
     </div>
   );
