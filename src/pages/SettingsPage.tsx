@@ -1,4 +1,4 @@
-import { Home, Settings, ChevronRight, MoreVertical, User, Lock, Mail, Shield, Fingerprint, Smartphone, Bell, Clock, AlertTriangle, Users, Star, HelpCircle, MessageSquare, LogOut, Trash2, FileText, Download, Share2, Vault } from "lucide-react";
+import { Home, Settings, ChevronRight, MoreVertical, User, Lock, Mail, Shield, Fingerprint, Smartphone, Bell, Clock, AlertTriangle, Users, HelpCircle, MessageSquare, LogOut, Trash2, FileText, Download, Share2, Vault, ShieldCheck, ShieldAlert, LockKeyhole, Database } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -79,7 +79,7 @@ const SettingsPage = () => {
   ];
 
   const securitySettings = [
-    { icon: Shield, title: "Two-Factor Authentication", subtitle: "Add an extra layer of security", toggle: "twoFactorAuth" },
+    { icon: ShieldCheck, title: "Two-Factor Authentication", subtitle: "Add an extra layer of security", toggle: "twoFactorAuth" },
     { icon: Fingerprint, title: "Biometric Login", subtitle: "Use fingerprint or face ID", toggle: "biometric" },
     { icon: Smartphone, title: "Active Sessions", arrow: true, path: "/active-sessions" },
   ];
@@ -88,9 +88,9 @@ const SettingsPage = () => {
     { icon: Bell, title: "Push Notifications", subtitle: "Receive push notifications", toggle: "pushNotifications" },
     { icon: Mail, title: "Email Notifications", subtitle: "Receive email updates", toggle: "emailNotifications" },
     { icon: Clock, title: "Time Capsule Alerts", subtitle: "Get notified about time capsule activity", toggle: "timeCapsuleAlerts" },
-    { icon: AlertTriangle, title: "Security Alerts", subtitle: "Important security updates", toggle: "securityAlerts" },
+    { icon: ShieldAlert, title: "Security Alerts", subtitle: "Important security updates", toggle: "securityAlerts" },
     { icon: Users, title: "Nominee Updates", subtitle: "Updates about nominee changes", toggle: "nomineeUpdates" },
-    { icon: Star, title: "Vault Reminders", subtitle: "Reminders to update your vault", toggle: "vaultReminders" },
+    { icon: Vault, title: "Vault Reminders", subtitle: "Reminders to update your vault", toggle: "vaultReminders" },
   ];
 
   const supportSettings = [
@@ -99,8 +99,8 @@ const SettingsPage = () => {
   ];
 
   const vaultSettings = [
-    { icon: Clock, title: "Auto Lock Timeout", subtitle: "5 minutes", arrow: true, path: "/auto-lock-timeout" },
-    { icon: Clock, title: "Backup Frequency", subtitle: "Weekly", arrow: true, path: "/backup-frequency" },
+    { icon: LockKeyhole, title: "Auto Lock Timeout", subtitle: "5 minutes", arrow: true, path: "/auto-lock-timeout" },
+    { icon: Database, title: "Backup Frequency", subtitle: "Weekly", arrow: true, path: "/backup-frequency" },
     { title: "App Version", subtitle: "2.0", showRight: true },
   ];
 
