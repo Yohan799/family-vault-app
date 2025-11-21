@@ -1,41 +1,61 @@
-import { Home, FolderOpen, Settings, ChevronRight, MoreVertical, User, Lock, Mail, Shield, Fingerprint, Smartphone, Bell, Clock, AlertTriangle, Users, Star, HelpCircle, MessageSquare } from "lucide-react";
+import { Home, FolderOpen, Settings, ChevronRight, MoreVertical, User, Lock, Mail, Shield, Fingerprint, Smartphone, Bell, Clock, AlertTriangle, Users, Star, HelpCircle, MessageSquare, LogOut, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 const SettingsPage = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [toggleStates, setToggleStates] = useState({
+    biometric: false,
+    pushNotifications: true,
+    emailNotifications: false,
+    timeCapsuleAlerts: true,
+    securityAlerts: true,
+    nomineeUpdates: true,
+    vaultReminders: false,
+  });
+
+  const handleToggle = (key: string) => {
+    setToggleStates(prev => ({ ...prev, [key]: !prev[key] }));
+    toast({
+      title: toggleStates[key as keyof typeof toggleStates] ? "Disabled" : "Enabled",
+      description: `Setting has been ${toggleStates[key as keyof typeof toggleStates] ? "turned off" : "turned on"}`,
+    });
+  };
 
   const accountSettings = [
-    { icon: User, title: "Edit Profile", arrow: true },
-    { icon: Lock, title: "Change Password", arrow: true },
-    { icon: Mail, title: "Email Preferences", arrow: true },
+    { icon: User, title: "Edit Profile", arrow: true, path: "/edit-profile" },
+    { icon: Lock, title: "Change Password", arrow: true, path: "/change-password" },
+    { icon: Mail, title: "Email Preferences", arrow: true, path: "/email-preferences" },
   ];
 
   const securitySettings = [
-    { icon: Shield, title: "Two-Factor Authentication", subtitle: "Add an extra layer of security", arrow: true },
-    { icon: Fingerprint, title: "Biometric Login", subtitle: "Use fingerprint or face ID", toggle: false },
-    { icon: Smartphone, title: "Active Sessions", arrow: true },
+    { icon: Shield, title: "Two-Factor Authentication", subtitle: "Add an extra layer of security", arrow: true, path: "/two-factor-auth" },
+    { icon: Fingerprint, title: "Biometric Login", subtitle: "Use fingerprint or face ID", toggle: "biometric" },
+    { icon: Smartphone, title: "Active Sessions", arrow: true, path: "/active-sessions" },
   ];
 
   const notificationSettings = [
-    { icon: Bell, title: "Push Notifications", subtitle: "Receive push notifications", toggle: true },
-    { icon: Mail, title: "Email Notifications", subtitle: "Receive email updates", toggle: false },
-    { icon: Clock, title: "Time Capsule Alerts", subtitle: "Get notified about time capsule activity", toggle: true },
-    { icon: AlertTriangle, title: "Security Alerts", subtitle: "Important security updates", toggle: true },
-    { icon: Users, title: "Nominee Updates", subtitle: "Updates about nominee changes", toggle: true },
-    { icon: Star, title: "Vault Reminders", subtitle: "Reminders to update your vault", toggle: false },
+    { icon: Bell, title: "Push Notifications", subtitle: "Receive push notifications", toggle: "pushNotifications" },
+    { icon: Mail, title: "Email Notifications", subtitle: "Receive email updates", toggle: "emailNotifications" },
+    { icon: Clock, title: "Time Capsule Alerts", subtitle: "Get notified about time capsule activity", toggle: "timeCapsuleAlerts" },
+    { icon: AlertTriangle, title: "Security Alerts", subtitle: "Important security updates", toggle: "securityAlerts" },
+    { icon: Users, title: "Nominee Updates", subtitle: "Updates about nominee changes", toggle: "nomineeUpdates" },
+    { icon: Star, title: "Vault Reminders", subtitle: "Reminders to update your vault", toggle: "vaultReminders" },
   ];
 
   const supportSettings = [
-    { icon: HelpCircle, title: "Help Center", arrow: true },
-    { icon: MessageSquare, title: "Contact Support", arrow: true },
+    { icon: HelpCircle, title: "Help Center", arrow: true, path: "/help-center" },
+    { icon: MessageSquare, title: "Contact Support", arrow: true, path: "/contact-support" },
   ];
 
   const vaultSettings = [
-    { icon: Clock, title: "Auto Lock Timeout", subtitle: "5 minutes", arrow: true },
-    { icon: Clock, title: "Backup Frequency", arrow: true },
+    { icon: Clock, title: "Auto Lock Timeout", subtitle: "5 minutes", arrow: true, path: "/auto-lock-timeout" },
+    { icon: Clock, title: "Backup Frequency", subtitle: "Weekly", arrow: true, path: "/backup-frequency" },
     { title: "App Version", subtitle: "2.0" },
   ];
 
@@ -53,7 +73,10 @@ const SettingsPage = () => {
 
       <div className="p-6 space-y-6">
         {/* Profile Section */}
-        <button className="w-full bg-card rounded-2xl p-4 flex items-center gap-4 hover:bg-accent transition-colors">
+        <button 
+          onClick={() => navigate("/profile")}
+          className="w-full bg-card rounded-2xl p-4 flex items-center gap-4 hover:bg-accent transition-colors"
+        >
           <Avatar className="w-12 h-12 bg-primary">
             <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
               RK
@@ -75,6 +98,7 @@ const SettingsPage = () => {
               return (
                 <button
                   key={index}
+                  onClick={() => setting.path && navigate(setting.path)}
                   className="w-full p-4 flex items-center gap-4 hover:bg-accent transition-colors"
                 >
                   <Icon className="w-5 h-5 text-primary" />
@@ -95,7 +119,8 @@ const SettingsPage = () => {
               return (
                 <div
                   key={index}
-                  className="p-4 flex items-center gap-4"
+                  onClick={() => setting.path && navigate(setting.path)}
+                  className={`p-4 flex items-center gap-4 ${setting.arrow ? 'cursor-pointer hover:bg-accent transition-colors' : ''}`}
                 >
                   <Icon className="w-5 h-5 text-primary" />
                   <div className="flex-1">
@@ -104,8 +129,11 @@ const SettingsPage = () => {
                       <p className="text-sm text-muted-foreground">{setting.subtitle}</p>
                     )}
                   </div>
-                  {setting.toggle !== undefined ? (
-                    <Switch checked={setting.toggle} />
+                  {setting.toggle ? (
+                    <Switch 
+                      checked={toggleStates[setting.toggle as keyof typeof toggleStates]} 
+                      onCheckedChange={() => handleToggle(setting.toggle as string)}
+                    />
                   ) : setting.arrow ? (
                     <ChevronRight className="w-5 h-5 text-muted-foreground" />
                   ) : null}
@@ -131,7 +159,10 @@ const SettingsPage = () => {
                     <h3 className="font-medium text-foreground">{setting.title}</h3>
                     <p className="text-sm text-muted-foreground">{setting.subtitle}</p>
                   </div>
-                  <Switch checked={setting.toggle} />
+                  <Switch 
+                    checked={toggleStates[setting.toggle as keyof typeof toggleStates]} 
+                    onCheckedChange={() => handleToggle(setting.toggle as string)}
+                  />
                 </div>
               );
             })}
@@ -147,6 +178,7 @@ const SettingsPage = () => {
               return (
                 <button
                   key={index}
+                  onClick={() => setting.path && navigate(setting.path)}
                   className="w-full p-4 flex items-center gap-4 hover:bg-accent transition-colors"
                 >
                   <Icon className="w-5 h-5 text-primary" />
@@ -167,6 +199,7 @@ const SettingsPage = () => {
               return (
                 <button
                   key={index}
+                  onClick={() => setting.path && navigate(setting.path)}
                   className="w-full p-4 flex items-center gap-4 hover:bg-accent transition-colors"
                 >
                   {Icon && <Icon className="w-5 h-5 text-primary" />}
@@ -180,6 +213,44 @@ const SettingsPage = () => {
                 </button>
               );
             })}
+          </div>
+        </div>
+
+        {/* Account Actions */}
+        <div>
+          <h2 className="text-sm font-semibold text-muted-foreground mb-3 px-2">ACCOUNT ACTIONS</h2>
+          <div className="bg-card rounded-2xl overflow-hidden divide-y divide-border">
+            <button
+              onClick={() => {
+                toast({
+                  title: "Signed out",
+                  description: "You have been successfully signed out",
+                });
+                navigate("/signin");
+              }}
+              className="w-full p-4 flex items-center gap-4 hover:bg-accent transition-colors"
+            >
+              <LogOut className="w-5 h-5 text-primary" />
+              <span className="flex-1 text-left font-medium text-foreground">Sign Out</span>
+              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+            </button>
+            <button
+              onClick={() => {
+                if (confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
+                  toast({
+                    title: "Account deleted",
+                    description: "Your account has been permanently deleted",
+                    variant: "destructive"
+                  });
+                  navigate("/");
+                }
+              }}
+              className="w-full p-4 flex items-center gap-4 hover:bg-destructive/10 transition-colors"
+            >
+              <Trash2 className="w-5 h-5 text-destructive" />
+              <span className="flex-1 text-left font-medium text-destructive">Delete Account</span>
+              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+            </button>
           </div>
         </div>
       </div>

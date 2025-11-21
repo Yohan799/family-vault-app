@@ -10,6 +10,16 @@ import SignIn from "./pages/SignIn";
 import Dashboard from "./pages/Dashboard";
 import Vault from "./pages/Vault";
 import SettingsPage from "./pages/SettingsPage";
+import NomineeCenter from "./pages/NomineeCenter";
+import InactivityTriggers from "./pages/InactivityTriggers";
+import TimeCapsule from "./pages/TimeCapsule";
+import CustomizeQuickActions from "./pages/CustomizeQuickActions";
+import Profile from "./pages/Profile";
+import EditProfile from "./pages/EditProfile";
+import ChangePassword from "./pages/ChangePassword";
+import AutoLockTimeout from "./pages/AutoLockTimeout";
+import BackupFrequency from "./pages/BackupFrequency";
+import Notifications from "./pages/Notifications";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +38,16 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/vault" element={<Vault />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/nominee-center" element={<NomineeCenter />} />
+          <Route path="/inactivity-triggers" element={<InactivityTriggers />} />
+          <Route path="/time-capsule" element={<TimeCapsule />} />
+          <Route path="/customize-quick-actions" element={<CustomizeQuickActions />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/edit-profile" element={<EditProfile />} />
+          <Route path="/change-password" element={<ChangePassword />} />
+          <Route path="/auto-lock-timeout" element={<AutoLockTimeout />} />
+          <Route path="/backup-frequency" element={<BackupFrequency />} />
+          <Route path="/notifications" element={<Notifications />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

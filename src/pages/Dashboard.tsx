@@ -1,5 +1,6 @@
-import { Home, FolderOpen, Settings, FileText, Users, Clock, Zap, Shield, ChevronRight, Bell } from "lucide-react";
+import { Home, FolderOpen, Settings, FileText, Users, Clock, Zap, Shield, ChevronRight, Bell, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
@@ -14,10 +15,10 @@ const Dashboard = () => {
 
   const quickActions = [
     { icon: Shield, title: "Digital Vault", subtitle: "Manage your secure documents", color: "bg-accent", onClick: () => navigate("/vault") },
-    { icon: Users, title: "Nominee Center", subtitle: "Manage trusted contacts", color: "bg-accent" },
-    { icon: Bell, title: "Inactivity Triggers", subtitle: "Set up activity monitoring", color: "bg-accent" },
-    { icon: Clock, title: "Time Capsule", subtitle: "Create legacy messages", color: "bg-accent" },
-    { icon: Zap, title: "Customize Quick Actions", subtitle: "Add your own shortcuts", color: "bg-accent" },
+    { icon: Users, title: "Nominee Center", subtitle: "Manage trusted contacts", color: "bg-accent", onClick: () => navigate("/nominee-center") },
+    { icon: Bell, title: "Inactivity Triggers", subtitle: "Set up activity monitoring", color: "bg-accent", onClick: () => navigate("/inactivity-triggers") },
+    { icon: Clock, title: "Time Capsule", subtitle: "Create legacy messages", color: "bg-accent", onClick: () => navigate("/time-capsule") },
+    { icon: Zap, title: "Customize Quick Actions", subtitle: "Add your own shortcuts", color: "bg-accent", onClick: () => navigate("/customize-quick-actions") },
   ];
 
   const recentDocs = [
@@ -35,9 +36,18 @@ const Dashboard = () => {
             <p className="text-sm opacity-90 mb-1">Welcome,</p>
             <h1 className="text-2xl font-bold">Sandeep</h1>
           </div>
-          <Button variant="ghost" size="icon" className="text-primary-foreground">
-            <Bell className="w-5 h-5" />
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="ghost" size="icon" className="text-primary-foreground" onClick={() => navigate("/notifications")}>
+              <Bell className="w-5 h-5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="text-primary-foreground p-0" onClick={() => navigate("/profile")}>
+              <Avatar className="w-9 h-9 bg-primary-foreground">
+                <AvatarFallback className="bg-primary-foreground text-primary font-semibold text-sm">
+                  RK
+                </AvatarFallback>
+              </Avatar>
+            </Button>
+          </div>
         </div>
 
         {/* Security Score */}
@@ -74,16 +84,18 @@ const Dashboard = () => {
 
       <div className="p-6 space-y-6">
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-4">
-          {stats.map((stat, index) => {
-            const Icon = stat.icon;
-            return (
-              <div key={index} className="bg-card rounded-2xl p-4 flex items-center gap-3">
-                <Icon className={`w-5 h-5 ${stat.color}`} />
-                <span className="text-sm font-medium text-foreground">{stat.label}</span>
-              </div>
-            );
-          })}
+        <div className="bg-card rounded-2xl p-4">
+          <div className="grid grid-cols-4 gap-4">
+            {stats.map((stat, index) => {
+              const Icon = stat.icon;
+              return (
+                <div key={index} className="flex flex-col items-center gap-2">
+                  <Icon className={`w-5 h-5 ${stat.color}`} />
+                  <span className="text-xs font-medium text-foreground text-center leading-tight">{stat.label}</span>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {/* Quick Actions */}
