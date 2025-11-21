@@ -1,4 +1,4 @@
-import { ArrowLeft, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Image as ImageIcon, CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -7,6 +7,10 @@ import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { PhotoCropper } from "@/components/PhotoCropper";
 import { PhotoGallery } from "@/components/PhotoGallery";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 const EditProfile = () => {
   const navigate = useNavigate();
@@ -21,8 +25,10 @@ const EditProfile = () => {
     fullName: "Raj Kumar",
     email: "raj@example.com",
     phone: "+91 98765 43210",
-    location: "Mumbai, India"
+    location: "Mumbai, India",
+    dateOfBirth: ""
   });
+  const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(undefined);
 
   useEffect(() => {
     const savedPhotos = localStorage.getItem("profilePhotos");
@@ -35,7 +41,11 @@ const EditProfile = () => {
     }
     const savedProfile = localStorage.getItem("profileData");
     if (savedProfile) {
-      setFormData(JSON.parse(savedProfile));
+      const data = JSON.parse(savedProfile);
+      setFormData(data);
+      if (data.dateOfBirth) {
+        setDateOfBirth(new Date(data.dateOfBirth));
+      }
     }
   }, []);
 
@@ -98,7 +108,11 @@ const EditProfile = () => {
   };
 
   const handleSave = () => {
-    localStorage.setItem("profileData", JSON.stringify(formData));
+    const dataToSave = {
+      ...formData,
+      dateOfBirth: dateOfBirth ? format(dateOfBirth, "PPP") : ""
+    };
+    localStorage.setItem("profileData", JSON.stringify(dataToSave));
     toast({
       title: "Profile updated!",
       description: "Your changes have been saved successfully",
@@ -183,6 +197,36 @@ const EditProfile = () => {
               onChange={(e) => setFormData({...formData, location: e.target.value})}
               className="bg-card border-border"
             />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">Date of Birth</label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal bg-card border-border",
+                    !dateOfBirth && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dateOfBirth ? format(dateOfBirth, "PPP") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={dateOfBirth}
+                  onSelect={setDateOfBirth}
+                  disabled={(date) =>
+                    date > new Date() || date < new Date("1900-01-01")
+                  }
+                  initialFocus
+                  className="pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
 
