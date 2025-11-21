@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 const SettingsPage = () => {
@@ -34,7 +34,7 @@ const SettingsPage = () => {
   );
 
   // Update state when returning from settings pages
-  useState(() => {
+  useEffect(() => {
     const handleStorageChange = () => {
       setAutoLockTimeout(localStorage.getItem("autoLockTimeout") || "5 minutes");
       setBackupFrequency(localStorage.getItem("backupFrequency") || "Weekly");
@@ -47,7 +47,7 @@ const SettingsPage = () => {
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener("focus", handleStorageChange);
     };
-  });
+  }, []);
 
   const handleToggle = (key: string) => {
     const newState = !toggleStates[key as keyof typeof toggleStates];
