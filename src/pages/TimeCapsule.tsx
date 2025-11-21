@@ -143,6 +143,15 @@ const TimeCapsule = () => {
                       input.onchange = (e: any) => {
                         const file = e.target.files[0];
                         if (file) {
+                          const maxSize = 20 * 1024 * 1024; // 20MB in bytes
+                          if (file.size > maxSize) {
+                            toast({
+                              title: "File too large",
+                              description: "Maximum file size is 20MB",
+                              variant: "destructive"
+                            });
+                            return;
+                          }
                           toast({
                             title: "File uploaded",
                             description: `${file.name} has been attached`,
@@ -190,7 +199,7 @@ const TimeCapsule = () => {
                     DigiLocker
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground mt-3">Maximum file size: 10MB</p>
+                <p className="text-xs text-muted-foreground mt-3">Maximum file size: 20MB</p>
               </div>
             </div>
 
