@@ -1,4 +1,4 @@
-import { Home, FolderOpen, Settings, FileText, Users, Clock, Shield, ChevronRight, Bell, User, Vault, UserPlus, Timer, Plus } from "lucide-react";
+import { Home, Settings, FileText, Users, Clock, Shield, ChevronRight, Bell, User, Vault, UserPlus, Timer, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
@@ -163,7 +163,7 @@ const Dashboard = () => {
             onClick={() => navigate("/vault")}
             className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
           >
-            <FolderOpen className="w-6 h-6" />
+            <Vault className="w-6 h-6" />
             <span className="text-xs font-medium">Vault</span>
           </button>
           <button

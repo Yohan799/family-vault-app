@@ -1,4 +1,4 @@
-import { Home, FolderOpen, Settings, Search, SlidersHorizontal, Plus, HomeIcon, Stethoscope, GraduationCap, FileText, User } from "lucide-react";
+import { Home, Settings, Search, SlidersHorizontal, Plus, HomeIcon, Stethoscope, GraduationCap, FileText, User, Vault as VaultIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
@@ -78,7 +78,7 @@ const Vault = () => {
             <span className="text-xs font-medium">Home</span>
           </button>
           <button className="flex flex-col items-center gap-1 text-primary">
-            <FolderOpen className="w-6 h-6" />
+            <VaultIcon className="w-6 h-6" />
             <span className="text-xs font-medium">Vault</span>
           </button>
           <button

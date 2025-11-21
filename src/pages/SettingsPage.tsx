@@ -1,4 +1,4 @@
-import { Home, FolderOpen, Settings, ChevronRight, MoreVertical, User, Lock, Mail, Shield, Fingerprint, Smartphone, Bell, Clock, AlertTriangle, Users, Star, HelpCircle, MessageSquare, LogOut, Trash2, FileText, Download, Share2 } from "lucide-react";
+import { Home, Settings, ChevronRight, MoreVertical, User, Lock, Mail, Shield, Fingerprint, Smartphone, Bell, Clock, AlertTriangle, Users, Star, HelpCircle, MessageSquare, LogOut, Trash2, FileText, Download, Share2, Vault } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -338,7 +338,7 @@ const SettingsPage = () => {
             onClick={() => navigate("/vault")}
             className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
           >
-            <FolderOpen className="w-6 h-6" />
+            <Vault className="w-6 h-6" />
             <span className="text-xs font-medium">Vault</span>
           </button>
           <button className="flex flex-col items-center gap-1 text-primary">
