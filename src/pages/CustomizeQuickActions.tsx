@@ -1,97 +1,20 @@
-import { ArrowLeft, Home, Lock as LockIcon, Settings, Plus, GripVertical, Trash2, Shield, Users, Bell, Clock, Vault, UserPlus, Timer } from "lucide-react";
+import { ArrowLeft, Home, Lock as LockIcon, Settings, Plus, GripVertical, Trash2, Shield, Users, Bell, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect } from "react";
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import { useState } from "react";
 
 interface QuickAction {
   id: string;
   title: string;
   subtitle: string;
   icon: any;
-  path?: string;
   isDefault: boolean;
   isEnabled: boolean;
 }
-
-const ICON_MAP: { [key: string]: any } = {
-  Vault,
-  UserPlus,
-  Shield,
-  Timer,
-  Plus,
-  Bell,
-  Clock,
-  Users,
-};
-
-const SortableAction = ({ action, onToggle, onDelete }: { action: QuickAction; onToggle: (id: string) => void; onDelete: (id: string) => void }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({ id: action.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-
-  const Icon = action.icon;
-
-  return (
-    <div ref={setNodeRef} style={style} className="bg-card rounded-xl p-4 flex items-center gap-4">
-      <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing">
-        <GripVertical className="w-5 h-5 text-muted-foreground" />
-      </div>
-      <div className="w-10 h-10 bg-accent rounded-full flex items-center justify-center flex-shrink-0">
-        <Icon className="w-5 h-5 text-primary" />
-      </div>
-      <div className="flex-1">
-        <h3 className="font-semibold text-foreground">{action.title}</h3>
-        <p className="text-sm text-muted-foreground">{action.subtitle}</p>
-      </div>
-      <div className="flex items-center gap-2">
-        <Switch 
-          checked={action.isEnabled}
-          onCheckedChange={() => onToggle(action.id)}
-        />
-        {!action.isDefault && (
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => onDelete(action.id)}
-            className="text-destructive"
-          >
-            <Trash2 className="w-5 h-5" />
-          </Button>
-        )}
-      </div>
-    </div>
-  );
-};
 
 const CustomizeQuickActions = () => {
   const navigate = useNavigate();
@@ -100,54 +23,21 @@ const CustomizeQuickActions = () => {
   const [newActionTitle, setNewActionTitle] = useState("");
   const [newActionSubtitle, setNewActionSubtitle] = useState("");
   
-  const defaultActions: QuickAction[] = [
-    { id: "vault", title: "Digital Vault", subtitle: "Manage your secure documents", icon: Vault, path: "/vault", isDefault: true, isEnabled: true },
-    { id: "nominee", title: "Nominee Center", subtitle: "Manage trusted contacts", icon: UserPlus, path: "/nominee-center", isDefault: true, isEnabled: true },
-    { id: "triggers", title: "Inactivity Triggers", subtitle: "Set up activity monitoring", icon: Shield, path: "/inactivity-triggers", isDefault: true, isEnabled: true },
-    { id: "capsule", title: "Time Capsule", subtitle: "Create legacy messages", icon: Timer, path: "/time-capsule", isDefault: true, isEnabled: true },
-  ];
-
-  const [actions, setActions] = useState<QuickAction[]>(defaultActions);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
-  useEffect(() => {
-    const saved = localStorage.getItem("quickActions");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        const actionsWithIcons = parsed.map((action: any) => ({
-          ...action,
-          icon: ICON_MAP[action.iconName] || Plus,
-        }));
-        setActions(actionsWithIcons);
-      } catch (e) {
-        console.error("Failed to load quick actions", e);
-      }
-    }
-  }, []);
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-
-    if (over && active.id !== over.id) {
-      setActions((items) => {
-        const oldIndex = items.findIndex((item) => item.id === active.id);
-        const newIndex = items.findIndex((item) => item.id === over.id);
-        return arrayMove(items, oldIndex, newIndex);
-      });
-    }
-  };
+  const [actions, setActions] = useState<QuickAction[]>([
+    { id: "1", title: "Digital Vault", subtitle: "Manage your secure documents", icon: Shield, isDefault: true, isEnabled: true },
+    { id: "2", title: "Nominee Center", subtitle: "Manage trusted contacts", icon: Users, isDefault: true, isEnabled: true },
+    { id: "3", title: "Inactivity Triggers", subtitle: "Set up activity monitoring", icon: Bell, isDefault: true, isEnabled: true },
+    { id: "4", title: "Time Capsule", subtitle: "Create legacy messages", icon: Clock, isDefault: true, isEnabled: true },
+  ]);
 
   const handleToggle = (id: string) => {
     setActions(actions.map(action => 
       action.id === id ? { ...action, isEnabled: !action.isEnabled } : action
     ));
+    toast({
+      title: "Quick action updated",
+      description: "Your changes have been applied",
+    });
   };
 
   const handleDelete = (id: string) => {
@@ -188,12 +78,6 @@ const CustomizeQuickActions = () => {
   };
 
   const handleSave = () => {
-    const actionsToSave = actions.map(action => ({
-      ...action,
-      iconName: Object.keys(ICON_MAP).find(key => ICON_MAP[key] === action.icon) || 'Plus',
-      icon: undefined,
-    }));
-    localStorage.setItem("quickActions", JSON.stringify(actionsToSave));
     toast({
       title: "Quick actions updated!",
       description: "Your changes have been saved successfully",
@@ -217,27 +101,39 @@ const CustomizeQuickActions = () => {
         <p className="text-muted-foreground">Drag to reorder, toggle to enable/disable. Add custom shortcuts to personalize your dashboard.</p>
 
         {/* Current Actions */}
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext
-            items={actions.map(a => a.id)}
-            strategy={verticalListSortingStrategy}
-          >
-            <div className="space-y-3">
-              {actions.map((action) => (
-                <SortableAction
-                  key={action.id}
-                  action={action}
-                  onToggle={handleToggle}
-                  onDelete={handleDelete}
-                />
-              ))}
-            </div>
-          </SortableContext>
-        </DndContext>
+        <div className="space-y-3">
+          {actions.map((action) => {
+            const Icon = action.icon;
+            return (
+              <div key={action.id} className="bg-card rounded-xl p-4 flex items-center gap-4">
+                <GripVertical className="w-5 h-5 text-muted-foreground" />
+                <div className="w-10 h-10 bg-accent rounded-full flex items-center justify-center flex-shrink-0">
+                  <Icon className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-foreground">{action.title}</h3>
+                  <p className="text-sm text-muted-foreground">{action.subtitle}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch 
+                    checked={action.isEnabled}
+                    onCheckedChange={() => handleToggle(action.id)}
+                  />
+                  {!action.isDefault && (
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => handleDelete(action.id)}
+                      className="text-destructive"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
 
         {/* Add Action Dialog */}
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
