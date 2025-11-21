@@ -19,9 +19,11 @@ const AutoLockTimeout = () => {
   ];
 
   const handleSave = () => {
+    const selectedOption = options.find(opt => opt.value === selected);
+    localStorage.setItem("autoLockTimeout", selectedOption?.label || "5 minutes");
     toast({
       title: "Auto-lock timeout updated!",
-      description: `Vault will auto-lock after ${selected} minutes of inactivity`,
+      description: `Vault will auto-lock after ${selectedOption?.label} of inactivity`,
     });
     navigate("/settings");
   };

@@ -19,6 +19,7 @@ import EditProfile from "./pages/EditProfile";
 import ChangePassword from "./pages/ChangePassword";
 import AutoLockTimeout from "./pages/AutoLockTimeout";
 import BackupFrequency from "./pages/BackupFrequency";
+import BackupHistory from "./pages/BackupHistory";
 import Notifications from "./pages/Notifications";
 import EmailPreferences from "./pages/EmailPreferences";
 import ActiveSessions from "./pages/ActiveSessions";
@@ -51,6 +52,7 @@ const App = () => (
           <Route path="/change-password" element={<ChangePassword />} />
           <Route path="/auto-lock-timeout" element={<AutoLockTimeout />} />
           <Route path="/backup-frequency" element={<BackupFrequency />} />
+          <Route path="/backup-history" element={<BackupHistory />} />
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/email-preferences" element={<EmailPreferences />} />
           <Route path="/active-sessions" element={<ActiveSessions />} />

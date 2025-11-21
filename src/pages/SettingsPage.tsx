@@ -25,6 +25,29 @@ const SettingsPage = () => {
     nomineeUpdates: true,
     vaultReminders: false,
   });
+  
+  const [autoLockTimeout, setAutoLockTimeout] = useState(
+    localStorage.getItem("autoLockTimeout") || "5 minutes"
+  );
+  const [backupFrequency, setBackupFrequency] = useState(
+    localStorage.getItem("backupFrequency") || "Weekly"
+  );
+
+  // Update state when returning from settings pages
+  useState(() => {
+    const handleStorageChange = () => {
+      setAutoLockTimeout(localStorage.getItem("autoLockTimeout") || "5 minutes");
+      setBackupFrequency(localStorage.getItem("backupFrequency") || "Weekly");
+    };
+    
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("focus", handleStorageChange);
+    
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("focus", handleStorageChange);
+    };
+  });
 
   const handleToggle = (key: string) => {
     const newState = !toggleStates[key as keyof typeof toggleStates];
@@ -99,8 +122,9 @@ const SettingsPage = () => {
   ];
 
   const vaultSettings = [
-    { icon: LockKeyhole, title: "Auto Lock Timeout", subtitle: "5 minutes", arrow: true, path: "/auto-lock-timeout" },
-    { icon: Database, title: "Backup Frequency", subtitle: "Weekly", arrow: true, path: "/backup-frequency" },
+    { icon: LockKeyhole, title: "Auto Lock Timeout", subtitle: autoLockTimeout, arrow: true, path: "/auto-lock-timeout" },
+    { icon: Database, title: "Backup Frequency", subtitle: backupFrequency, arrow: true, path: "/backup-frequency" },
+    { icon: Clock, title: "Backup History", subtitle: "View & restore", arrow: true, path: "/backup-history" },
     { title: "App Version", subtitle: "2.0", showRight: true },
   ];
 

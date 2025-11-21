@@ -19,6 +19,7 @@ const BackupFrequency = () => {
 
   const handleSave = () => {
     const selectedOption = options.find(o => o.value === selected);
+    localStorage.setItem("backupFrequency", selectedOption?.label || "Weekly");
     toast({
       title: "Backup frequency updated!",
       description: `Backups will be performed ${selectedOption?.label.toLowerCase()}`,

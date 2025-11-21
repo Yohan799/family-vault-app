@@ -24,11 +24,24 @@ const EmailPreferences = () => {
     }
   };
 
-  const handleEditEmail = (index: number) => {
-    toast({
-      title: "Edit email",
-      description: "Email editing feature opened",
-    });
+  const handleDeleteEmail = (index: number) => {
+    if (emails.length === 1) {
+      toast({
+        title: "Cannot delete",
+        description: "You must have at least one email address",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (confirm("Are you sure you want to delete this email?")) {
+      const deletedEmail = emails[index];
+      setEmails(emails.filter((_, i) => i !== index));
+      toast({
+        title: "Email deleted",
+        description: `${deletedEmail} has been removed from your account`,
+      });
+    }
   };
 
   return (
@@ -60,9 +73,10 @@ const EmailPreferences = () => {
               <Button 
                 variant="ghost" 
                 size="sm"
-                onClick={() => handleEditEmail(index)}
+                onClick={() => handleDeleteEmail(index)}
+                className="text-destructive hover:text-destructive hover:bg-destructive/10"
               >
-                Edit
+                Delete
               </Button>
             </div>
           ))}
