@@ -136,26 +136,7 @@ const EditProfile = () => {
               ✏️
             </Button>
           </div>
-          <div className="flex gap-2 mt-4">
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-2"
-            >
-              <ImageIcon className="w-4 h-4" />
-              Upload New
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => setShowGallery(true)}
-              className="flex items-center gap-2"
-            >
-              <ImageIcon className="w-4 h-4" />
-              Gallery ({photoGallery.length})
-            </Button>
-          </div>
+          <p className="text-sm opacity-90 mt-4">Tap to change photo</p>
         </div>
       </div>
 
