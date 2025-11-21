@@ -100,7 +100,7 @@ const Dashboard = () => {
             </svg>
             <span className="absolute text-3xl font-bold text-primary">65</span>
           </div>
-          <p className="text-foreground font-medium mb-1">Your Vault is Secure</p>
+          <p className="text-foreground font-medium mb-1">Family Readiness Index</p>
           <p className="text-sm text-muted-foreground">Keep your data protected</p>
         </div>
       </div>
@@ -151,7 +151,7 @@ const Dashboard = () => {
         <div>
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-bold text-foreground">Recent Documents</h2>
-            <button 
+            <button
               onClick={() => navigate("/vault")}
               className="text-sm text-primary font-medium hover:underline"
             >
