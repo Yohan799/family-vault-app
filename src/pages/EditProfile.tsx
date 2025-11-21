@@ -1,22 +1,39 @@
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { PhotoCropper } from "@/components/PhotoCropper";
+import { PhotoGallery } from "@/components/PhotoGallery";
 
 const EditProfile = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [tempImageSrc, setTempImageSrc] = useState<string | null>(null);
+  const [showCropper, setShowCropper] = useState(false);
+  const [showGallery, setShowGallery] = useState(false);
+  const [photoGallery, setPhotoGallery] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     fullName: "Raj Kumar",
     email: "raj@example.com",
     phone: "+91 98765 43210",
     location: "Mumbai, India"
   });
+
+  useEffect(() => {
+    const savedPhotos = localStorage.getItem("profilePhotos");
+    if (savedPhotos) {
+      setPhotoGallery(JSON.parse(savedPhotos));
+    }
+    const savedCurrentPhoto = localStorage.getItem("currentProfilePhoto");
+    if (savedCurrentPhoto) {
+      setProfileImage(savedCurrentPhoto);
+    }
+  }, []);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -31,14 +48,49 @@ const EditProfile = () => {
       }
       const reader = new FileReader();
       reader.onloadend = () => {
-        setProfileImage(reader.result as string);
-        toast({
-          title: "Photo uploaded!",
-          description: "Your profile picture has been updated",
-        });
+        setTempImageSrc(reader.result as string);
+        setShowCropper(true);
       };
       reader.readAsDataURL(file);
     }
+    if (e.target) {
+      e.target.value = "";
+    }
+  };
+
+  const handleCropComplete = (croppedImage: string) => {
+    const updatedGallery = [...photoGallery, croppedImage];
+    setPhotoGallery(updatedGallery);
+    setProfileImage(croppedImage);
+    localStorage.setItem("profilePhotos", JSON.stringify(updatedGallery));
+    localStorage.setItem("currentProfilePhoto", croppedImage);
+    toast({
+      title: "Photo uploaded!",
+      description: "Your profile picture has been updated",
+    });
+  };
+
+  const handleSelectFromGallery = (photo: string) => {
+    setProfileImage(photo);
+    localStorage.setItem("currentProfilePhoto", photo);
+    toast({
+      title: "Photo selected!",
+      description: "Your profile picture has been updated",
+    });
+  };
+
+  const handleDeletePhoto = (photo: string) => {
+    const updatedGallery = photoGallery.filter((p) => p !== photo);
+    setPhotoGallery(updatedGallery);
+    localStorage.setItem("profilePhotos", JSON.stringify(updatedGallery));
+    if (profileImage === photo) {
+      setProfileImage(null);
+      localStorage.removeItem("currentProfilePhoto");
+    }
+    toast({
+      title: "Photo deleted",
+      description: "The photo has been removed from your gallery",
+    });
   };
 
   const handleSave = () => {
@@ -84,7 +136,26 @@ const EditProfile = () => {
               ✏️
             </Button>
           </div>
-          <p className="text-sm opacity-90 mt-4">Tap to change photo</p>
+          <div className="flex gap-2 mt-4">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              className="flex items-center gap-2"
+            >
+              <ImageIcon className="w-4 h-4" />
+              Upload New
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setShowGallery(true)}
+              className="flex items-center gap-2"
+            >
+              <ImageIcon className="w-4 h-4" />
+              Gallery ({photoGallery.length})
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -136,6 +207,25 @@ const EditProfile = () => {
           Save Changes
         </Button>
       </div>
+
+      <PhotoCropper
+        open={showCropper}
+        onClose={() => {
+          setShowCropper(false);
+          setTempImageSrc(null);
+        }}
+        imageSrc={tempImageSrc || ""}
+        onCropComplete={handleCropComplete}
+      />
+
+      <PhotoGallery
+        open={showGallery}
+        onClose={() => setShowGallery(false)}
+        photos={photoGallery}
+        selectedPhoto={profileImage}
+        onSelectPhoto={handleSelectFromGallery}
+        onDeletePhoto={handleDeletePhoto}
+      />
     </div>
   );
 };
