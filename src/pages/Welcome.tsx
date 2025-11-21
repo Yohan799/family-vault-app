@@ -1,6 +1,6 @@
-import { Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import logo from "@/assets/logo_fv.jpg";
 
 const Welcome = () => {
   const navigate = useNavigate();
@@ -17,8 +17,8 @@ const Welcome = () => {
     <div className="min-h-screen bg-vault-bg flex items-center justify-center p-4">
       <div className="text-center space-y-6 max-w-md">
         <div className="flex justify-center">
-          <div className="w-28 h-28 bg-card rounded-[2rem] shadow-lg flex items-center justify-center">
-            <Shield className="w-14 h-14 text-primary" strokeWidth={2.5} />
+          <div className="w-28 h-28 bg-white rounded-3xl shadow-lg flex items-center justify-center p-4">
+            <img src={logo} alt="Family Vault Logo" className="w-full h-full object-contain" />
           </div>
         </div>
         
