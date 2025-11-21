@@ -1,20 +1,45 @@
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 const EditProfile = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     fullName: "Raj Kumar",
     email: "raj@example.com",
     phone: "+91 98765 43210",
     location: "Mumbai, India"
   });
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please select an image smaller than 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfileImage(reader.result as string);
+        toast({
+          title: "Photo uploaded!",
+          description: "Your profile picture has been updated",
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSave = () => {
     toast({
@@ -39,12 +64,21 @@ const EditProfile = () => {
         <div className="flex flex-col items-center">
           <div className="relative">
             <Avatar className="w-24 h-24 bg-primary-foreground">
+              {profileImage && <AvatarImage src={profileImage} alt="Profile" />}
               <AvatarFallback className="bg-primary-foreground text-primary font-bold text-2xl">
                 RK
               </AvatarFallback>
             </Avatar>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImageUpload}
+              accept="image/*"
+              className="hidden"
+            />
             <Button 
               size="sm" 
+              onClick={() => fileInputRef.current?.click()}
               className="absolute bottom-0 right-0 rounded-full w-8 h-8 p-0 bg-card text-foreground hover:bg-card/90"
             >
               ✏️
