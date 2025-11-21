@@ -21,7 +21,8 @@ const EditProfile = () => {
     fullName: "Raj Kumar",
     email: "raj@example.com",
     phone: "+91 98765 43210",
-    location: "Mumbai, India"
+    location: "Mumbai, India",
+    dateOfBirth: "January 1, 1990"
   });
 
   useEffect(() => {
@@ -172,6 +173,17 @@ const EditProfile = () => {
               type="tel"
               value={formData.phone}
               onChange={(e) => setFormData({...formData, phone: e.target.value})}
+              className="bg-card border-border"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">Date of Birth</label>
+            <Input
+              type="text"
+              placeholder="e.g., January 1, 1990"
+              value={formData.dateOfBirth}
+              onChange={(e) => setFormData({...formData, dateOfBirth: e.target.value})}
               className="bg-card border-border"
             />
           </div>

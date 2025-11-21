@@ -2,6 +2,18 @@ import { Home, Settings, FileText, Users, Clock, Shield, ChevronRight, Bell, Use
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+
+const ICON_MAP: { [key: string]: any } = {
+  Vault,
+  UserPlus,
+  Shield,
+  Timer,
+  Plus,
+  Bell,
+  Clock,
+  Users,
+};
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -13,13 +25,46 @@ const Dashboard = () => {
     { icon: Shield, label: "Trigger On", color: "text-primary" },
   ];
 
-  const quickActions = [
+  const defaultQuickActions = [
     { icon: Vault, title: "Digital Vault", subtitle: "Manage your secure documents", color: "bg-accent", onClick: () => navigate("/vault") },
     { icon: UserPlus, title: "Nominee Center", subtitle: "Manage trusted contacts", color: "bg-accent", onClick: () => navigate("/nominee-center") },
     { icon: Shield, title: "Inactivity Triggers", subtitle: "Set up activity monitoring", color: "bg-accent", onClick: () => navigate("/inactivity-triggers") },
     { icon: Timer, title: "Time Capsule", subtitle: "Create legacy messages", color: "bg-accent", onClick: () => navigate("/time-capsule") },
     { icon: Plus, title: "Customize Quick Actions", subtitle: "Add your own shortcuts", color: "bg-accent", onClick: () => navigate("/customize-quick-actions") },
   ];
+
+  const [quickActions, setQuickActions] = useState(defaultQuickActions);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("quickActions");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        const enabledActions = parsed
+          .filter((action: any) => action.isEnabled)
+          .map((action: any) => ({
+            icon: ICON_MAP[action.iconName] || Plus,
+            title: action.title,
+            subtitle: action.subtitle,
+            color: "bg-accent",
+            onClick: () => action.path ? navigate(action.path) : null,
+          }));
+        
+        // Always add customize option at the end
+        enabledActions.push({
+          icon: Plus,
+          title: "Customize Quick Actions",
+          subtitle: "Add your own shortcuts",
+          color: "bg-accent",
+          onClick: () => navigate("/customize-quick-actions"),
+        });
+        
+        setQuickActions(enabledActions);
+      } catch (e) {
+        console.error("Failed to load quick actions", e);
+      }
+    }
+  }, [navigate]);
 
   const recentDocs = [
     { name: "Last Will & Testament.pdf", category: "Sandeep Sharma", date: "May 15, 2024" },
