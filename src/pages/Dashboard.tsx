@@ -85,7 +85,7 @@ const Dashboard = () => {
       <div className="p-6 space-y-6">
         {/* Stats Grid */}
         <div className="bg-card rounded-2xl p-4">
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center justify-start gap-6">
             {stats.map((stat, index) => {
               const Icon = stat.icon;
               return (
