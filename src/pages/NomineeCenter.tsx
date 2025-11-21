@@ -66,16 +66,6 @@ const NomineeCenter = () => {
       </div>
 
       <div className="p-6 space-y-6">
-        {/* Add Nominee Button */}
-        {!showAddForm && (
-          <Button 
-            onClick={() => setShowAddForm(true)}
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl h-14 text-base font-semibold"
-          >
-            + Add Nominee
-          </Button>
-        )}
-
         {/* Add Nominee Form */}
         {showAddForm && (
           <div className="bg-card rounded-2xl p-6 space-y-4">
@@ -163,7 +153,7 @@ const NomineeCenter = () => {
                 onClick={() => setShowAddForm(true)}
                 className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-8"
               >
-                + Add First Nominee
+                + Add Nominee
               </Button>
             )}
           </div>
