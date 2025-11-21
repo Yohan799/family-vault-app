@@ -1,4 +1,4 @@
-import { ArrowLeft, Mail, MessageSquare, Phone } from "lucide-react";
+import { ArrowLeft, Mail, MessageSquare, Phone, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,27 +22,6 @@ const ContactSupport = () => {
       setMessage("");
     }
   };
-
-  const contactMethods = [
-    {
-      icon: Mail,
-      title: "Email Support",
-      description: "support@familyvault.com",
-      action: "Send Email",
-    },
-    {
-      icon: MessageSquare,
-      title: "Live Chat",
-      description: "Available 9 AM - 6 PM",
-      action: "Start Chat",
-    },
-    {
-      icon: Phone,
-      title: "Phone Support",
-      description: "+91 1800-XXX-XXXX",
-      action: "Call Now",
-    },
-  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -89,27 +68,62 @@ const ContactSupport = () => {
         <div>
           <h2 className="text-lg font-semibold text-foreground mb-4">Other ways to reach us</h2>
           <div className="space-y-3">
-            {contactMethods.map((method, index) => {
-              const Icon = method.icon;
-              return (
-                <div key={index} className="bg-card rounded-2xl p-4 flex items-center gap-4">
-                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                    <Icon className="w-6 h-6 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-foreground">{method.title}</h3>
-                    <p className="text-sm text-muted-foreground">{method.description}</p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => toast({ title: method.action, description: "Opening communication channel" })}
-                  >
-                    {method.action}
-                  </Button>
-                </div>
-              );
-            })}
+            <a 
+              href="mailto:support@familyvault.com"
+              className="w-full bg-card rounded-2xl p-4 flex items-center gap-4 hover:bg-accent transition-colors border border-border"
+            >
+              <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center">
+                <Mail className="w-6 h-6 text-primary" />
+              </div>
+              <div className="flex-1 text-left">
+                <h3 className="font-semibold text-foreground">Email Support</h3>
+                <p className="text-sm text-muted-foreground">support@familyvault.com</p>
+              </div>
+              <div className="bg-primary/10 rounded-xl px-3 py-1.5 flex items-center gap-2">
+                <Send className="w-4 h-4 text-primary" />
+                <span className="text-xs font-medium text-primary">Send Email</span>
+              </div>
+            </a>
+
+            <button 
+              onClick={() => {
+                toast({
+                  title: "Live Chat Starting",
+                  description: "Connecting you to a support agent...",
+                });
+              }}
+              className="w-full bg-card rounded-2xl p-4 flex items-center gap-4 hover:bg-accent transition-colors border border-border"
+            >
+              <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center">
+                <MessageSquare className="w-6 h-6 text-primary" />
+              </div>
+              <div className="flex-1 text-left">
+                <h3 className="font-semibold text-foreground">Live Chat</h3>
+                <p className="text-sm text-muted-foreground">Available 24/7</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                <span className="text-xs font-medium text-green-600">Online</span>
+              </div>
+            </button>
+
+            <button 
+              onClick={() => {
+                toast({
+                  title: "Call Now",
+                  description: "Opening phone dialer...",
+                });
+              }}
+              className="w-full bg-card rounded-2xl p-4 flex items-center gap-4 hover:bg-accent transition-colors border border-border"
+            >
+              <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center">
+                <Phone className="w-6 h-6 text-primary" />
+              </div>
+              <div className="flex-1 text-left">
+                <h3 className="font-semibold text-foreground">Phone Support</h3>
+                <p className="text-sm text-muted-foreground">1-800-FAMILY-VAULT</p>
+              </div>
+            </button>
           </div>
         </div>
       </div>

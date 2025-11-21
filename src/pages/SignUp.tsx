@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Shield, User, Mail, Lock, X } from "lucide-react";
+import { Shield, User, Mail, Lock, X, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -58,9 +58,13 @@ const SignUp = () => {
         <div className="bg-card rounded-3xl shadow-xl p-8 space-y-6">
           <div className="text-center space-y-4">
             <h2 className="text-2xl font-bold text-foreground">Sign Up</h2>
-            <div className="flex justify-center">
+            <div className="flex justify-center gap-3">
               <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center">
                 <Shield className="w-8 h-8 text-primary" />
+              </div>
+              <div className="bg-primary/10 rounded-2xl px-4 py-2 flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-primary" />
+                <span className="text-sm font-medium text-primary">Secure</span>
               </div>
             </div>
             <p className="text-sm text-muted-foreground">Create Your Family Vault</p>

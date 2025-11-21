@@ -31,8 +31,6 @@ const Vault = () => {
             <SlidersHorizontal className="w-4 h-4" />
           </Button>
         </div>
-
-        <p className="text-sm text-muted-foreground mt-3">Family Vault Vault Screen</p>
       </div>
 
       {/* Categories Grid */}

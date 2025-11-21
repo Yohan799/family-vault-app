@@ -27,10 +27,48 @@ const SettingsPage = () => {
   });
 
   const handleToggle = (key: string) => {
-    setToggleStates(prev => ({ ...prev, [key]: !prev[key] }));
+    const newState = !toggleStates[key as keyof typeof toggleStates];
+    setToggleStates(prev => ({ ...prev, [key]: newState }));
+    
+    const messages: { [key: string]: { enabled: string; disabled: string } } = {
+      twoFactorAuth: { 
+        enabled: "Two-Factor Authentication Enabled", 
+        disabled: "Two-Factor Authentication Disabled" 
+      },
+      biometric: { 
+        enabled: "Biometric Login Enabled", 
+        disabled: "Biometric Login Disabled" 
+      },
+      pushNotifications: { 
+        enabled: "Push Notifications Enabled", 
+        disabled: "Push Notifications Disabled" 
+      },
+      emailNotifications: { 
+        enabled: "Email Notifications Enabled", 
+        disabled: "Email Notifications Disabled" 
+      },
+      timeCapsuleAlerts: { 
+        enabled: "Time Capsule Alerts Enabled", 
+        disabled: "Time Capsule Alerts Disabled" 
+      },
+      securityAlerts: { 
+        enabled: "Security Alerts Enabled", 
+        disabled: "Security Alerts Disabled" 
+      },
+      nomineeUpdates: { 
+        enabled: "Nominee Updates Enabled", 
+        disabled: "Nominee Updates Disabled" 
+      },
+      vaultReminders: { 
+        enabled: "Vault Reminders Enabled", 
+        disabled: "Vault Reminders Disabled" 
+      },
+    };
+
+    const message = messages[key];
     toast({
-      title: toggleStates[key as keyof typeof toggleStates] ? "Disabled" : "Enabled",
-      description: `Setting has been ${toggleStates[key as keyof typeof toggleStates] ? "turned off" : "turned on"}`,
+      title: newState ? message.enabled : message.disabled,
+      duration: 2000,
     });
   };
 
@@ -266,11 +304,14 @@ const SettingsPage = () => {
               onClick={() => {
                 if (confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
                   toast({
-                    title: "Account deleted",
+                    title: "Account Deleted",
                     description: "Your account has been permanently deleted",
-                    variant: "destructive"
+                    variant: "destructive",
+                    duration: 2000,
                   });
-                  navigate("/welcome");
+                  setTimeout(() => {
+                    navigate("/welcome");
+                  }, 2000);
                 }
               }}
               className="w-full p-4 flex items-center gap-4 hover:bg-destructive/10 transition-colors"

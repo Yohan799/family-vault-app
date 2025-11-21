@@ -44,9 +44,11 @@ const Onboarding = () => {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="flex justify-end mb-8">
-          <Button variant="ghost" onClick={handleSkip} className="text-muted-foreground">
-            Skip
-          </Button>
+          <div className="bg-card rounded-xl px-6 py-2 shadow-md">
+            <Button variant="ghost" onClick={handleSkip} className="text-muted-foreground hover:text-foreground">
+              Skip
+            </Button>
+          </div>
         </div>
 
         <div className="bg-card rounded-3xl shadow-xl p-8 space-y-8">
