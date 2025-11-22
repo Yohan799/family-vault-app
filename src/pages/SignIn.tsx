@@ -26,7 +26,7 @@ const SignIn = () => {
   };
 
   return (
-    <div className="min-h-screen bg-vault-bg flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-card rounded-3xl shadow-xl p-8">
         <div className="space-y-6">
           <div className="text-center space-y-4">
