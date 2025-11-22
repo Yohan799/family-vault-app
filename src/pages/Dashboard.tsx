@@ -1,6 +1,7 @@
 import { Home, Settings, FileText, Users, Clock, Shield, ChevronRight, Bell, User, Vault, UserPlus, Timer, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Switch } from "@/components/ui/switch";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 
@@ -11,6 +12,33 @@ const Dashboard = () => {
     email: "guest@example.com",
     profileImage: null as string | null,
   });
+
+  // Security settings for readiness score calculation  
+  const [securitySettings, setSecuritySettings] = useState({
+    twoFactorAuth: false,
+    biometric: false,
+    lockedDocumentsCount: 0,
+    inactivityTriggerActive: false,
+  });
+
+  // Dynamic counts from localStorage
+  const [counts, setCounts] = useState({
+    documents: 0,
+    nominees: 0,
+    timeCapsules: 0,
+  });
+
+  // Calculate Family Readiness Index (0-100)
+  const calculateReadinessScore = () => {
+    let score = 0;
+    if (securitySettings.twoFactorAuth) score += 25;
+    if (securitySettings.biometric) score += 25;
+    if (securitySettings.lockedDocumentsCount > 0) score += 25;
+    if (securitySettings.inactivityTriggerActive) score += 25;
+    return score;
+  };
+
+  const readinessScore = calculateReadinessScore();
 
   useEffect(() => {
     const savedProfile = localStorage.getItem("profileData");
@@ -26,14 +54,57 @@ const Dashboard = () => {
     if (savedPhoto) {
       setProfileData(prev => ({ ...prev, profileImage: savedPhoto }));
     }
+
+    // Load security settings from localStorage
+    const savedSettings = localStorage.getItem("userSettings");
+    if (savedSettings) {
+      const settings = JSON.parse(savedSettings);
+      setSecuritySettings({
+        twoFactorAuth: settings.twoFactorAuth || false,
+        biometric: settings.biometric || false,
+        lockedDocumentsCount: 0, // Will be calculated from actual documents
+        inactivityTriggerActive: settings.inactivityTriggerActive || false,
+      });
+    }
+
+    // Load counts from localStorage
+    const loadCounts = () => {
+      const documentsCount = parseInt(localStorage.getItem("documentsCount") || "0");
+      const nomineesCount = parseInt(localStorage.getItem("nomineesCount") || "0");
+      const timeCapsulesCount = parseInt(localStorage.getItem("timeCapsulesCount") || "0");
+
+      setCounts({
+        documents: documentsCount,
+        nominees: nomineesCount,
+        timeCapsules: timeCapsulesCount,
+      });
+    };
+
+    loadCounts();
+
+    // Listen for storage changes (when counts are updated from other pages)
+    const handleStorageChange = () => {
+      loadCounts();
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    // Also listen for custom event for same-window updates
+    window.addEventListener("countsUpdated", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("countsUpdated", handleStorageChange);
+    };
   }, []);
 
-  const stats = [
-    { icon: FileText, label: "0 Documents", color: "text-primary" },
-    { icon: Users, label: "0 Nominees", color: "text-primary" },
-    { icon: Clock, label: "0 Time Capsule", color: "text-primary" },
-    { icon: Shield, label: "Trigger On", color: "text-primary" },
-  ];
+  const handleInactivityToggle = (checked: boolean) => {
+    setSecuritySettings(prev => ({ ...prev, inactivityTriggerActive: checked }));
+    // Save to localStorage
+    const savedSettings = localStorage.getItem("userSettings");
+    const settings = savedSettings ? JSON.parse(savedSettings) : {};
+    settings.inactivityTriggerActive = checked;
+    localStorage.setItem("userSettings", JSON.stringify(settings));
+  };
 
   const quickActions = [
     { icon: Vault, title: "Digital Vault", subtitle: "Manage your secure documents", color: "bg-accent", onClick: () => navigate("/vault") },
@@ -48,20 +119,20 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="bg-primary text-primary-foreground p-6 rounded-b-3xl">
+      <div className="bg-primary/20 text-foreground p-6 rounded-b-3xl">
         <div className="flex justify-between items-start mb-6">
           <div>
-            <p className="text-sm opacity-90 mb-1">Welcome,</p>
-            <h1 className="text-2xl font-bold">{profileData.fullName.split(' ')[0]}</h1>
+            <p className="text-sm text-muted-foreground mb-1">Welcome,</p>
+            <h1 className="text-2xl font-bold text-foreground">{profileData.fullName.split(' ')[0]}</h1>
           </div>
           <div className="flex gap-2">
-            <Button variant="ghost" size="icon" className="text-primary-foreground" onClick={() => navigate("/notifications")}>
+            <Button variant="ghost" size="icon" className="text-foreground" onClick={() => navigate("/notifications")}>
               <Bell className="w-5 h-5" />
             </Button>
-            <Button variant="ghost" size="icon" className="text-primary-foreground p-0" onClick={() => navigate("/profile")}>
-              <Avatar className="w-9 h-9 bg-primary-foreground">
+            <Button variant="ghost" size="icon" className="text-foreground p-0" onClick={() => navigate("/profile")}>
+              <Avatar className="w-9 h-9 bg-primary">
                 {profileData.profileImage && <AvatarImage src={profileData.profileImage} alt="Profile" />}
-                <AvatarFallback className="bg-primary-foreground text-primary font-semibold text-sm">
+                <AvatarFallback className="bg-primary text-primary-foreground font-semibold text-sm">
                   {profileData.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
@@ -69,51 +140,68 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Security Score */}
-        <div className="bg-card rounded-2xl p-6 text-center">
-          <div className="relative inline-flex items-center justify-center mb-3">
-            <svg className="w-24 h-24 transform -rotate-90">
+        {/* Security Score - Smaller Circle with Blue Progress */}
+        <div className="bg-card rounded-2xl p-4 text-center">
+          <div className="relative inline-flex items-center justify-center mb-2">
+            <svg className="w-16 h-16 transform -rotate-90">
               <circle
-                cx="48"
-                cy="48"
-                r="40"
+                cx="32"
+                cy="32"
+                r="28"
                 stroke="currentColor"
-                strokeWidth="8"
+                strokeWidth="6"
                 fill="none"
                 className="text-muted"
               />
               <circle
-                cx="48"
-                cy="48"
-                r="40"
+                cx="32"
+                cy="32"
+                r="28"
                 stroke="currentColor"
-                strokeWidth="8"
+                strokeWidth="6"
                 fill="none"
-                strokeDasharray={`${2 * Math.PI * 40}`}
-                strokeDashoffset={`${2 * Math.PI * 40 * (1 - 0.65)}`}
-                className="text-primary"
+                strokeDasharray={`${2 * Math.PI * 28}`}
+                strokeDashoffset={`${2 * Math.PI * 28 * (1 - readinessScore / 100)}`}
+                className="text-blue-500"
               />
             </svg>
-            <span className="absolute text-3xl font-bold text-primary">65</span>
+            <span className="absolute text-xl font-bold text-blue-500">{readinessScore}</span>
           </div>
-          <p className="text-foreground font-medium mb-1">Family Readiness Index</p>
-          <p className="text-sm text-muted-foreground">Keep your data protected</p>
+          <p className="text-foreground font-medium mb-1 text-sm">Family Readiness Index</p>
+          <p className="text-xs text-muted-foreground">Keep your data protected</p>
         </div>
       </div>
 
       <div className="p-6 space-y-6">
-        {/* Stats Grid */}
-        <div className="bg-card rounded-2xl p-5">
-          <div className="space-y-4">
-            {stats.map((stat, index) => {
-              const Icon = stat.icon;
-              return (
-                <div key={index} className="flex items-center gap-4">
-                  <Icon className={`w-6 h-6 ${stat.color}`} />
-                  <span className="text-base font-medium text-foreground">{stat.label}</span>
-                </div>
-              );
-            })}
+        {/* Stats Grid - Horizontal Single Row with Dynamic Counts */}
+        <div className="grid grid-cols-4 gap-2">
+          {/* Documents - Dynamic Count */}
+          <div className="bg-card rounded-xl p-4 text-center">
+            <FileText className="w-6 h-6 text-primary mx-auto mb-2" />
+            <span className="text-sm font-medium text-foreground block">{counts.documents} Documents</span>
+          </div>
+
+          {/* Nominees - Dynamic Count */}
+          <div className="bg-card rounded-xl p-4 text-center">
+            <Users className="w-6 h-6 text-primary mx-auto mb-2" />
+            <span className="text-sm font-medium text-foreground block">{counts.nominees} Nominees</span>
+          </div>
+
+          {/* Time Capsule - Dynamic Count */}
+          <div className="bg-card rounded-xl p-4 text-center">
+            <Clock className="w-6 h-6 text-primary mx-auto mb-2" />
+            <span className="text-sm font-medium text-foreground block">{counts.timeCapsules} Time Capsule</span>
+          </div>
+
+          {/* Inactivity Trigger - Toggle */}
+          <div className="bg-card rounded-xl p-2 text-center flex flex-col items-center justify-center">
+            <Shield className="w-5 h-5 text-primary mb-1" />
+            <span className="text-[10px] font-medium text-foreground block mb-1 leading-tight">Inactivity Trigger</span>
+            <Switch
+              checked={securitySettings.inactivityTriggerActive}
+              onCheckedChange={handleInactivityToggle}
+              className="scale-75"
+            />
           </div>
         </div>
 

@@ -1,4 +1,4 @@
-import { Home, Briefcase, GraduationCap, Shield, User, Mountain, Factory, Pill, TestTube, Hospital, Syringe, FileText, CreditCard, Car, Plane, IdCard, ScrollText, Award, Building, FileCheck, Landmark } from "lucide-react";
+import { Home, Briefcase, GraduationCap, Shield, User, Mountain, Factory, Pill, TestTube, Hospital, Syringe, FileText, CreditCard, Car, Plane, IdCard, ScrollText, Award, Building, FileCheck, Landmark, Building2, Key, ClipboardList } from "lucide-react";
 import { LucideIcon } from "lucide-react";
 
 export interface Subcategory {
@@ -25,8 +25,14 @@ export const vaultCategories: Category[] = [
     iconBgColor: "bg-red-100",
     documentCount: 0,
     subcategories: [
+      { id: "residential", name: "Residential Property", icon: Home, documentCount: 0 },
+      { id: "commercial", name: "Commercial Property", icon: Building2, documentCount: 0 },
       { id: "land", name: "Land", icon: Mountain, documentCount: 0 },
       { id: "industrial", name: "Industrial", icon: Factory, documentCount: 0 },
+      { id: "rental", name: "Rental Properties", icon: Key, documentCount: 0 },
+      { id: "property-tax", name: "Property Tax", icon: FileText, documentCount: 0 },
+      { id: "sale-deeds", name: "Sale/Purchase Deeds", icon: ScrollText, documentCount: 0 },
+      { id: "property-documents", name: "Property Documents", icon: ClipboardList, documentCount: 0 },
     ],
   },
   {
