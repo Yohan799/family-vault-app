@@ -13,7 +13,6 @@ const Dashboard = () => {
     profileImage: null as string | null,
   });
 
-  // Security settings for readiness score calculation  
   const [securitySettings, setSecuritySettings] = useState({
     twoFactorAuth: false,
     biometric: false,
@@ -21,14 +20,12 @@ const Dashboard = () => {
     inactivityTriggerActive: false,
   });
 
-  // Dynamic counts from localStorage
   const [counts, setCounts] = useState({
     documents: 0,
     nominees: 0,
     timeCapsules: 0,
   });
 
-  // Calculate Family Readiness Index (0-100)
   const calculateReadinessScore = () => {
     let score = 0;
     if (securitySettings.twoFactorAuth) score += 25;
@@ -55,19 +52,17 @@ const Dashboard = () => {
       setProfileData(prev => ({ ...prev, profileImage: savedPhoto }));
     }
 
-    // Load security settings from localStorage
     const savedSettings = localStorage.getItem("userSettings");
     if (savedSettings) {
       const settings = JSON.parse(savedSettings);
       setSecuritySettings({
         twoFactorAuth: settings.twoFactorAuth || false,
         biometric: settings.biometric || false,
-        lockedDocumentsCount: 0, // Will be calculated from actual documents
+        lockedDocumentsCount: 0,
         inactivityTriggerActive: settings.inactivityTriggerActive || false,
       });
     }
 
-    // Load counts from localStorage
     const loadCounts = () => {
       const documentsCount = parseInt(localStorage.getItem("documentsCount") || "0");
       const nomineesCount = parseInt(localStorage.getItem("nomineesCount") || "0");
@@ -82,13 +77,11 @@ const Dashboard = () => {
 
     loadCounts();
 
-    // Listen for storage changes (when counts are updated from other pages)
     const handleStorageChange = () => {
       loadCounts();
     };
 
     window.addEventListener("storage", handleStorageChange);
-    // Also listen for custom event for same-window updates
     window.addEventListener("countsUpdated", handleStorageChange);
 
     return () => {
@@ -99,7 +92,6 @@ const Dashboard = () => {
 
   const handleInactivityToggle = (checked: boolean) => {
     setSecuritySettings(prev => ({ ...prev, inactivityTriggerActive: checked }));
-    // Save to localStorage
     const savedSettings = localStorage.getItem("userSettings");
     const settings = savedSettings ? JSON.parse(savedSettings) : {};
     settings.inactivityTriggerActive = checked;
@@ -117,22 +109,21 @@ const Dashboard = () => {
   const recentDocs: Array<{ name: string; category: string; date: string }> = [];
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      {/* Header */}
-      <div className="bg-primary/20 text-foreground p-6 rounded-b-3xl">
-        <div className="flex justify-between items-start mb-6">
+    <div className="min-h-screen bg-background pb-16">
+      <div className="bg-primary/20 text-foreground p-4 rounded-b-3xl">
+        <div className="flex justify-between items-start mb-3">
           <div>
-            <p className="text-sm text-muted-foreground mb-1">Welcome,</p>
-            <h1 className="text-2xl font-bold text-foreground">{profileData.fullName.split(' ')[0]}</h1>
+            <p className="text-xs text-muted-foreground mb-0.5">Welcome,</p>
+            <h1 className="text-xl font-bold text-foreground">{profileData.fullName.split(' ')[0]}</h1>
           </div>
           <div className="flex gap-2">
-            <Button variant="ghost" size="icon" className="text-foreground" onClick={() => navigate("/notifications")}>
-              <Bell className="w-5 h-5" />
+            <Button variant="ghost" size="icon" className="text-foreground h-8 w-8" onClick={() => navigate("/notifications")}>
+              <Bell className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="text-foreground p-0" onClick={() => navigate("/profile")}>
-              <Avatar className="w-9 h-9 bg-primary">
+            <Button variant="ghost" size="icon" className="text-foreground p-0 h-8 w-8" onClick={() => navigate("/profile")}>
+              <Avatar className="w-8 h-8 bg-primary">
                 {profileData.profileImage && <AvatarImage src={profileData.profileImage} alt="Profile" />}
-                <AvatarFallback className="bg-primary text-primary-foreground font-semibold text-sm">
+                <AvatarFallback className="bg-primary text-primary-foreground font-semibold text-xs">
                   {profileData.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
@@ -140,63 +131,41 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Security Score - Smaller Circle with Blue Progress */}
-        <div className="bg-card rounded-2xl p-4 text-center">
-          <div className="relative inline-flex items-center justify-center mb-2">
-            <svg className="w-16 h-16 transform -rotate-90">
-              <circle
-                cx="32"
-                cy="32"
-                r="28"
-                stroke="currentColor"
-                strokeWidth="6"
-                fill="none"
-                className="text-muted"
-              />
-              <circle
-                cx="32"
-                cy="32"
-                r="28"
-                stroke="currentColor"
-                strokeWidth="6"
-                fill="none"
-                strokeDasharray={`${2 * Math.PI * 28}`}
-                strokeDashoffset={`${2 * Math.PI * 28 * (1 - readinessScore / 100)}`}
-                className="text-blue-500"
-              />
+        <div className="bg-card rounded-xl p-3 text-center">
+          <div className="relative inline-flex items-center justify-center mb-1">
+            <svg className="w-14 h-14 transform -rotate-90">
+              <circle cx="28" cy="28" r="24" stroke="currentColor" strokeWidth="5" fill="none" className="text-muted" />
+              <circle cx="28" cy="28" r="24" stroke="currentColor" strokeWidth="5" fill="none"
+                strokeDasharray={`${2 * Math.PI * 24}`}
+                strokeDashoffset={`${2 * Math.PI * 24 * (1 - readinessScore / 100)}`}
+                className="text-blue-500" />
             </svg>
-            <span className="absolute text-xl font-bold text-blue-500">{readinessScore}</span>
+            <span className="absolute text-lg font-bold text-blue-500">{readinessScore}</span>
           </div>
-          <p className="text-foreground font-medium mb-1 text-sm">Family Readiness Index</p>
-          <p className="text-xs text-muted-foreground">Keep your data protected</p>
+          <p className="text-foreground font-medium text-xs">Family Readiness Index</p>
         </div>
       </div>
 
-      <div className="p-6 space-y-6">
-        {/* Stats Grid - 2x2 Grid Layout */}
-        <div className="grid grid-cols-2 gap-3">
-          {/* Documents - Dynamic Count */}
-          <div className="bg-card rounded-xl p-3 text-center">
-            <FileText className="w-6 h-6 text-primary mx-auto mb-2" />
-            <span className="text-xs font-medium text-foreground block truncate">{counts.documents} Docs</span>
+      <div className="p-4 space-y-4">
+        <div className="grid grid-cols-2 gap-2">
+          <div className="bg-card rounded-lg p-2.5 text-center flex flex-col items-center justify-center h-20">
+            <FileText className="w-5 h-5 text-primary mb-1.5" />
+            <span className="text-xs font-medium text-foreground truncate">{counts.documents} Docs</span>
           </div>
 
-          {/* Nominees - Dynamic Count */}
-          <div className="bg-card rounded-xl p-3 text-center">
-            <Users className="w-6 h-6 text-primary mx-auto mb-2" />
-            <span className="text-xs font-medium text-foreground block truncate">{counts.nominees} Nominees</span>
+          <div className="bg-card rounded-lg p-2.5 text-center flex flex-col items-center justify-center h-20">
+            <Users className="w-5 h-5 text-primary mb-1.5" />
+            <span className="text-xs font-medium text-foreground truncate">{counts.nominees} Nominees</span>
           </div>
 
-          {/* Time Capsule - Dynamic Count */}
-          <div className="bg-card rounded-xl p-3 text-center">
-            <Clock className="w-6 h-6 text-primary mx-auto mb-2" />
-            <span className="text-xs font-medium text-foreground block truncate">{counts.timeCapsules} Capsules</span>
+          <div className="bg-card rounded-lg p-2.5 text-center flex flex-col items-center justify-center h-20">
+            <Clock className="w-5 h-5 text-primary mb-1.5" />
+            <span className="text-xs font-medium text-foreground truncate">{counts.timeCapsules} Capsules</span>
           </div>
 
-          {/* Inactivity Trigger - Toggle */}
-          <div className="bg-card rounded-xl p-3 text-center flex flex-col items-center justify-center">
-            <Shield className="w-6 h-6 text-primary mb-2" />
-            <span className="text-xs font-medium text-foreground block truncate mb-1">Trigger</span>
+          <div className="bg-card rounded-lg p-2.5 text-center flex flex-col items-center justify-center h-20">
+            <Shield className="w-5 h-5 text-primary mb-0.5" />
+            <span className="text-[10px] font-medium text-foreground truncate mb-0.5">Trigger</span>
             <Switch
               checked={securitySettings.inactivityTriggerActive}
               onCheckedChange={handleInactivityToggle}
@@ -205,53 +174,45 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Quick Actions - More Compact */}
         <div>
-          <h2 className="text-lg font-bold text-foreground mb-3">Quick Actions</h2>
-          <div className="space-y-2">
+          <h2 className="text-base font-bold text-foreground mb-2">Quick Actions</h2>
+          <div className="space-y-1.5">
             {quickActions.map((action, index) => {
               const Icon = action.icon;
               return (
-                <button
-                  key={index}
-                  onClick={action.onClick}
-                  className="w-full bg-card rounded-xl p-3 flex items-center gap-3 hover:bg-accent transition-colors"
-                >
-                  <div className={`w-10 h-10 ${action.color} rounded-full flex items-center justify-center flex-shrink-0`}>
-                    <Icon className="w-5 h-5 text-primary" />
+                <button key={index} onClick={action.onClick}
+                  className="w-full bg-card rounded-lg p-2.5 flex items-center gap-2.5 hover:bg-accent transition-colors">
+                  <div className={`w-9 h-9 ${action.color} rounded-full flex items-center justify-center flex-shrink-0`}>
+                    <Icon className="w-4 h-4 text-primary" />
                   </div>
                   <div className="flex-1 text-left min-w-0">
-                    <h3 className="font-semibold text-foreground text-sm truncate">{action.title}</h3>
-                    <p className="text-xs text-muted-foreground truncate">{action.subtitle}</p>
+                    <h3 className="font-semibold text-foreground text-xs truncate">{action.title}</h3>
+                    <p className="text-[10px] text-muted-foreground truncate">{action.subtitle}</p>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                  <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* Recent Documents */}
         <div>
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-bold text-foreground">Recent Documents</h2>
-            <button
-              onClick={() => navigate("/vault")}
-              className="text-sm text-primary font-medium hover:underline"
-            >
+          <div className="flex justify-between items-center mb-2">
+            <h2 className="text-base font-bold text-foreground">Recent Documents</h2>
+            <button onClick={() => navigate("/vault")} className="text-xs text-primary font-medium hover:underline">
               View All
             </button>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2">
             {recentDocs.map((doc, index) => (
-              <div key={index} className="bg-card rounded-2xl p-4 flex items-center gap-4">
-                <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center flex-shrink-0">
-                  <FileText className="w-5 h-5 text-primary" />
+              <div key={index} className="bg-card rounded-lg p-2.5 flex items-center gap-3">
+                <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center flex-shrink-0">
+                  <FileText className="w-4 h-4 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-foreground truncate">{doc.name}</h3>
-                  <p className="text-sm text-muted-foreground">{doc.category}</p>
-                  <p className="text-xs text-muted-foreground">{doc.date}</p>
+                  <h3 className="font-medium text-foreground text-xs truncate">{doc.name}</h3>
+                  <p className="text-[10px] text-muted-foreground">{doc.category}</p>
+                  <p className="text-[10px] text-muted-foreground">{doc.date}</p>
                 </div>
               </div>
             ))}
@@ -259,26 +220,19 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
-        <div className="flex justify-around items-center h-16 max-w-md mx-auto">
-          <button className="flex flex-col items-center gap-1 text-primary">
-            <Home className="w-6 h-6" />
-            <span className="text-xs font-medium">Home</span>
+        <div className="flex justify-around items-center h-14 max-w-md mx-auto">
+          <button className="flex flex-col items-center gap-0.5 text-primary">
+            <Home className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Home</span>
           </button>
-          <button
-            onClick={() => navigate("/vault")}
-            className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
-          >
-            <Vault className="w-6 h-6" />
-            <span className="text-xs font-medium">Vault</span>
+          <button onClick={() => navigate("/vault")} className="flex flex-col items-center gap-0.5 text-muted-foreground hover:text-foreground">
+            <Vault className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Vault</span>
           </button>
-          <button
-            onClick={() => navigate("/settings")}
-            className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
-          >
-            <Settings className="w-6 h-6" />
-            <span className="text-xs font-medium">Settings</span>
+          <button onClick={() => navigate("/settings")} className="flex flex-col items-center gap-0.5 text-muted-foreground hover:text-foreground">
+            <Settings className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Settings</span>
           </button>
         </div>
       </div>
