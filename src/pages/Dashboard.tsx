@@ -173,30 +173,30 @@ const Dashboard = () => {
       </div>
 
       <div className="p-6 space-y-6">
-        {/* Stats Grid - Horizontal Single Row with Dynamic Counts */}
-        <div className="grid grid-cols-4 gap-2">
+        {/* Stats Grid - 2x2 Grid Layout */}
+        <div className="grid grid-cols-2 gap-3">
           {/* Documents - Dynamic Count */}
-          <div className="bg-card rounded-xl p-4 text-center">
+          <div className="bg-card rounded-xl p-3 text-center">
             <FileText className="w-6 h-6 text-primary mx-auto mb-2" />
-            <span className="text-sm font-medium text-foreground block">{counts.documents} Documents</span>
+            <span className="text-xs font-medium text-foreground block truncate">{counts.documents} Docs</span>
           </div>
 
           {/* Nominees - Dynamic Count */}
-          <div className="bg-card rounded-xl p-4 text-center">
+          <div className="bg-card rounded-xl p-3 text-center">
             <Users className="w-6 h-6 text-primary mx-auto mb-2" />
-            <span className="text-sm font-medium text-foreground block">{counts.nominees} Nominees</span>
+            <span className="text-xs font-medium text-foreground block truncate">{counts.nominees} Nominees</span>
           </div>
 
           {/* Time Capsule - Dynamic Count */}
-          <div className="bg-card rounded-xl p-4 text-center">
+          <div className="bg-card rounded-xl p-3 text-center">
             <Clock className="w-6 h-6 text-primary mx-auto mb-2" />
-            <span className="text-sm font-medium text-foreground block">{counts.timeCapsules} Time Capsule</span>
+            <span className="text-xs font-medium text-foreground block truncate">{counts.timeCapsules} Capsules</span>
           </div>
 
           {/* Inactivity Trigger - Toggle */}
-          <div className="bg-card rounded-xl p-2 text-center flex flex-col items-center justify-center">
-            <Shield className="w-5 h-5 text-primary mb-1" />
-            <span className="text-[10px] font-medium text-foreground block mb-1 leading-tight">Inactivity Trigger</span>
+          <div className="bg-card rounded-xl p-3 text-center flex flex-col items-center justify-center">
+            <Shield className="w-6 h-6 text-primary mb-2" />
+            <span className="text-xs font-medium text-foreground block truncate mb-1">Trigger</span>
             <Switch
               checked={securitySettings.inactivityTriggerActive}
               onCheckedChange={handleInactivityToggle}
@@ -205,24 +205,24 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Quick Actions */}
+        {/* Quick Actions - More Compact */}
         <div>
-          <h2 className="text-lg font-bold text-foreground mb-4">Quick Actions</h2>
-          <div className="space-y-3">
+          <h2 className="text-lg font-bold text-foreground mb-3">Quick Actions</h2>
+          <div className="space-y-2">
             {quickActions.map((action, index) => {
               const Icon = action.icon;
               return (
                 <button
                   key={index}
                   onClick={action.onClick}
-                  className="w-full bg-card rounded-2xl p-4 flex items-center gap-4 hover:bg-accent transition-colors"
+                  className="w-full bg-card rounded-xl p-3 flex items-center gap-3 hover:bg-accent transition-colors"
                 >
-                  <div className={`w-12 h-12 ${action.color} rounded-full flex items-center justify-center flex-shrink-0`}>
-                    <Icon className="w-6 h-6 text-primary" />
+                  <div className={`w-10 h-10 ${action.color} rounded-full flex items-center justify-center flex-shrink-0`}>
+                    <Icon className="w-5 h-5 text-primary" />
                   </div>
-                  <div className="flex-1 text-left">
-                    <h3 className="font-semibold text-foreground">{action.title}</h3>
-                    <p className="text-sm text-muted-foreground">{action.subtitle}</p>
+                  <div className="flex-1 text-left min-w-0">
+                    <h3 className="font-semibold text-foreground text-sm truncate">{action.title}</h3>
+                    <p className="text-xs text-muted-foreground truncate">{action.subtitle}</p>
                   </div>
                   <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
                 </button>
