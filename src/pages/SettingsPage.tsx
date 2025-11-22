@@ -1,4 +1,4 @@
-import { Lock, Mail, Shield, Fingerprint, Bell, ShieldAlert, HelpCircle, MessageSquare, LogOut, Trash2, LockKeyhole, Home, ChevronRight, User, Vault, Settings } from "lucide-react";
+import { Lock, Mail, Shield, Fingerprint, Bell, ShieldAlert, HelpCircle, MessageSquare, LogOut, Trash2, LockKeyhole, Home, ChevronRight, User, Vault, Settings, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -89,8 +89,15 @@ const SettingsPage = () => {
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
       <div className="bg-primary/20 text-foreground p-6 rounded-b-3xl mb-4">
-        <h1 className="text-2xl font-bold">Settings</h1>
-        <p className="text-sm text-muted-foreground mt-1">Manage your preferences</p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Settings</h1>
+            <p className="text-sm text-muted-foreground mt-1">Manage your preferences</p>
+          </div>
+          <button className="text-foreground hover:text-foreground/70 transition-colors">
+            <MoreVertical className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       <div className="px-4 space-y-3">
