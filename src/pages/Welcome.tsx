@@ -14,7 +14,7 @@ const Welcome = () => {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-vault-bg flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="text-center space-y-6 max-w-md">
         <div className="flex justify-center">
           <div className="w-28 h-28 bg-white rounded-3xl shadow-lg flex items-center justify-center p-4">

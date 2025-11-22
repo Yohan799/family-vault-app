@@ -260,9 +260,9 @@ const InactivityTriggers = () => {
         )}
 
         {/* Info Box */}
-        <div className="bg-yellow-500/5 border border-yellow-500/20 rounded-2xl p-4 flex gap-3">
-          <div className="w-8 h-8 bg-yellow-500/20 rounded-full flex items-center justify-center flex-shrink-0">
-            <AlertTriangle className="w-4 h-4 text-yellow-600" />
+        <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 flex gap-3">
+          <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center flex-shrink-0">
+            <AlertTriangle className="w-4 h-4 text-primary" />
           </div>
           <div>
             <h3 className="font-semibold text-foreground mb-1">How Inactivity Triggers Work</h3>
