@@ -1,7 +1,13 @@
-import { Lock, Mail, Shield, Fingerprint, Bell, ShieldAlert, HelpCircle, MessageSquare, LogOut, Trash2, LockKeyhole, Home, ChevronRight, User, Vault, Settings, MoreVertical } from "lucide-react";
+import { Lock, Mail, Shield, Fingerprint, Bell, ShieldAlert, HelpCircle, MessageSquare, LogOut, Trash2, LockKeyhole, Home, ChevronRight, User, Vault, Settings, MoreVertical, RotateCcw, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -94,9 +100,44 @@ const SettingsPage = () => {
             <h1 className="text-2xl font-bold">Settings</h1>
             <p className="text-sm text-muted-foreground mt-1">Manage your preferences</p>
           </div>
-          <button className="text-foreground hover:text-foreground/70 transition-colors">
-            <MoreVertical className="w-5 h-5" />
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="text-foreground hover:text-foreground/70 transition-colors">
+                <MoreVertical className="w-5 h-5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={() => {
+                if (confirm("Reset all settings to default values?")) {
+                  localStorage.removeItem("autoLockTimeout");
+                  setAutoLockTimeout("5 minutes");
+                  setToggleStates({
+                    twoFactorAuth: false,
+                    biometric: false,
+                    pushNotifications: false,
+                    securityAlerts: false,
+                  });
+                  toast({ title: "Settings reset to defaults" });
+                }
+              }}>
+                <RotateCcw className="w-4 h-4 mr-2" />
+                Reset to Defaults
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/help-center")}>
+                <HelpCircle className="w-4 h-4 mr-2" />
+                Help Center
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => {
+                toast({ 
+                  title: "About ForeverVault",
+                  description: "Version 2.0.0 - Your digital legacy platform"
+                });
+              }}>
+                <Info className="w-4 h-4 mr-2" />
+                About
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
