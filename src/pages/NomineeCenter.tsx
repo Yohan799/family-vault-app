@@ -37,30 +37,30 @@ const NomineeCenter = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="bg-primary text-primary-foreground p-6 rounded-b-3xl">
+      <div className="bg-primary/20 text-foreground p-6 rounded-b-3xl">
         <div className="flex items-center gap-4 mb-6">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")} className="text-primary-foreground">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")} className="text-foreground">
             <ArrowLeft className="w-6 h-6" />
           </Button>
           <div className="flex-1 text-center -ml-10">
             <h1 className="text-2xl font-bold">Nominee Center</h1>
-            <p className="text-sm opacity-90 mt-1">Manage trusted contacts</p>
+            <p className="text-sm text-muted-foreground mt-1">Manage trusted contacts</p>
           </div>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3">
-          <div className="bg-primary-foreground/20 rounded-xl p-4 text-center backdrop-blur-sm">
+          <div className="bg-card/50 rounded-xl p-4 text-center backdrop-blur-sm">
             <div className="text-3xl font-bold mb-1">0</div>
-            <div className="text-sm opacity-90">Total</div>
+            <div className="text-sm text-muted-foreground">Total</div>
           </div>
-          <div className="bg-primary-foreground/20 rounded-xl p-4 text-center backdrop-blur-sm">
+          <div className="bg-card/50 rounded-xl p-4 text-center backdrop-blur-sm">
             <div className="text-3xl font-bold mb-1">0</div>
-            <div className="text-sm opacity-90">Verified</div>
+            <div className="text-sm text-muted-foreground">Verified</div>
           </div>
-          <div className="bg-primary-foreground/20 rounded-xl p-4 text-center backdrop-blur-sm">
+          <div className="bg-card/50 rounded-xl p-4 text-center backdrop-blur-sm">
             <div className="text-3xl font-bold mb-1">0</div>
-            <div className="text-sm opacity-90">Pending</div>
+            <div className="text-sm text-muted-foreground">Pending</div>
           </div>
         </div>
       </div>
@@ -70,20 +70,20 @@ const NomineeCenter = () => {
         {showAddForm && (
           <div className="bg-card rounded-2xl p-6 space-y-4">
             <h2 className="text-lg font-bold text-foreground mb-4">+ Add New Nominee</h2>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">Full Name *</label>
                 <Input
                   placeholder="Enter full name"
                   value={formData.fullName}
-                  onChange={(e) => setFormData({...formData, fullName: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                   className="bg-background border-border"
                 />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">Relation</label>
-                <Select value={formData.relation} onValueChange={(value) => setFormData({...formData, relation: value})}>
+                <Select value={formData.relation} onValueChange={(value) => setFormData({ ...formData, relation: value })}>
                   <SelectTrigger className="bg-background border-border">
                     <SelectValue placeholder="Select relation" />
                   </SelectTrigger>
@@ -105,7 +105,7 @@ const NomineeCenter = () => {
                 type="email"
                 placeholder="Enter email address"
                 value={formData.email}
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="bg-background border-border"
               />
             </div>
@@ -116,7 +116,7 @@ const NomineeCenter = () => {
                 type="tel"
                 placeholder="Enter phone number"
                 value={formData.phone}
-                onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 className="bg-background border-border"
               />
             </div>
@@ -125,8 +125,8 @@ const NomineeCenter = () => {
               <Button onClick={handleAddNominee} className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12">
                 Add & Send Code
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => setShowAddForm(false)}
                 className="flex-1 rounded-xl h-12 border-border"
               >
@@ -139,7 +139,7 @@ const NomineeCenter = () => {
         {/* Your Nominees Section */}
         <div className="space-y-4">
           <h2 className="text-lg font-bold text-foreground">Your Nominees</h2>
-          
+
           <div className="bg-card rounded-2xl p-8 text-center">
             <div className="w-24 h-24 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center">
               <Users className="w-12 h-12 text-primary" />
@@ -149,7 +149,7 @@ const NomineeCenter = () => {
               Add trusted contacts who can access your vault in emergencies.
             </p>
             {!showAddForm && (
-              <Button 
+              <Button
                 onClick={() => setShowAddForm(true)}
                 className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-8"
               >
@@ -167,7 +167,7 @@ const NomineeCenter = () => {
           <div>
             <h3 className="font-semibold text-foreground mb-1">About Nominees</h3>
             <p className="text-sm text-muted-foreground">
-              Nominees are trusted individuals who can access your vault under specific conditions. 
+              Nominees are trusted individuals who can access your vault under specific conditions.
               They must verify their identity through OTP before gaining access. You can add up to 5 nominees.
             </p>
           </div>

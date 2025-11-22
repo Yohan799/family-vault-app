@@ -44,26 +44,26 @@ const InactivityTriggers = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="bg-primary text-primary-foreground p-6 rounded-b-3xl">
+      <div className="bg-primary/20 text-foreground p-6 rounded-b-3xl">
         <div className="flex items-center gap-4 mb-6">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")} className="text-primary-foreground">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")} className="text-foreground">
             <ArrowLeft className="w-6 h-6" />
           </Button>
           <div className="flex-1 text-center -ml-10">
             <h1 className="text-2xl font-bold">Inactivity Triggers</h1>
-            <p className="text-sm opacity-90 mt-1">Monitor account activity</p>
+            <p className="text-sm text-muted-foreground mt-1">Monitor account activity</p>
           </div>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-primary-foreground/20 rounded-xl p-4 text-center backdrop-blur-sm">
+          <div className="bg-card/50 rounded-xl p-4 text-center backdrop-blur-sm">
             <div className="text-3xl font-bold mb-1">0</div>
-            <div className="text-sm opacity-90">Active</div>
+            <div className="text-sm text-muted-foreground">Active</div>
           </div>
-          <div className="bg-primary-foreground/20 rounded-xl p-4 text-center backdrop-blur-sm">
+          <div className="bg-card/50 rounded-xl p-4 text-center backdrop-blur-sm">
             <div className="text-3xl font-bold mb-1">0</div>
-            <div className="text-sm opacity-90">Inactive</div>
+            <div className="text-sm text-muted-foreground">Inactive</div>
           </div>
         </div>
       </div>
@@ -73,13 +73,13 @@ const InactivityTriggers = () => {
         {showCreateForm && (
           <div className="bg-card rounded-2xl p-6 space-y-4">
             <h2 className="text-lg font-bold text-foreground mb-4">+ Create New Trigger</h2>
-            
+
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Trigger Name *</label>
               <Input
                 placeholder="Enter trigger name"
                 value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className="bg-background border-border"
               />
             </div>
@@ -89,14 +89,14 @@ const InactivityTriggers = () => {
               <Textarea
                 placeholder="Describe what this trigger monitors..."
                 value={formData.description}
-                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 className="bg-background border-border min-h-[80px]"
               />
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Trigger Type</label>
-              <Select value={formData.type} onValueChange={(value) => setFormData({...formData, type: value})}>
+              <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
                 <SelectTrigger className="bg-background border-border">
                   <SelectValue />
                 </SelectTrigger>
@@ -114,7 +114,7 @@ const InactivityTriggers = () => {
                 type="number"
                 placeholder="30"
                 value={formData.duration}
-                onChange={(e) => setFormData({...formData, duration: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
                 className="bg-background border-border"
               />
             </div>
@@ -170,7 +170,7 @@ const InactivityTriggers = () => {
                     }}
                   >
                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12.545 10.239v3.821h5.445c-.712 2.315-2.647 3.972-5.445 3.972a6.033 6.033 0 110-12.064c1.498 0 2.866.549 3.921 1.453l2.814-2.814A9.969 9.969 0 0012.545 2C7.021 2 2.543 6.477 2.543 12s4.478 10 10.002 10c8.396 0 10.249-7.85 9.426-11.748l-9.426-.013z"/>
+                      <path d="M12.545 10.239v3.821h5.445c-.712 2.315-2.647 3.972-5.445 3.972a6.033 6.033 0 110-12.064c1.498 0 2.866.549 3.921 1.453l2.814-2.814A9.969 9.969 0 0012.545 2C7.021 2 2.543 6.477 2.543 12s4.478 10 10.002 10c8.396 0 10.249-7.85 9.426-11.748l-9.426-.013z" />
                     </svg>
                     Google Drive
                   </Button>
@@ -187,7 +187,7 @@ const InactivityTriggers = () => {
                     }}
                   >
                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V7.3l7-3.11v8.8z"/>
+                      <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V7.3l7-3.11v8.8z" />
                     </svg>
                     DigiLocker
                   </Button>
@@ -200,8 +200,8 @@ const InactivityTriggers = () => {
               <Button onClick={handleCreateTrigger} className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12">
                 Create Trigger
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => setShowCreateForm(false)}
                 className="flex-1 rounded-xl h-12 border-border"
               >
@@ -215,7 +215,7 @@ const InactivityTriggers = () => {
         {triggers.length > 0 && (
           <div className="space-y-4">
             <h2 className="text-lg font-bold text-foreground">Your Triggers</h2>
-            
+
             {triggers.map((trigger) => (
               <div key={trigger.id} className="bg-card rounded-2xl p-4">
                 <h3 className="font-semibold text-foreground mb-1">{trigger.name}</h3>
@@ -240,7 +240,7 @@ const InactivityTriggers = () => {
             <p className="text-sm text-muted-foreground mb-6">
               Create inactivity triggers to monitor your account and alert nominees when needed.
             </p>
-            <Button 
+            <Button
               onClick={() => setShowCreateForm(true)}
               className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-8"
             >
@@ -248,10 +248,10 @@ const InactivityTriggers = () => {
             </Button>
           </div>
         )}
-        
+
         {/* Create Button when triggers exist */}
         {!showCreateForm && triggers.length > 0 && (
-          <Button 
+          <Button
             onClick={() => setShowCreateForm(true)}
             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12"
           >
@@ -267,8 +267,8 @@ const InactivityTriggers = () => {
           <div>
             <h3 className="font-semibold text-foreground mb-1">How Inactivity Triggers Work</h3>
             <p className="text-sm text-muted-foreground">
-              Inactivity triggers monitor your account for signs of activity. If no activity is detected 
-              within the specified timeframe, your nominated contacts will be alerted and may gain access 
+              Inactivity triggers monitor your account for signs of activity. If no activity is detected
+              within the specified timeframe, your nominated contacts will be alerted and may gain access
               to your vault according to your emergency protocol.
             </p>
           </div>

@@ -44,26 +44,26 @@ const TimeCapsule = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="bg-primary text-primary-foreground p-6 rounded-b-3xl">
+      <div className="bg-primary/20 text-foreground p-6 rounded-b-3xl">
         <div className="flex items-center gap-4 mb-6">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")} className="text-primary-foreground">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")} className="text-foreground">
             <ArrowLeft className="w-6 h-6" />
           </Button>
           <div className="flex-1 text-center -ml-10">
             <h1 className="text-2xl font-bold">Time Capsule</h1>
-            <p className="text-sm opacity-90 mt-1">Create messages for the future</p>
+            <p className="text-sm text-muted-foreground mt-1">Create messages for the future</p>
           </div>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-primary-foreground/20 rounded-xl p-4 text-center backdrop-blur-sm">
+          <div className="bg-card/50 rounded-xl p-4 text-center backdrop-blur-sm">
             <div className="text-3xl font-bold mb-1">0</div>
-            <div className="text-sm opacity-90">Scheduled</div>
+            <div className="text-sm text-muted-foreground">Scheduled</div>
           </div>
-          <div className="bg-primary-foreground/20 rounded-xl p-4 text-center backdrop-blur-sm">
+          <div className="bg-card/50 rounded-xl p-4 text-center backdrop-blur-sm">
             <div className="text-3xl font-bold mb-1">0</div>
-            <div className="text-sm opacity-90">Released</div>
+            <div className="text-sm text-muted-foreground">Released</div>
           </div>
         </div>
       </div>
@@ -73,13 +73,13 @@ const TimeCapsule = () => {
         {showCreateForm && (
           <div className="bg-card rounded-2xl p-6 space-y-4">
             <h2 className="text-lg font-bold text-foreground mb-4">+ Create New Time Capsule</h2>
-            
+
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Title *</label>
               <Input
                 placeholder="Enter capsule title"
                 value={formData.title}
-                onChange={(e) => setFormData({...formData, title: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 className="bg-background border-border"
               />
             </div>
@@ -89,7 +89,7 @@ const TimeCapsule = () => {
               <Textarea
                 placeholder="Write your message for the future..."
                 value={formData.message}
-                onChange={(e) => setFormData({...formData, message: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                 className="bg-background border-border min-h-[120px]"
               />
             </div>
@@ -99,7 +99,7 @@ const TimeCapsule = () => {
               <Input
                 type="date"
                 value={formData.releaseDate}
-                onChange={(e) => setFormData({...formData, releaseDate: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, releaseDate: e.target.value })}
                 className="bg-background border-border"
               />
             </div>
@@ -110,7 +110,7 @@ const TimeCapsule = () => {
                 type="email"
                 placeholder="Enter recipient email address"
                 value={formData.recipientEmail}
-                onChange={(e) => setFormData({...formData, recipientEmail: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, recipientEmail: e.target.value })}
                 className="bg-background border-border"
               />
             </div>
@@ -121,7 +121,7 @@ const TimeCapsule = () => {
                 type="tel"
                 placeholder="Enter phone number (optional)"
                 value={formData.phone}
-                onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 className="bg-background border-border"
               />
             </div>
@@ -177,7 +177,7 @@ const TimeCapsule = () => {
                     }}
                   >
                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12.545 10.239v3.821h5.445c-.712 2.315-2.647 3.972-5.445 3.972a6.033 6.033 0 110-12.064c1.498 0 2.866.549 3.921 1.453l2.814-2.814A9.969 9.969 0 0012.545 2C7.021 2 2.543 6.477 2.543 12s4.478 10 10.002 10c8.396 0 10.249-7.85 9.426-11.748l-9.426-.013z"/>
+                      <path d="M12.545 10.239v3.821h5.445c-.712 2.315-2.647 3.972-5.445 3.972a6.033 6.033 0 110-12.064c1.498 0 2.866.549 3.921 1.453l2.814-2.814A9.969 9.969 0 0012.545 2C7.021 2 2.543 6.477 2.543 12s4.478 10 10.002 10c8.396 0 10.249-7.85 9.426-11.748l-9.426-.013z" />
                     </svg>
                     Google Drive
                   </Button>
@@ -194,7 +194,7 @@ const TimeCapsule = () => {
                     }}
                   >
                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V7.3l7-3.11v8.8z"/>
+                      <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V7.3l7-3.11v8.8z" />
                     </svg>
                     DigiLocker
                   </Button>
@@ -208,8 +208,8 @@ const TimeCapsule = () => {
                 <Send className="w-4 h-4" />
                 Create Capsule
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => setShowCreateForm(false)}
                 className="flex-1 rounded-xl h-12 border-border"
               >
@@ -223,7 +223,7 @@ const TimeCapsule = () => {
         {capsules.length > 0 && (
           <div className="space-y-4">
             <h2 className="text-lg font-bold text-foreground">Your Time Capsules</h2>
-            
+
             {capsules.map((capsule) => (
               <div key={capsule.id} className="bg-card rounded-2xl p-4">
                 <h3 className="font-semibold text-foreground mb-1">{capsule.title}</h3>
@@ -248,7 +248,7 @@ const TimeCapsule = () => {
             <p className="text-sm text-muted-foreground mb-6">
               Create your first time capsule to send messages to the future.
             </p>
-            <Button 
+            <Button
               onClick={() => setShowCreateForm(true)}
               className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-8"
             >
@@ -256,10 +256,10 @@ const TimeCapsule = () => {
             </Button>
           </div>
         )}
-        
+
         {/* Create Button when capsules exist */}
         {!showCreateForm && capsules.length > 0 && (
-          <Button 
+          <Button
             onClick={() => setShowCreateForm(true)}
             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12 gap-2"
           >
@@ -276,7 +276,7 @@ const TimeCapsule = () => {
           <div>
             <h3 className="font-semibold text-foreground mb-1">About Time Capsules</h3>
             <p className="text-sm text-muted-foreground">
-              Time capsules allow you to create messages that will be automatically released at a future date. 
+              Time capsules allow you to create messages that will be automatically released at a future date.
               They can be sent to specific recipients or accessed by your nominees when conditions are met.
             </p>
           </div>

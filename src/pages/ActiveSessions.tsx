@@ -8,7 +8,6 @@ const ActiveSessions = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Empty sessions array - will be populated when user actually logs in
   const [sessions] = useState<Array<{
     id: number;
     device: string;
@@ -27,47 +26,47 @@ const ActiveSessions = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="bg-primary text-primary-foreground p-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="text-primary-foreground">
-            <ArrowLeft className="w-6 h-6" />
+    <div className="min-h-screen bg-background pb-16">
+      <div className="bg-primary/20 text-foreground p-4 rounded-b-3xl">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="text-foreground h-8 w-8">
+            <ArrowLeft className="w-4 h-4" />
           </Button>
-          <h1 className="text-2xl font-bold">Active Sessions</h1>
+          <h1 className="text-xl font-bold text-foreground">Active Sessions</h1>
         </div>
       </div>
 
-      <div className="p-6 space-y-6">
-        <p className="text-muted-foreground">
+      <div className="p-4 space-y-4">
+        <p className="text-muted-foreground text-sm">
           Manage devices where you're currently logged in. End sessions you don't recognize.
         </p>
 
         {sessions.length > 0 ? (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {sessions.map((session) => {
               const DeviceIcon = session.icon;
               return (
-                <div key={session.id} className="bg-card rounded-2xl p-4">
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                      <DeviceIcon className="w-6 h-6 text-primary" />
+                <div key={session.id} className="bg-card rounded-lg p-3">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                      <DeviceIcon className="w-5 h-5 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-foreground">{session.device}</h3>
+                        <h3 className="font-semibold text-foreground text-sm">{session.device}</h3>
                         {session.current && (
                           <span className="text-xs px-2 py-0.5 bg-green-500/20 text-green-600 rounded-full">
                             Current
                           </span>
                         )}
                       </div>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <MapPin className="w-4 h-4" />
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <MapPin className="w-3 h-3" />
                           <span>{session.location}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Clock className="w-4 h-4" />
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Clock className="w-3 h-3" />
                           <span>{session.time} • {session.date}</span>
                         </div>
                       </div>
@@ -75,7 +74,7 @@ const ActiveSessions = () => {
                         <Button
                           variant="destructive"
                           size="sm"
-                          className="mt-3"
+                          className="mt-2 h-8 text-xs"
                           onClick={() => handleEndSession(session.id, session.device)}
                         >
                           End Session
@@ -88,12 +87,12 @@ const ActiveSessions = () => {
             })}
           </div>
         ) : (
-          <div className="bg-card rounded-2xl p-8 text-center">
-            <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
-              <Smartphone className="w-8 h-8 text-muted-foreground" />
+          <div className="bg-card rounded-lg p-6 text-center">
+            <div className="w-14 h-14 mx-auto mb-3 bg-muted rounded-full flex items-center justify-center">
+              <Smartphone className="w-7 h-7 text-muted-foreground" />
             </div>
-            <h3 className="font-semibold text-foreground mb-2">No Active Sessions</h3>
-            <p className="text-sm text-muted-foreground">
+            <h3 className="font-semibold text-foreground mb-1 text-sm">No Active Sessions</h3>
+            <p className="text-xs text-muted-foreground">
               You don't have any active sessions yet. Sessions will appear here after you log in.
             </p>
           </div>
@@ -102,7 +101,7 @@ const ActiveSessions = () => {
         {sessions.length > 1 && (
           <Button
             variant="outline"
-            className="w-full h-12 rounded-xl"
+            className="w-full h-10 rounded-lg text-sm"
             onClick={() => {
               toast({
                 title: "All sessions ended",

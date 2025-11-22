@@ -1,5 +1,4 @@
-import { Search, Filter, Home, Settings, Sparkles } from "lucide-react";
-import { Vault as VaultIcon } from "lucide-react";
+import { Search, Filter, Home, Settings, Sparkles, Vault } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { vaultCategories } from "@/data/vaultCategories";
@@ -62,25 +61,24 @@ const VaultHome = () => {
 
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
-        <div className="flex justify-around items-center h-16 max-w-md mx-auto">
+        <div className="flex justify-around items-center h-14 max-w-md mx-auto">
           <button
             onClick={() => navigate("/dashboard")}
-            className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
+            className="flex flex-col items-center gap-0.5 text-muted-foreground hover:text-foreground"
           >
-            <Home className="w-6 h-6" />
-            <span className="text-xs font-medium">Home</span>
+            <Home className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Home</span>
           </button>
-          <button className="flex flex-col items-center gap-1 text-primary relative">
-            <VaultIcon className="w-6 h-6" />
-            <span className="text-xs font-medium">Vault</span>
-            <div className="absolute -bottom-2 w-12 h-1 bg-primary rounded-full" />
+          <button className="flex flex-col items-center gap-0.5 text-primary">
+            <Vault className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Vault</span>
           </button>
           <button
             onClick={() => navigate("/settings")}
-            className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
+            className="flex flex-col items-center gap-0.5 text-muted-foreground hover:text-foreground"
           >
-            <Settings className="w-6 h-6" />
-            <span className="text-xs font-medium">Settings</span>
+            <Settings className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Settings</span>
           </button>
         </div>
       </div>
