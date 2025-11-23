@@ -1,264 +1,252 @@
-// Document Storage Utility for localStorage
-// This will be migrated to Supabase in production
+import { supabase } from "@/integrations/supabase/client";
 
 export interface StoredDocument {
-    id: string;
-    name: string;
-    size: number;
-    type: string;
-    date: string;
-    categoryId: string;
-    subcategoryId: string;
-    folderId?: string;
-    base64Data: string;
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  date: string;
+  categoryId: string;
+  subcategoryId?: string;
+  folderId?: string;
+  fileUrl: string;
+  viewCount: number;
+  downloadCount: number;
+  externalSource?: string;
 }
 
 /**
- * Convert File to base64 string
- */
-export const convertFileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => {
-            const base64String = reader.result as string;
-            resolve(base64String);
-        };
-        reader.onerror = (error) => reject(error);
-    });
-};
-
-/**
- * Store document in localStorage
+ * Store document in Supabase Storage and Database
  */
 export const storeDocument = async (
-    file: File,
-    categoryId: string,
-    subcategoryId: string,
-    folderId?: string
+  file: File,
+  categoryId: string,
+  subcategoryId?: string,
+  folderId?: string,
+  externalSource?: string
 ): Promise<StoredDocument> => {
-    try {
-        // Convert file to base64
-        const base64Data = await convertFileToBase64(file);
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("User not authenticated");
 
-        // Create document metadata
-        const document: StoredDocument = {
-            id: `doc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            name: file.name,
-            size: file.size,
-            type: file.type,
-            date: new Date().toISOString(),
-            categoryId,
-            subcategoryId,
-            folderId,
-            base64Data,
-        };
+    // Upload file to Supabase Storage
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+    const filePath = `${user.id}/${categoryId}/${fileName}`;
 
-        // Get existing documents
-        const storageKey = folderId
-            ? `documents_${categoryId}_${subcategoryId}_${folderId}`
-            : `documents_${categoryId}_${subcategoryId}`;
+    const { error: uploadError } = await supabase.storage
+      .from('documents')
+      .upload(filePath, file);
 
-        const existingDocs = getDocuments(categoryId, subcategoryId, folderId);
+    if (uploadError) throw uploadError;
 
-        // Add new document
-        const updatedDocs = [...existingDocs, document];
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('documents')
+      .getPublicUrl(filePath);
 
-        // Save to localStorage
-        localStorage.setItem(storageKey, JSON.stringify(updatedDocs));
+    // Insert document record in database
+    const { data, error } = await supabase
+      .from('documents')
+      .insert({
+        user_id: user.id,
+        category_id: categoryId,
+        subcategory_id: subcategoryId,
+        folder_id: folderId,
+        file_name: file.name,
+        file_url: publicUrl,
+        file_size: file.size,
+        file_type: file.type,
+        external_source: externalSource,
+        view_count: 0,
+        download_count: 0,
+      })
+      .select()
+      .single();
 
-        // Update document counts
-        updateDocumentCounts(categoryId, subcategoryId, folderId);
+    if (error) throw error;
 
-        return document;
-    } catch (error) {
-        console.error('Error storing document:', error);
-        throw new Error('Failed to store document');
-    }
+    return {
+      id: data.id,
+      name: data.file_name,
+      size: data.file_size || 0,
+      type: data.file_type || '',
+      date: data.uploaded_at,
+      categoryId: data.category_id || '',
+      subcategoryId: data.subcategory_id || undefined,
+      folderId: data.folder_id || undefined,
+      fileUrl: data.file_url,
+      viewCount: data.view_count || 0,
+      downloadCount: data.download_count || 0,
+      externalSource: data.external_source || undefined,
+    };
+  } catch (error) {
+    console.error('Error storing document:', error);
+    throw new Error('Failed to store document');
+  }
 };
 
 /**
  * Get documents for a specific location
  */
-export const getDocuments = (
-    categoryId: string,
-    subcategoryId: string,
-    folderId?: string
-): StoredDocument[] => {
-    try {
-        const storageKey = folderId
-            ? `documents_${categoryId}_${subcategoryId}_${folderId}`
-            : `documents_${categoryId}_${subcategoryId}`;
+export const getDocuments = async (
+  categoryId: string,
+  subcategoryId?: string,
+  folderId?: string
+): Promise<StoredDocument[]> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
 
-        const stored = localStorage.getItem(storageKey);
-        return stored ? JSON.parse(stored) : [];
-    } catch (error) {
-        console.error('Error retrieving documents:', error);
-        return [];
+    let query = supabase
+      .from('documents')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('category_id', categoryId)
+      .is('deleted_at', null);
+
+    if (folderId) {
+      query = query.eq('folder_id', folderId);
+    } else if (subcategoryId) {
+      query = query.eq('subcategory_id', subcategoryId).is('folder_id', null);
+    } else {
+      query = query.is('subcategory_id', null).is('folder_id', null);
     }
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    return (data || []).map(doc => ({
+      id: doc.id,
+      name: doc.file_name,
+      size: doc.file_size || 0,
+      type: doc.file_type || '',
+      date: doc.uploaded_at,
+      categoryId: doc.category_id || '',
+      subcategoryId: doc.subcategory_id || undefined,
+      folderId: doc.folder_id || undefined,
+      fileUrl: doc.file_url,
+      viewCount: doc.view_count || 0,
+      downloadCount: doc.download_count || 0,
+      externalSource: doc.external_source || undefined,
+    }));
+  } catch (error) {
+    console.error('Error retrieving documents:', error);
+    return [];
+  }
 };
 
 /**
- * Get all documents for a subcategory (including nested folders)
+ * Get all documents for a category
  */
-export const getAllDocumentsInSubcategory = (
-    categoryId: string,
-    subcategoryId: string
-): StoredDocument[] => {
-    try {
-        const allDocs: StoredDocument[] = [];
+export const getAllDocumentsInCategory = async (categoryId: string): Promise<StoredDocument[]> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
 
-        // Get documents in subcategory root
-        allDocs.push(...getDocuments(categoryId, subcategoryId));
+    const { data, error } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('category_id', categoryId)
+      .is('deleted_at', null);
 
-        // Get documents in nested folders
-        const folderKeys = Object.keys(localStorage).filter(key =>
-            key.startsWith(`documents_${categoryId}_${subcategoryId}_`) &&
-            key !== `documents_${categoryId}_${subcategoryId}`
-        );
+    if (error) throw error;
 
-        folderKeys.forEach(key => {
-            const stored = localStorage.getItem(key);
-            if (stored) {
-                allDocs.push(...JSON.parse(stored));
-            }
-        });
-
-        return allDocs;
-    } catch (error) {
-        console.error('Error retrieving all documents:', error);
-        return [];
-    }
+    return (data || []).map(doc => ({
+      id: doc.id,
+      name: doc.file_name,
+      size: doc.file_size || 0,
+      type: doc.file_type || '',
+      date: doc.uploaded_at,
+      categoryId: doc.category_id || '',
+      subcategoryId: doc.subcategory_id || undefined,
+      folderId: doc.folder_id || undefined,
+      fileUrl: doc.file_url,
+      viewCount: doc.view_count || 0,
+      downloadCount: doc.download_count || 0,
+      externalSource: doc.external_source || undefined,
+    }));
+  } catch (error) {
+    console.error('Error retrieving documents:', error);
+    return [];
+  }
 };
 
 /**
- * Delete document from localStorage
+ * Delete document from Supabase (soft delete)
  */
-export const deleteDocument = (
-    documentId: string,
-    categoryId: string,
-    subcategoryId: string,
-    folderId?: string
-): boolean => {
-    try {
-        const storageKey = folderId
-            ? `documents_${categoryId}_${subcategoryId}_${folderId}`
-            : `documents_${categoryId}_${subcategoryId}`;
+export const deleteDocument = async (documentId: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('documents')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', documentId);
 
-        const existingDocs = getDocuments(categoryId, subcategoryId, folderId);
-        const updatedDocs = existingDocs.filter(doc => doc.id !== documentId);
-
-        localStorage.setItem(storageKey, JSON.stringify(updatedDocs));
-        updateDocumentCounts(categoryId, subcategoryId, folderId);
-
-        return true;
-    } catch (error) {
-        console.error('Error deleting document:', error);
-        return false;
-    }
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Error deleting document:', error);
+    return false;
+  }
 };
 
 /**
- * Download document (convert base64 back to file)
+ * Download document
  */
-export const downloadDocument = (doc: StoredDocument): void => {
-    try {
-        // Create a link element
-        const link = window.document.createElement('a');
-        link.href = doc.base64Data;
-        link.download = doc.name;
+export const downloadDocument = async (doc: StoredDocument): Promise<void> => {
+  try {
+    // Increment download count
+    await supabase
+      .from('documents')
+      .update({ download_count: doc.downloadCount + 1 })
+      .eq('id', doc.id);
 
-        // Trigger download
-        window.document.body.appendChild(link);
-        link.click();
-        window.document.body.removeChild(link);
-    } catch (error) {
-        console.error('Error downloading document:', error);
-        throw new Error('Failed to download document');
-    }
+    // Trigger download
+    const link = window.document.createElement('a');
+    link.href = doc.fileUrl;
+    link.download = doc.name;
+    link.target = '_blank';
+    window.document.body.appendChild(link);
+    link.click();
+    window.document.body.removeChild(link);
+  } catch (error) {
+    console.error('Error downloading document:', error);
+    throw new Error('Failed to download document');
+  }
 };
 
 /**
- * Update document counts in category data
+ * Increment view count
  */
-export const updateDocumentCounts = (
-    categoryId: string,
-    subcategoryId: string,
-    folderId?: string
-): void => {
-    try {
-        if (folderId) {
-            // Update nested folder count
-            const folderKey = `nested_folders_${subcategoryId}`;
-            const folders = localStorage.getItem(folderKey);
+export const incrementViewCount = async (documentId: string): Promise<void> => {
+  try {
+    const { data } = await supabase
+      .from('documents')
+      .select('view_count')
+      .eq('id', documentId)
+      .single();
 
-            if (folders) {
-                const parsedFolders = JSON.parse(folders);
-                const updatedFolders = parsedFolders.map((folder: any) => {
-                    if (folder.id === folderId) {
-                        const docs = getDocuments(categoryId, subcategoryId, folderId);
-                        return { ...folder, documentCount: docs.length };
-                    }
-                    return folder;
-                });
-                localStorage.setItem(folderKey, JSON.stringify(updatedFolders));
-            }
-        }
-
-        // Update subcategory count
-        const totalDocs = getAllDocumentsInSubcategory(categoryId, subcategoryId);
-
-        // Update in custom subcategories if exists
-        const customSubsKey = `custom_subcategories_${categoryId}`;
-        const customSubs = localStorage.getItem(customSubsKey);
-
-        if (customSubs) {
-            const parsed = JSON.parse(customSubs);
-            const updated = parsed.map((sub: any) => {
-                if (sub.id === subcategoryId) {
-                    return { ...sub, documentCount: totalDocs.length };
-                }
-                return sub;
-            });
-            localStorage.setItem(customSubsKey, JSON.stringify(updated));
-        }
-    } catch (error) {
-        console.error('Error updating document counts:', error);
+    if (data) {
+      await supabase
+        .from('documents')
+        .update({ view_count: (data.view_count || 0) + 1 })
+        .eq('id', documentId);
     }
-};
-
-/**
- * Get storage usage information
- */
-export const getStorageInfo = (): { used: number; total: number; percentage: number } => {
-    try {
-        let used = 0;
-        for (let key in localStorage) {
-            if (localStorage.hasOwnProperty(key)) {
-                used += localStorage[key].length + key.length;
-            }
-        }
-
-        // localStorage limit is typically 5-10MB (5MB = 5242880 bytes)
-        const total = 5242880;
-        const percentage = (used / total) * 100;
-
-        return { used, total, percentage };
-    } catch (error) {
-        console.error('Error getting storage info:', error);
-        return { used: 0, total: 5242880, percentage: 0 };
-    }
+  } catch (error) {
+    console.error('Error incrementing view count:', error);
+  }
 };
 
 /**
  * Format file size for display
  */
 export const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 Bytes';
+  if (bytes === 0) return '0 Bytes';
 
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
 
-    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
 };

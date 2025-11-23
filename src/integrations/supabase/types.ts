@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_controls: {
+        Row: {
+          access_level: string
+          granted_at: string
+          id: string
+          nominee_id: string
+          resource_id: string
+          resource_type: string
+          user_id: string
+        }
+        Insert: {
+          access_level: string
+          granted_at?: string
+          id?: string
+          nominee_id: string
+          resource_id: string
+          resource_type: string
+          user_id: string
+        }
+        Update: {
+          access_level?: string
+          granted_at?: string
+          id?: string
+          nominee_id?: string
+          resource_id?: string
+          resource_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_controls_nominee_id_fkey"
+            columns: ["nominee_id"]
+            isOneToOne: false
+            referencedRelation: "nominees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           created_at: string
@@ -51,35 +89,53 @@ export type Database = {
         Row: {
           category_id: string | null
           deleted_at: string | null
+          download_count: number | null
+          external_source: string | null
           file_name: string
           file_size: number | null
           file_type: string | null
           file_url: string
+          folder_id: string | null
           id: string
+          subcategory_id: string | null
+          updated_at: string
           uploaded_at: string
           user_id: string
+          view_count: number | null
         }
         Insert: {
           category_id?: string | null
           deleted_at?: string | null
+          download_count?: number | null
+          external_source?: string | null
           file_name: string
           file_size?: number | null
           file_type?: string | null
           file_url: string
+          folder_id?: string | null
           id?: string
+          subcategory_id?: string | null
+          updated_at?: string
           uploaded_at?: string
           user_id: string
+          view_count?: number | null
         }
         Update: {
           category_id?: string | null
           deleted_at?: string | null
+          download_count?: number | null
+          external_source?: string | null
           file_name?: string
           file_size?: number | null
           file_type?: string | null
           file_url?: string
+          folder_id?: string | null
           id?: string
+          subcategory_id?: string | null
+          updated_at?: string
           uploaded_at?: string
           user_id?: string
+          view_count?: number | null
         }
         Relationships: [
           {
@@ -87,6 +143,78 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "folders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_subcategory_id_fkey"
+            columns: ["subcategory_id"]
+            isOneToOne: false
+            referencedRelation: "subcategories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      folders: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          deleted_at: string | null
+          id: string
+          name: string
+          parent_folder_id: string | null
+          subcategory_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          name: string
+          parent_folder_id?: string | null
+          subcategory_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          name?: string
+          parent_folder_id?: string | null
+          subcategory_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "folders_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "folders_parent_folder_id_fkey"
+            columns: ["parent_folder_id"]
+            isOneToOne: false
+            referencedRelation: "folders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "folders_subcategory_id_fkey"
+            columns: ["subcategory_id"]
+            isOneToOne: false
+            referencedRelation: "subcategories"
             referencedColumns: ["id"]
           },
         ]
@@ -216,6 +344,53 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      subcategories: {
+        Row: {
+          category_id: string
+          created_at: string
+          deleted_at: string | null
+          icon: string | null
+          icon_bg_color: string | null
+          id: string
+          is_custom: boolean | null
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          deleted_at?: string | null
+          icon?: string | null
+          icon_bg_color?: string | null
+          id?: string
+          is_custom?: boolean | null
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          deleted_at?: string | null
+          icon?: string | null
+          icon_bg_color?: string | null
+          id?: string
+          is_custom?: boolean | null
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subcategories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       time_capsules: {
         Row: {

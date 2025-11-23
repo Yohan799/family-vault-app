@@ -1,4 +1,5 @@
 import { Search, Filter, Home, Settings, Vault, Plus, Folder, X, AlertTriangle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -22,13 +23,47 @@ const VaultHome = () => {
   const [accessControlCategory, setAccessControlCategory] = useState<any | null>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem('custom_categories');
-    if (stored) {
-      setCustomCategories(JSON.parse(stored));
-    }
+    loadCategories();
   }, []);
 
-  const handleAddCategory = () => {
+  const loadCategories = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_custom', true)
+        .is('deleted_at', null);
+
+      if (error) throw error;
+
+      const customCats = (data || []).map((cat: any) => ({
+        id: cat.id,
+        name: cat.name,
+        icon: Folder,
+        iconBgColor: cat.icon_bg_color || "bg-yellow-100",
+        documentCount: 0,
+        subcategories: [],
+        isCustom: true
+      }));
+
+      setCustomCategories(customCats);
+
+      // Load document counts for all categories
+      await loadDocumentCounts();
+    } catch (error) {
+      console.error('Error loading categories:', error);
+    }
+  };
+
+  const loadDocumentCounts = async () => {
+    // This will be implemented to count documents per category
+  };
+
+  const handleAddCategory = async () => {
     const sanitizedName = sanitizeInput(categoryName);
     const validation = categoryNameSchema.safeParse(sanitizedName);
 
@@ -55,27 +90,39 @@ const VaultHome = () => {
       return;
     }
 
-    const newCategory = {
-      id: `custom-${Date.now()}`,
-      name: validation.data,
-      icon: Folder,
-      iconBgColor: "bg-yellow-100",
-      documentCount: 0,
-      subcategories: [],
-      isCustom: true
-    };
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
 
-    const updated = [...customCategories, newCategory];
-    setCustomCategories(updated);
-    localStorage.setItem('custom_categories', JSON.stringify(updated));
+      const { data, error } = await supabase
+        .from('categories')
+        .insert({
+          user_id: user.id,
+          name: validation.data,
+          is_custom: true,
+          icon_bg_color: "bg-yellow-100"
+        })
+        .select()
+        .single();
 
-    toast({
-      title: "Category created!",
-      description: `${validation.data} has been added to your vault`
-    });
+      if (error) throw error;
 
-    setCategoryName("");
-    setShowAddDialog(false);
+      toast({
+        title: "Category created!",
+        description: `${validation.data} has been added to your vault`
+      });
+
+      setCategoryName("");
+      setShowAddDialog(false);
+      loadCategories();
+    } catch (error) {
+      console.error('Error adding category:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create category",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleDeleteClick = (category: any, e: React.MouseEvent) => {
@@ -83,23 +130,35 @@ const VaultHome = () => {
     setDeleteConfirm({ show: true, category });
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!deleteConfirm.category) return;
 
     const categoryId = deleteConfirm.category.id;
     const categoryName = deleteConfirm.category.name;
 
-    const updated = customCategories.filter(cat => cat.id !== categoryId);
-    setCustomCategories(updated);
-    localStorage.setItem('custom_categories', JSON.stringify(updated));
-    localStorage.removeItem(`custom_subcategories_${categoryId}`);
+    try {
+      const { error } = await supabase
+        .from('categories')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', categoryId);
 
-    toast({
-      title: "Category deleted",
-      description: `${categoryName} has been removed from your vault`
-    });
+      if (error) throw error;
 
-    setDeleteConfirm({ show: false, category: null });
+      toast({
+        title: "Category deleted",
+        description: `${categoryName} has been removed from your vault`
+      });
+
+      setDeleteConfirm({ show: false, category: null });
+      loadCategories();
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete category",
+        variant: "destructive"
+      });
+    }
   };
 
   const totalDocuments = vaultCategories.reduce((sum, cat) => sum + cat.documentCount, 0);
