@@ -40,7 +40,7 @@ export const storeDocument = async (
 
     if (uploadError) throw uploadError;
 
-    // Insert document record in database. We store the file path and generate signed URLs when reading.
+    // Insert document record in database
     const { data, error } = await supabase
       .from('documents')
       .insert({
@@ -113,12 +113,12 @@ export const getDocuments = async (
 
     const docs = data || [];
 
-    // Generate signed URLs for each document. This works even when the bucket is private.
+    // Generate signed URLs for each document
     const documentsWithUrls: StoredDocument[] = await Promise.all(
       docs.map(async (doc) => {
         let path = doc.file_url as string;
 
-        // Backward compatibility: if we stored a full URL earlier, extract the path after the bucket name.
+        // Backward compatibility: if we stored a full URL earlier, extract the path
         if (path?.startsWith('http')) {
           const parts = path.split('/documents/');
           if (parts.length === 2) {
@@ -251,11 +251,36 @@ export const downloadDocument = async (doc: StoredDocument): Promise<void> => {
       .update({ download_count: doc.downloadCount + 1 })
       .eq('id', doc.id);
 
-    // Trigger download
+    // Try blob download first (works locally), fallback to direct link (for CORS issues)
+    try {
+      const response = await fetch(doc.fileUrl, {
+        mode: 'cors',
+        credentials: 'omit'
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+
+        const link = window.document.createElement('a');
+        link.href = blobUrl;
+        link.download = doc.name;
+        window.document.body.appendChild(link);
+        link.click();
+        window.document.body.removeChild(link);
+        window.URL.revokeObjectURL(blobUrl);
+        return;
+      }
+    } catch (fetchError) {
+      console.warn('Blob download failed, using direct link:', fetchError);
+    }
+
+    // Fallback: Open in new tab with download attribute  
     const link = window.document.createElement('a');
     link.href = doc.fileUrl;
     link.download = doc.name;
     link.target = '_blank';
+    link.rel = 'noopener noreferrer';
     window.document.body.appendChild(link);
     link.click();
     window.document.body.removeChild(link);

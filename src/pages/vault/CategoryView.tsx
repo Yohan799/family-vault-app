@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { categoryNameSchema, sanitizeInput } from "@/lib/validation";
 import { AccessControlModal } from "@/components/vault/AccessControlModal";
 import { ActionMenu, createSubcategoryActionMenu } from "@/components/vault/ActionMenu";
+import { supabase } from "@/integrations/supabase/client";
 
 const CategoryView = () => {
   const navigate = useNavigate();
@@ -32,6 +33,37 @@ const CategoryView = () => {
 
       let foundCategory = vaultCategories.find((cat) => cat.id === categoryId);
 
+      // If not found in hardcoded categories, check Supabase
+      if (!foundCategory) {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const { data, error } = await supabase
+              .from('categories')
+              .select('*')
+              .eq('id', categoryId)
+              .eq('user_id', user.id)
+              .is('deleted_at', null)
+              .single();
+
+            if (!error && data) {
+              foundCategory = {
+                id: data.id,
+                name: data.name,
+                icon: Folder,
+                iconBgColor: data.icon_bg_color || "bg-yellow-100",
+                documentCount: 0,
+                subcategories: [],
+                isCustom: true
+              };
+            }
+          }
+        } catch (e) {
+          console.error("Error loading category from Supabase:", e);
+        }
+      }
+
+      // Fallback to localStorage for backward compatibility
       if (!foundCategory) {
         const customCats = localStorage.getItem('custom_categories');
         if (customCats) {

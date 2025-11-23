@@ -232,12 +232,21 @@ const SubcategoryView = () => {
         return;
       }
 
+      if (!fullDoc.fileUrl) {
+        toast({
+          title: "Error",
+          description: "Document URL is not available. Please try again.",
+          variant: "destructive"
+        });
+        return;
+      }
+
       // Increment view count
       await incrementViewCount(fullDoc.id);
 
       // Open in new window
       window.open(fullDoc.fileUrl, '_blank');
-      
+
       toast({
         title: "Opening document",
         description: `Viewing ${doc.name}`,
@@ -246,7 +255,7 @@ const SubcategoryView = () => {
       console.error("Error viewing document:", error);
       toast({
         title: "Error",
-        description: "Could not view the document",
+        description: "Could not open the document. Please check your connection and try again.",
         variant: "destructive"
       });
     }
@@ -260,6 +269,20 @@ const SubcategoryView = () => {
     if (!deleteDocConfirm.doc) return;
 
     try {
+      // Check authentication first
+      const { supabase } = await import('@/integrations/supabase/client');
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        toast({
+          title: "Authentication required",
+          description: "Please log in to delete documents",
+          variant: "destructive"
+        });
+        setDeleteDocConfirm({ show: false, doc: null });
+        return;
+      }
+
       const { deleteDocument } = await import('@/lib/documentStorage');
       const success = await deleteDocument(deleteDocConfirm.doc.id);
 
@@ -280,7 +303,7 @@ const SubcategoryView = () => {
       console.error("Error deleting document:", error);
       toast({
         title: "Error",
-        description: "Could not delete the document",
+        description: "Could not delete the document. Please try again.",
         variant: "destructive"
       });
       setDeleteDocConfirm({ show: false, doc: null });
