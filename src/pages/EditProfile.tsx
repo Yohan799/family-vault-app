@@ -1,56 +1,50 @@
-import { ArrowLeft, Image as ImageIcon, CalendarIcon } from "lucide-react";
+import { ArrowLeft, CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import { PhotoCropper } from "@/components/PhotoCropper";
-import { PhotoGallery } from "@/components/PhotoGallery";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { uploadProfileImage } from "@/services/profileService";
 
 const EditProfile = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { profile, user, updateProfile, refreshProfile } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [profileImage, setProfileImage] = useState<string | null>(null);
   const [tempImageSrc, setTempImageSrc] = useState<string | null>(null);
   const [showCropper, setShowCropper] = useState(false);
-  const [showGallery, setShowGallery] = useState(false);
-  const [photoGallery, setPhotoGallery] = useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  
   const [formData, setFormData] = useState({
-    fullName: "Raj Kumar",
-    email: "raj@example.com",
-    phone: "+91 98765 43210",
-    location: "Mumbai, India",
-    dateOfBirth: ""
+    fullName: "",
+    phone: "",
   });
   const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(undefined);
 
   useEffect(() => {
-    const savedPhotos = localStorage.getItem("profilePhotos");
-    if (savedPhotos) {
-      setPhotoGallery(JSON.parse(savedPhotos));
-    }
-    const savedCurrentPhoto = localStorage.getItem("currentProfilePhoto");
-    if (savedCurrentPhoto) {
-      setProfileImage(savedCurrentPhoto);
-    }
-    const savedProfile = localStorage.getItem("profileData");
-    if (savedProfile) {
-      const data = JSON.parse(savedProfile);
-      setFormData(data);
-      if (data.dateOfBirth && data.dateOfBirth.trim() !== "") {
-        const parsedDate = new Date(data.dateOfBirth);
-        if (!isNaN(parsedDate.getTime())) {
-          setDateOfBirth(parsedDate);
+    if (profile) {
+      setFormData({
+        fullName: profile.full_name || "",
+        phone: profile.phone || "",
+      });
+      
+      if (profile.date_of_birth) {
+        try {
+          setDateOfBirth(new Date(profile.date_of_birth));
+        } catch (e) {
+          console.error('Invalid date:', e);
         }
       }
     }
-  }, []);
+  }, [profile]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -75,53 +69,83 @@ const EditProfile = () => {
     }
   };
 
-  const handleCropComplete = (croppedImage: string) => {
-    const updatedGallery = [...photoGallery, croppedImage];
-    setPhotoGallery(updatedGallery);
-    setProfileImage(croppedImage);
-    localStorage.setItem("profilePhotos", JSON.stringify(updatedGallery));
-    localStorage.setItem("currentProfilePhoto", croppedImage);
-    toast({
-      title: "Photo uploaded!",
-      description: "Your profile picture has been updated",
-    });
-  };
+  const handleCropComplete = async (croppedImageDataUrl: string) => {
+    if (!user) return;
+    
+    setIsUploading(true);
+    try {
+      // Convert base64 to blob
+      const response = await fetch(croppedImageDataUrl);
+      const blob = await response.blob();
+      const file = new File([blob], `profile-${Date.now()}.jpg`, { type: 'image/jpeg' });
 
-  const handleSelectFromGallery = (photo: string) => {
-    setProfileImage(photo);
-    localStorage.setItem("currentProfilePhoto", photo);
-    toast({
-      title: "Photo selected!",
-      description: "Your profile picture has been updated",
-    });
-  };
+      // Upload to Supabase Storage
+      const imageUrl = await uploadProfileImage(user.id, file);
 
-  const handleDeletePhoto = (photo: string) => {
-    const updatedGallery = photoGallery.filter((p) => p !== photo);
-    setPhotoGallery(updatedGallery);
-    localStorage.setItem("profilePhotos", JSON.stringify(updatedGallery));
-    if (profileImage === photo) {
-      setProfileImage(null);
-      localStorage.removeItem("currentProfilePhoto");
+      // Update profile with new image URL
+      await updateProfile({ profile_image_url: imageUrl });
+      await refreshProfile();
+
+      toast({
+        title: "Photo uploaded!",
+        description: "Your profile picture has been updated",
+      });
+    } catch (error: any) {
+      console.error('Error uploading photo:', error);
+      toast({
+        title: "Upload failed",
+        description: error.message || "Failed to upload photo",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
     }
-    toast({
-      title: "Photo deleted",
-      description: "The photo has been removed from your gallery",
-    });
   };
 
-  const handleSave = () => {
-    const dataToSave = {
-      ...formData,
-      dateOfBirth: dateOfBirth ? format(dateOfBirth, "PPP") : ""
-    };
-    localStorage.setItem("profileData", JSON.stringify(dataToSave));
-    toast({
-      title: "Profile updated!",
-      description: "Your changes have been saved successfully",
-    });
-    navigate("/profile");
+  const handleSave = async () => {
+    if (!user) return;
+    
+    setIsSaving(true);
+    try {
+      await updateProfile({
+        full_name: formData.fullName,
+        phone: formData.phone,
+        date_of_birth: dateOfBirth ? dateOfBirth.toISOString().split('T')[0] : null,
+      });
+
+      toast({
+        title: "Profile updated!",
+        description: "Your changes have been saved successfully",
+      });
+      
+      navigate("/profile");
+    } catch (error: any) {
+      console.error('Error updating profile:', error);
+      toast({
+        title: "Update failed",
+        description: error.message || "Failed to update profile",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  if (!profile || !user) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
+
+  const displayName = formData.fullName || "User";
+  const initials = displayName
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
 
   return (
     <div className="min-h-screen bg-background">
@@ -138,9 +162,9 @@ const EditProfile = () => {
         <div className="flex flex-col items-center">
           <div className="relative">
             <Avatar className="w-24 h-24 bg-primary-foreground">
-              {profileImage && <AvatarImage src={profileImage} alt="Profile" />}
+              {profile.profile_image_url && <AvatarImage src={profile.profile_image_url} alt="Profile" />}
               <AvatarFallback className="bg-primary-foreground text-primary font-bold text-2xl">
-                {formData.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                {initials}
               </AvatarFallback>
             </Avatar>
             <input
@@ -149,13 +173,15 @@ const EditProfile = () => {
               onChange={handleImageUpload}
               accept="image/*"
               className="hidden"
+              disabled={isUploading}
             />
             <Button
               size="sm"
               onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
               className="absolute bottom-0 right-0 rounded-full w-8 h-8 p-0 bg-card text-foreground hover:bg-card/90"
             >
-              ✏️
+              {isUploading ? "..." : "✏️"}
             </Button>
           </div>
           <p className="text-sm opacity-90 mt-4">Tap to change photo</p>
@@ -177,10 +203,11 @@ const EditProfile = () => {
             <label className="text-sm font-medium text-foreground">Email</label>
             <Input
               type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="bg-card border-border"
+              value={profile.email}
+              disabled
+              className="bg-card border-border opacity-60"
             />
+            <p className="text-xs text-muted-foreground">Email cannot be changed</p>
           </div>
 
           <div className="space-y-2">
@@ -190,15 +217,7 @@ const EditProfile = () => {
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
               className="bg-card border-border"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Location</label>
-            <Input
-              value={formData.location}
-              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-              className="bg-card border-border"
+              placeholder="+91 98765 43210"
             />
           </div>
 
@@ -235,9 +254,10 @@ const EditProfile = () => {
 
         <Button
           onClick={handleSave}
+          disabled={isSaving}
           className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12"
         >
-          Save Changes
+          {isSaving ? "Saving..." : "Save Changes"}
         </Button>
       </div>
 
@@ -249,15 +269,6 @@ const EditProfile = () => {
         }}
         imageSrc={tempImageSrc || ""}
         onCropComplete={handleCropComplete}
-      />
-
-      <PhotoGallery
-        open={showGallery}
-        onClose={() => setShowGallery(false)}
-        photos={photoGallery}
-        selectedPhoto={profileImage}
-        onSelectPhoto={handleSelectFromGallery}
-        onDeletePhoto={handleDeletePhoto}
       />
     </div>
   );

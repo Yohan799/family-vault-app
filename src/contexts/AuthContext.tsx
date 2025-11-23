@@ -1,149 +1,196 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
-interface User {
-    id: string;
-    email: string;
-    fullName: string;
-    phone?: string;
-    avatarUrl?: string;
-    createdAt: string;
+interface Profile {
+  id: string;
+  email: string;
+  full_name: string | null;
+  phone: string | null;
+  date_of_birth: string | null;
+  profile_image_url: string | null;
+  two_factor_enabled: boolean;
+  biometric_enabled: boolean;
 }
 
 interface AuthContextType {
-    user: User | null;
-    isAuthenticated: boolean;
-    isLoading: boolean;
-    signUp: (email: string, password: string, fullName: string) => Promise<void>;
-    signIn: (email: string, password: string) => Promise<void>;
-    signInWithGoogle: () => Promise<void>;
-    signOut: () => void;
-    updateProfile: (updates: Partial<User>) => void;
+  user: SupabaseUser | null;
+  profile: Profile | null;
+  session: Session | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  signUp: (email: string, password: string, fullName: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
+  signOut: () => Promise<void>;
+  updateProfile: (updates: Partial<Profile>) => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [user, setUser] = useState<User | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-    // Load user from localStorage on mount
-    useEffect(() => {
-        const storedUser = localStorage.getItem('currentUser');
-        if (storedUser) {
-            setUser(JSON.parse(storedUser));
+  // Fetch user profile from database
+  const fetchProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) throw error;
+      setProfile(data);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  };
+
+  // Initialize auth state
+  useEffect(() => {
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        // Fetch profile when user signs in
+        if (session?.user) {
+          // Use setTimeout to defer Supabase calls
+          setTimeout(() => {
+            fetchProfile(session.user.id);
+          }, 0);
+        } else {
+          setProfile(null);
         }
-        setIsLoading(false);
-    }, []);
-
-    const signUp = async (email: string, password: string, fullName: string) => {
-        // Mock signup - simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        // Check if user already exists
-        const users = JSON.parse(localStorage.getItem('users') || '[]');
-        if (users.find((u: any) => u.email === email)) {
-            throw new Error('User already exists');
-        }
-
-        // Create new user
-        const newUser: User = {
-            id: `user-${Date.now()}`,
-            email,
-            fullName,
-            createdAt: new Date().toISOString(),
-        };
-
-        // Store password separately (in real app, this would be hashed on backend)
-        const userWithPassword = { ...newUser, password };
-        users.push(userWithPassword);
-        localStorage.setItem('users', JSON.stringify(users));
-
-        // Set as current user
-        localStorage.setItem('currentUser', JSON.stringify(newUser));
-
-        // Mark as first login for feature tour
-        localStorage.setItem('isFirstLogin', 'true');
-
-        setUser(newUser);
-    };
-
-    const signIn = async (email: string, password: string) => {
-        // Mock signin - simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        const users = JSON.parse(localStorage.getItem('users') || '[]');
-        const user = users.find((u: any) => u.email === email && u.password === password);
-
-        if (!user) {
-            throw new Error('Invalid credentials');
-        }
-
-        // Remove password before setting user state
-        const { password: _, ...userWithoutPassword } = user;
-        localStorage.setItem('currentUser', JSON.stringify(userWithoutPassword));
-        setUser(userWithoutPassword);
-    };
-
-    const signInWithGoogle = async () => {
-        // Mock Google signin
-        await new Promise(resolve => setTimeout(resolve, 1500));
-
-        const mockGoogleUser: User = {
-            id: `google-${Date.now()}`,
-            email: 'user@gmail.com',
-            fullName: 'Google User',
-            avatarUrl: 'https://i.pravatar.cc/150?img=1',
-            createdAt: new Date().toISOString(),
-        };
-
-        localStorage.setItem('currentUser', JSON.stringify(mockGoogleUser));
-        localStorage.setItem('isFirstLogin', 'true');
-        setUser(mockGoogleUser);
-    };
-
-    const signOut = () => {
-        localStorage.removeItem('currentUser');
-        setUser(null);
-    };
-
-    const updateProfile = (updates: Partial<User>) => {
-        if (!user) return;
-
-        const updatedUser = { ...user, ...updates };
-        localStorage.setItem('currentUser', JSON.stringify(updatedUser));
-        setUser(updatedUser);
-
-        // Also update in users array
-        const users = JSON.parse(localStorage.getItem('users') || '[]');
-        const userIndex = users.findIndex((u: any) => u.id === user.id);
-        if (userIndex !== -1) {
-            users[userIndex] = { ...users[userIndex], ...updates };
-            localStorage.setItem('users', JSON.stringify(users));
-        }
-    };
-
-    return (
-        <AuthContext.Provider
-            value={{
-                user,
-                isAuthenticated: !!user,
-                isLoading,
-                signUp,
-                signIn,
-                signInWithGoogle,
-                signOut,
-                updateProfile,
-            }}
-        >
-            {children}
-        </AuthContext.Provider>
+      }
     );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        fetchProfile(session.user.id);
+      }
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const signUp = async (email: string, password: string, fullName: string) => {
+    const redirectUrl = `${window.location.origin}/dashboard`;
+    
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: {
+          full_name: fullName,
+        }
+      }
+    });
+
+    if (error) throw error;
+    
+    // Mark as first login for feature tour
+    localStorage.setItem('isFirstLogin', 'true');
+  };
+
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) throw error;
+
+    // Update last_login
+    if (user) {
+      await supabase
+        .from('profiles')
+        .update({ last_login: new Date().toISOString() })
+        .eq('id', user.id);
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    const redirectUrl = `${window.location.origin}/dashboard`;
+    
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: redirectUrl,
+      }
+    });
+
+    if (error) throw error;
+    
+    localStorage.setItem('isFirstLogin', 'true');
+  };
+
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+    
+    setUser(null);
+    setProfile(null);
+    setSession(null);
+  };
+
+  const updateProfile = async (updates: Partial<Profile>) => {
+    if (!user) throw new Error('No user logged in');
+
+    const { error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', user.id);
+
+    if (error) throw error;
+
+    // Update local profile state
+    setProfile(prev => prev ? { ...prev, ...updates } : null);
+  };
+
+  const refreshProfile = async () => {
+    if (user) {
+      await fetchProfile(user.id);
+    }
+  };
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        profile,
+        session,
+        isAuthenticated: !!user,
+        isLoading,
+        signUp,
+        signIn,
+        signInWithGoogle,
+        signOut,
+        updateProfile,
+        refreshProfile,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (context === undefined) {
-        throw new Error('useAuth must be used within an AuthProvider');
-    }
-    return context;
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };

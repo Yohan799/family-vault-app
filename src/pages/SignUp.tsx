@@ -93,16 +93,17 @@ const SignUp = () => {
 
     setIsLoading(true);
     try {
-      await signUp(formData.email, formData.password, formData.name);
+      await signUp(formData.email.toLowerCase(), formData.password, formData.name);
       toast({
         title: "Success",
         description: "Account created successfully!",
       });
       navigate("/dashboard");
     } catch (error: any) {
+      const errorMessage = error.message || "Unable to create account";
       toast({
         title: "Sign up failed",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

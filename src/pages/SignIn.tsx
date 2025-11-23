@@ -47,16 +47,17 @@ const SignIn = () => {
 
     setIsLoading(true);
     try {
-      await signIn(formData.email, formData.password);
+      await signIn(formData.email.toLowerCase(), formData.password);
       toast({
         title: "Welcome back!",
         description: "Successfully signed in",
       });
       navigate("/dashboard");
     } catch (error: any) {
+      const errorMessage = error.message || "Invalid email or password";
       toast({
         title: "Sign in failed",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
