@@ -5,15 +5,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const SettingsPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [profileData, setProfileData] = useState({
-    fullName: "Guest User",
-    email: "guest@example.com",
-    profileImage: null as string | null,
-  });
+  const { profile } = useAuth();
   const [toggleStates, setToggleStates] = useState({
     twoFactorAuth: false,
     biometric: false,
@@ -27,20 +24,6 @@ const SettingsPage = () => {
 
   useEffect(() => {
     const loadSettings = () => {
-      const savedProfile = localStorage.getItem("profileData");
-      if (savedProfile) {
-        const data = JSON.parse(savedProfile);
-        setProfileData({
-          fullName: data.fullName || "Guest User",
-          email: data.email || "guest@example.com",
-          profileImage: null,
-        });
-      }
-      const savedPhoto = localStorage.getItem("currentProfilePhoto");
-      if (savedPhoto) {
-        setProfileData(prev => ({ ...prev, profileImage: savedPhoto }));
-      }
-
       // Load toggle states from userSettings
       const savedUserSettings = localStorage.getItem("userSettings");
       if (savedUserSettings) {
@@ -106,6 +89,22 @@ const SettingsPage = () => {
     { icon: MessageSquare, title: "Contact Support", subtitle: "Get help", path: "/contact-support", color: "bg-teal-100" },
   ];
 
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
+
+  const displayName = profile.full_name || "User";
+  const initials = displayName
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
@@ -117,20 +116,20 @@ const SettingsPage = () => {
       </div>
 
       <div className="px-4 space-y-3">
-        {/* Profile Card - Restored */}
+        {/* Profile Card */}
         <button
           onClick={() => navigate("/profile")}
           className="w-full bg-card rounded-xl p-4 flex items-center gap-4 hover:bg-accent transition-colors mb-2"
         >
           <Avatar className="w-12 h-12 bg-primary">
-            {profileData.profileImage && <AvatarImage src={profileData.profileImage} alt="Profile" />}
+            {profile.profile_image_url && <AvatarImage src={profile.profile_image_url} alt="Profile" />}
             <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
-              {profileData.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+              {initials}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 text-left">
-            <h3 className="font-semibold text-foreground">{profileData.fullName}</h3>
-            <p className="text-sm text-muted-foreground">{profileData.email}</p>
+            <h3 className="font-semibold text-foreground">{displayName}</h3>
+            <p className="text-sm text-muted-foreground">{profile.email}</p>
           </div>
           <ChevronRight className="w-5 h-5 text-muted-foreground" />
         </button>
