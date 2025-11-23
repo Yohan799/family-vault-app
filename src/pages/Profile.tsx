@@ -29,9 +29,9 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="bg-primary text-primary-foreground p-6">
+      <div className="bg-primary/20 text-foreground p-6 rounded-b-3xl">
         <div className="flex items-center gap-4 mb-8">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="text-primary-foreground">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="text-foreground">
             <ArrowLeft className="w-6 h-6" />
           </Button>
           <h1 className="text-2xl font-bold">Profile</h1>
@@ -39,14 +39,14 @@ const Profile = () => {
 
         {/* Profile Avatar */}
         <div className="flex flex-col items-center">
-          <Avatar className="w-24 h-24 bg-primary-foreground mb-4">
+          <Avatar className="w-24 h-24 bg-white mb-4">
             {profileData.profileImage && <AvatarImage src={profileData.profileImage} alt="Profile" />}
-            <AvatarFallback className="bg-primary-foreground text-primary font-bold text-2xl">
+            <AvatarFallback className="bg-white text-primary font-bold text-2xl">
               {profileData.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
             </AvatarFallback>
           </Avatar>
           <h2 className="text-2xl font-bold mb-1">{profileData.fullName}</h2>
-          <p className="text-sm opacity-90">{profileData.email}</p>
+          <p className="text-sm text-muted-foreground">{profileData.email}</p>
         </div>
       </div>
 
@@ -115,9 +115,9 @@ const Profile = () => {
         </div>
 
         {/* Edit Button */}
-        <Button 
+        <Button
           onClick={() => navigate("/edit-profile")}
-          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12"
+          className="w-full bg-primary/20 hover:bg-primary/30 text-primary rounded-xl h-12"
         >
           Edit Profile
         </Button>

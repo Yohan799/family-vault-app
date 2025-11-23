@@ -30,9 +30,9 @@ const AutoLockTimeout = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="bg-primary text-primary-foreground p-6">
+      <div className="bg-primary/20 text-foreground p-6 rounded-b-3xl">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="text-primary-foreground">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="text-foreground">
             <ArrowLeft className="w-6 h-6" />
           </Button>
           <h1 className="text-2xl font-bold">Auto Lock Timeout</h1>
@@ -59,9 +59,9 @@ const AutoLockTimeout = () => {
           ))}
         </div>
 
-        <Button 
+        <Button
           onClick={handleSave}
-          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12"
+          className="w-full bg-primary/20 hover:bg-primary/30 text-primary rounded-xl h-12"
         >
           Save Changes
         </Button>

@@ -33,7 +33,7 @@ const EmailPreferences = () => {
       });
       return;
     }
-    
+
     if (confirm("Are you sure you want to delete this email?")) {
       const deletedEmail = emails[index];
       setEmails(emails.filter((_, i) => i !== index));
@@ -46,7 +46,7 @@ const EmailPreferences = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="bg-primary text-primary-foreground p-6">
+      <div className="bg-primary/20 text-foreground p-6 rounded-b-3xl">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="text-primary-foreground">
             <ArrowLeft className="w-6 h-6" />
@@ -70,8 +70,8 @@ const EmailPreferences = () => {
                 <p className="font-medium text-foreground">{email}</p>
                 <p className="text-xs text-muted-foreground">{index === 0 ? "Primary" : "Secondary"}</p>
               </div>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 size="sm"
                 onClick={() => handleDeleteEmail(index)}
                 className="text-destructive hover:text-destructive hover:bg-destructive/10"
@@ -92,13 +92,13 @@ const EmailPreferences = () => {
               className="bg-background"
             />
             <div className="flex gap-2">
-              <Button 
+              <Button
                 onClick={handleAddEmail}
-                className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
+                className="flex-1 bg-primary/20 hover:bg-primary/30 text-primary"
               >
                 Add Email
               </Button>
-              <Button 
+              <Button
                 variant="outline"
                 onClick={() => {
                   setIsAdding(false);
@@ -110,7 +110,7 @@ const EmailPreferences = () => {
             </div>
           </div>
         ) : (
-          <Button 
+          <Button
             onClick={() => setIsAdding(true)}
             variant="outline"
             className="w-full h-12 rounded-xl"

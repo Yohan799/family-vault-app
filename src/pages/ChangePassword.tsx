@@ -40,9 +40,9 @@ const ChangePassword = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="bg-primary text-primary-foreground p-6">
+      <div className="bg-primary/20 text-foreground p-6 rounded-b-3xl">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="text-primary-foreground">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="text-foreground">
             <ArrowLeft className="w-6 h-6" />
           </Button>
           <h1 className="text-2xl font-bold">Change Password</h1>
@@ -57,7 +57,7 @@ const ChangePassword = () => {
               type="password"
               placeholder="Enter current password"
               value={formData.currentPassword}
-              onChange={(e) => setFormData({...formData, currentPassword: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
               className="bg-card border-border"
             />
           </div>
@@ -68,7 +68,7 @@ const ChangePassword = () => {
               type="password"
               placeholder="Enter new password"
               value={formData.newPassword}
-              onChange={(e) => setFormData({...formData, newPassword: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
               className="bg-card border-border"
             />
           </div>
@@ -79,7 +79,7 @@ const ChangePassword = () => {
               type="password"
               placeholder="Confirm new password"
               value={formData.confirmPassword}
-              onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
               className="bg-card border-border"
             />
           </div>
@@ -91,9 +91,9 @@ const ChangePassword = () => {
           </p>
         </div>
 
-        <Button 
+        <Button
           onClick={handleSave}
-          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12"
+          className="w-full bg-primary/20 hover:bg-primary/30 text-primary rounded-xl h-12"
         >
           Update Password
         </Button>

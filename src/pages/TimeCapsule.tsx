@@ -1,15 +1,18 @@
-import { ArrowLeft, Clock, Home, Lock as LockIcon, Settings, Info, Upload, Send } from "lucide-react";
+import { ArrowLeft, Clock, Home, Lock as LockIcon, Settings, Info, Upload, Send, Edit2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 const TimeCapsule = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; capsule: any | null }>({ open: false, capsule: null });
   const [capsules, setCapsules] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     title: "",
@@ -19,20 +22,50 @@ const TimeCapsule = () => {
     phone: ""
   });
 
+  useEffect(() => {
+    const stored = localStorage.getItem('timeCapsules');
+    if (stored) {
+      try {
+        setCapsules(JSON.parse(stored));
+      } catch (e) {
+        setCapsules([]);
+      }
+    }
+  }, []);
+
   const handleCreateCapsule = () => {
-    if (!formData.title || !formData.message || !formData.releaseDate || !formData.recipientEmail) {
+    // If editing, update existing capsule
+    if (editingId) {
+      const updatedCapsules = capsules.map(c =>
+        c.id === editingId ? { ...c, ...formData } : c
+      );
+      setCapsules(updatedCapsules);
+      localStorage.setItem('timeCapsules', JSON.stringify(updatedCapsules));
+
       toast({
-        title: "Required fields missing",
-        description: "Please fill in all required fields",
-        variant: "destructive"
+        title: "Time capsule updated!",
+        description: `${formData.title} has been updated successfully`,
       });
+
+      setFormData({ title: "", message: "", releaseDate: "", recipientEmail: "", phone: "" });
+      setEditingId(null);
+      setShowCreateForm(false);
       return;
     }
+
+    // Create new capsule
     const newCapsule = {
       id: Date.now(),
       ...formData
     };
-    setCapsules([...capsules, newCapsule]);
+    const updatedCapsules = [...capsules, newCapsule];
+    setCapsules(updatedCapsules);
+    localStorage.setItem('timeCapsules', JSON.stringify(updatedCapsules));
+    localStorage.setItem('timeCapsulesCount', String(updatedCapsules.length));
+
+    // Trigger dashboard update
+    window.dispatchEvent(new Event("countsUpdated"));
+
     toast({
       title: "Time capsule created!",
       description: `${formData.title} will be released on ${formData.releaseDate}`,
@@ -58,11 +91,11 @@ const TimeCapsule = () => {
         {/* Stats */}
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-card/50 rounded-xl p-4 text-center backdrop-blur-sm">
-            <div className="text-3xl font-bold mb-1">0</div>
+            <div className="text-3xl font-bold mb-1 text-blue-600">{capsules.length}</div>
             <div className="text-sm text-muted-foreground">Scheduled</div>
           </div>
           <div className="bg-card/50 rounded-xl p-4 text-center backdrop-blur-sm">
-            <div className="text-3xl font-bold mb-1">0</div>
+            <div className="text-3xl font-bold mb-1 text-green-600">0</div>
             <div className="text-sm text-muted-foreground">Released</div>
           </div>
         </div>
@@ -72,7 +105,9 @@ const TimeCapsule = () => {
         {/* Create Form */}
         {showCreateForm && (
           <div className="bg-card rounded-2xl p-6 space-y-4">
-            <h2 className="text-lg font-bold text-foreground mb-4">+ Create New Time Capsule</h2>
+            <h2 className="text-lg font-bold text-foreground mb-4">
+              {editingId ? '✏️ Edit Time Capsule' : '+ Create New Time Capsule'}
+            </h2>
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Title *</label>
@@ -225,61 +260,94 @@ const TimeCapsule = () => {
             <h2 className="text-lg font-bold text-foreground">Your Time Capsules</h2>
 
             {capsules.map((capsule) => (
-              <div key={capsule.id} className="bg-card rounded-2xl p-4">
-                <h3 className="font-semibold text-foreground mb-1">{capsule.title}</h3>
-                <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{capsule.message}</p>
-                <div className="flex gap-2 text-xs text-muted-foreground">
-                  <span>Release: {capsule.releaseDate}</span>
-                  <span>•</span>
-                  <span>{capsule.recipientEmail}</span>
+              <div key={capsule.id} className="bg-card rounded-2xl p-4 flex justify-between items-start gap-4">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-foreground mb-1">{capsule.title}</h3>
+                  <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{capsule.message}</p>
+                  <div className="flex gap-2 text-xs text-muted-foreground">
+                    <span>Release: {capsule.releaseDate}</span>
+                    <span>•</span>
+                    <span>{capsule.recipientEmail}</span>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setFormData({
+                        title: capsule.title,
+                        message: capsule.message,
+                        releaseDate: capsule.releaseDate,
+                        recipientEmail: capsule.recipientEmail,
+                        phone: capsule.phone || ''
+                      });
+                      setEditingId(capsule.id);
+                      setShowCreateForm(true);
+                    }}
+                    className="hover:bg-blue-100 hover:text-blue-600"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setDeleteDialog({ open: true, capsule })}
+                    className="hover:bg-red-100 hover:text-red-600"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
                 </div>
               </div>
             ))}
           </div>
         )}
+      </div>
 
-        {/* Create Capsule Button - Show when no form and no capsules */}
-        {!showCreateForm && capsules.length === 0 && (
-          <div className="bg-card rounded-2xl p-8 text-center">
-            <div className="w-24 h-24 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
-              <Clock className="w-12 h-12 text-muted-foreground" />
-            </div>
-            <h3 className="text-xl font-bold text-foreground mb-2">No Time Capsules Yet</h3>
-            <p className="text-sm text-muted-foreground mb-6">
-              Create your first time capsule to send messages to the future.
-            </p>
-            <Button
-              onClick={() => setShowCreateForm(true)}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-8"
-            >
-              + Create Time Capsule
-            </Button>
+
+      {/* Create Capsule Button - Show when no form and no capsules */}
+      {!showCreateForm && capsules.length === 0 && (
+        <div className="bg-card rounded-2xl p-8 text-center">
+          <div className="w-24 h-24 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
+            <Clock className="w-12 h-12 text-muted-foreground" />
           </div>
-        )}
-
-        {/* Create Button when capsules exist */}
-        {!showCreateForm && capsules.length > 0 && (
+          <h3 className="text-xl font-bold text-foreground mb-2">No Time Capsules Yet</h3>
+          <p className="text-sm text-muted-foreground mb-6">
+            Create your first time capsule to send messages to the future.
+          </p>
           <Button
             onClick={() => setShowCreateForm(true)}
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12 gap-2"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-8"
           >
-            <Send className="w-4 h-4" />
-            Create New Time Capsule
+            + Create Time Capsule
           </Button>
-        )}
+        </div>
+      )}
 
-        {/* Info Box */}
-        <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 flex gap-3">
-          <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center flex-shrink-0">
-            <Info className="w-4 h-4 text-primary" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-foreground mb-1">About Time Capsules</h3>
-            <p className="text-sm text-muted-foreground">
-              Time capsules allow you to create messages that will be automatically released at a future date.
-              They can be sent to specific recipients or accessed by your nominees when conditions are met.
-            </p>
-          </div>
+      {/* Create Button when capsules exist */}
+      {!showCreateForm && capsules.length > 0 && (
+        <Button
+          onClick={() => setShowCreateForm(true)}
+          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12 gap-2"
+        >
+          <Send className="w-4 h-4" />
+          Create New Time Capsule
+        </Button>
+      )}
+
+      {/* Info Box */}
+      <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 flex gap-3">
+        <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center flex-shrink-0">
+          <Info className="w-4 h-4 text-primary" />
+        </div>
+        <div>
+          <h3 className="font-semibold text-foreground mb-1">About Time Capsules</h3>
+          <p className="text-sm text-muted-foreground">
+            Time capsules allow you to create messages that will be automatically released at a future date.
+            They can be sent to specific recipients or accessed by your nominees when conditions are met.
+          </p>
         </div>
       </div>
 
@@ -306,6 +374,31 @@ const TimeCapsule = () => {
           </button>
         </div>
       </div>
+
+      {/* Confirm Delete Dialog */}
+      <ConfirmDialog
+        open={deleteDialog.open}
+        onOpenChange={(open) => setDeleteDialog({ open, capsule: null })}
+        title="Delete Time Capsule?"
+        description={`Are you sure you want to delete "${deleteDialog.capsule?.title}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="destructive"
+        onConfirm={() => {
+          if (deleteDialog.capsule) {
+            const updated = capsules.filter(c => c.id !== deleteDialog.capsule!.id);
+            setCapsules(updated);
+            localStorage.setItem('timeCapsules', JSON.stringify(updated));
+            localStorage.setItem('timeCapsulesCount', String(updated.length));
+            window.dispatchEvent(new Event('countsUpdated'));
+            toast({
+              title: 'Time Capsule Deleted',
+              description: `"${deleteDialog.capsule.title}" has been deleted.`
+            });
+            setDeleteDialog({ open: false, capsule: null });
+          }
+        }}
+      />
     </div>
   );
 };

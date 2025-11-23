@@ -25,7 +25,7 @@ const ContactSupport = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="bg-primary text-primary-foreground p-6">
+      <div className="bg-primary/20 text-foreground p-6 rounded-b-3xl">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="text-primary-foreground">
             <ArrowLeft className="w-6 h-6" />
@@ -56,9 +56,9 @@ const ContactSupport = () => {
                 className="bg-background min-h-[120px]"
               />
             </div>
-            <Button 
+            <Button
               onClick={handleSubmit}
-              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground h-12 rounded-xl"
+              className="w-full bg-primary/20 hover:bg-primary/30 text-primary h-12 rounded-xl"
             >
               Send Message
             </Button>
@@ -68,7 +68,7 @@ const ContactSupport = () => {
         <div>
           <h2 className="text-lg font-semibold text-foreground mb-4">Other ways to reach us</h2>
           <div className="space-y-3">
-            <a 
+            <a
               href="mailto:support@familyvault.com"
               className="w-full bg-card rounded-2xl p-4 flex items-center gap-3 hover:bg-accent transition-colors border border-border"
             >
@@ -85,7 +85,7 @@ const ContactSupport = () => {
               </div>
             </a>
 
-            <button 
+            <button
               onClick={() => {
                 toast({
                   title: "Live Chat Starting",
@@ -107,7 +107,7 @@ const ContactSupport = () => {
               </div>
             </button>
 
-            <button 
+            <button
               onClick={() => {
                 toast({
                   title: "Call Now",

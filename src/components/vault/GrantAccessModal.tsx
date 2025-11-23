@@ -14,28 +14,70 @@ interface GrantAccessModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   personName: string;
+  documentId?: string;
+  nomineeId?: string;
+  onAccessGranted?: () => void;
 }
 
 export const GrantAccessModal = ({
   open,
   onOpenChange,
   personName,
+  documentId,
+  nomineeId,
+  onAccessGranted,
 }: GrantAccessModalProps) => {
   const { toast } = useToast();
   const [permission, setPermission] = useState("view-only");
 
   const handleConfirm = () => {
+    if (!documentId || !nomineeId) {
+      toast({
+        title: "Error",
+        description: "Missing document or nominee information",
+        variant: "destructive"
+      });
+      return;
+    }
+
     const permissionText =
       permission === "view-only"
         ? "View Only"
         : permission === "download-only"
-        ? "Download Only"
-        : "View and Download";
+          ? "Download Only"
+          : "View and Download";
+
+    // Save to localStorage
+    const accessKey = `document_access_${documentId}`;
+    const existingAccess = JSON.parse(localStorage.getItem(accessKey) || '[]');
+
+    // Check if already exists
+    const existingIndex = existingAccess.findIndex((a: any) => a.nomineeId === nomineeId);
+
+    const newAccess = {
+      nomineeId,
+      personName,
+      permission,
+      grantedDate: new Date().toISOString()
+    };
+
+    if (existingIndex >= 0) {
+      existingAccess[existingIndex] = newAccess;
+    } else {
+      existingAccess.push(newAccess);
+    }
+
+    localStorage.setItem(accessKey, JSON.stringify(existingAccess));
 
     toast({
       title: "Access granted",
       description: `${personName} can now ${permissionText.toLowerCase()}`,
     });
+
+    if (onAccessGranted) {
+      onAccessGranted();
+    }
+
     onOpenChange(false);
   };
 

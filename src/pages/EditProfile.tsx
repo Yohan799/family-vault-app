@@ -126,9 +126,9 @@ const EditProfile = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-primary text-primary-foreground p-6">
+      <div className="bg-primary/20 text-foreground p-6 rounded-b-3xl">
         <div className="flex items-center gap-4 mb-8">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/profile")} className="text-primary-foreground">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/profile")} className="text-foreground">
             <ArrowLeft className="w-6 h-6" />
           </Button>
           <h1 className="text-2xl font-bold">Edit Profile</h1>
@@ -150,8 +150,8 @@ const EditProfile = () => {
               accept="image/*"
               className="hidden"
             />
-            <Button 
-              size="sm" 
+            <Button
+              size="sm"
               onClick={() => fileInputRef.current?.click()}
               className="absolute bottom-0 right-0 rounded-full w-8 h-8 p-0 bg-card text-foreground hover:bg-card/90"
             >
@@ -168,7 +168,7 @@ const EditProfile = () => {
             <label className="text-sm font-medium text-foreground">Full Name</label>
             <Input
               value={formData.fullName}
-              onChange={(e) => setFormData({...formData, fullName: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
               className="bg-card border-border"
             />
           </div>
@@ -178,7 +178,7 @@ const EditProfile = () => {
             <Input
               type="email"
               value={formData.email}
-              onChange={(e) => setFormData({...formData, email: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               className="bg-card border-border"
             />
           </div>
@@ -188,7 +188,7 @@ const EditProfile = () => {
             <Input
               type="tel"
               value={formData.phone}
-              onChange={(e) => setFormData({...formData, phone: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
               className="bg-card border-border"
             />
           </div>
@@ -197,7 +197,7 @@ const EditProfile = () => {
             <label className="text-sm font-medium text-foreground">Location</label>
             <Input
               value={formData.location}
-              onChange={(e) => setFormData({...formData, location: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
               className="bg-card border-border"
             />
           </div>
@@ -233,7 +233,7 @@ const EditProfile = () => {
           </div>
         </div>
 
-        <Button 
+        <Button
           onClick={handleSave}
           className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12"
         >

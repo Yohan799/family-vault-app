@@ -7,41 +7,80 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { validateFile } from "@/lib/validation";
 
 interface UploadDocumentModalProps {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
-  categoryName?: string;
+  onClose?: () => void;
+  onOpenChange?: (open: boolean) => void;
+  subcategoryName?: string;
+  categoryId: string;
+  subcategoryId: string;
+  folderId?: string;
+  onUploadComplete?: () => void;
 }
 
 export const UploadDocumentModal = ({
   open,
+  onClose,
   onOpenChange,
-  categoryName,
+  subcategoryName,
+  categoryId,
+  subcategoryId,
+  folderId,
+  onUploadComplete,
 }: UploadDocumentModalProps) => {
   const { toast } = useToast();
 
-  const handleUploadFromDevice = () => {
+  const handleClose = () => {
+    if (onClose) onClose();
+    if (onOpenChange) onOpenChange(false);
+  };
+
+  const handleUploadFromDevice = async () => {
     const input = document.createElement("input");
     input.type = "file";
     input.accept = "*/*";
-    input.onchange = (e: any) => {
+    input.onchange = async (e: any) => {
       const file = e.target.files[0];
       if (file) {
-        const maxSize = 20 * 1024 * 1024;
-        if (file.size > maxSize) {
+        // Use the centralized validation function
+        const validation = validateFile(file);
+
+        if (!validation.valid) {
           toast({
-            title: "File too large",
-            description: "Maximum file size is 20MB",
+            title: "Upload Failed",
+            description: validation.error,
             variant: "destructive",
           });
           return;
         }
-        toast({
-          title: "File uploaded",
-          description: `${file.name} has been added to your vault`,
-        });
-        onOpenChange(false);
+
+        try {
+          // Import storeDocument function dynamically
+          const { storeDocument } = await import('@/lib/documentStorage');
+
+          // Store the document
+          await storeDocument(file, categoryId, subcategoryId, folderId);
+
+          toast({
+            title: "File uploaded successfully",
+            description: `${file.name} has been added to your vault`,
+          });
+
+          handleClose();
+
+          // Trigger refresh in parent component
+          if (onUploadComplete) {
+            onUploadComplete();
+          }
+        } catch (error) {
+          toast({
+            title: "Upload Failed",
+            description: "Failed to store document. localStorage may be full.",
+            variant: "destructive",
+          });
+        }
       }
     };
     input.click();
@@ -53,7 +92,7 @@ export const UploadDocumentModal = ({
       title: "Opening Google Drive",
       description: "Select your file and share it with the app",
     });
-    onOpenChange(false);
+    handleClose();
   };
 
   const handleDigiLocker = () => {
@@ -62,11 +101,11 @@ export const UploadDocumentModal = ({
       title: "Opening DigiLocker",
       description: "Select your file and share it with the app",
     });
-    onOpenChange(false);
+    handleClose();
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange || (() => { })}>
       <DialogContent className="sm:max-w-md bg-background border-none rounded-t-3xl p-0">
         <DialogHeader className="p-6 pb-2">
           <div className="flex items-center justify-between">
@@ -74,7 +113,7 @@ export const UploadDocumentModal = ({
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => onOpenChange(false)}
+              onClick={handleClose}
               className="h-8 w-8"
             >
               <X className="h-5 w-5" />
@@ -119,7 +158,7 @@ export const UploadDocumentModal = ({
 
           <Button
             variant="outline"
-            onClick={() => onOpenChange(false)}
+            onClick={handleClose}
             className="w-full mt-4 h-12 rounded-xl"
           >
             Cancel

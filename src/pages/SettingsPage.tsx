@@ -40,6 +40,19 @@ const SettingsPage = () => {
       if (savedPhoto) {
         setProfileData(prev => ({ ...prev, profileImage: savedPhoto }));
       }
+
+      // Load toggle states from userSettings
+      const savedUserSettings = localStorage.getItem("userSettings");
+      if (savedUserSettings) {
+        const settings = JSON.parse(savedUserSettings);
+        setToggleStates({
+          twoFactorAuth: settings.twoFactorAuth || false,
+          biometric: settings.biometric || false,
+          pushNotifications: settings.pushNotifications || false,
+          securityAlerts: settings.securityAlerts || false,
+        });
+      }
+
       setAutoLockTimeout(localStorage.getItem("autoLockTimeout") || "5 minutes");
     };
     loadSettings();
@@ -48,6 +61,14 @@ const SettingsPage = () => {
   const handleToggle = (key: string) => {
     const newState = !toggleStates[key as keyof typeof toggleStates];
     setToggleStates(prev => ({ ...prev, [key]: newState }));
+
+    // Save to localStorage
+    const userSettings = JSON.parse(localStorage.getItem("userSettings") || "{}");
+    userSettings[key] = newState;
+    localStorage.setItem("userSettings", JSON.stringify(userSettings));
+
+    // Trigger dashboard update
+    window.dispatchEvent(new Event("countsUpdated"));
 
     const messages: { [key: string]: { enabled: string; disabled: string } } = {
       twoFactorAuth: { enabled: "Two-Factor Auth Enabled", disabled: "Two-Factor Auth Disabled" },

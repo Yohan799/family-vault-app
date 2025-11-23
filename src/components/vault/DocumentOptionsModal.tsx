@@ -13,7 +13,11 @@ interface DocumentOptionsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   documentName: string;
-  documentId?: string;
+  documentId: string;
+  categoryId: string;
+  subcategoryId: string;
+  folderId?: string;
+  onDelete?: () => void;
 }
 
 export const DocumentOptionsModal = ({
@@ -21,6 +25,10 @@ export const DocumentOptionsModal = ({
   onOpenChange,
   documentName,
   documentId,
+  categoryId,
+  subcategoryId,
+  folderId,
+  onDelete,
 }: DocumentOptionsModalProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -30,23 +38,65 @@ export const DocumentOptionsModal = ({
     onOpenChange(false);
   };
 
-  const handleDownload = () => {
-    toast({ title: "Downloading", description: `${documentName} is being downloaded` });
+  const handleDownload = async () => {
+    try {
+      const { getDocuments, downloadDocument } = await import('@/lib/documentStorage');
+      const storedDocs = getDocuments(categoryId, subcategoryId, folderId);
+      const doc = storedDocs.find(d => d.id === documentId);
+
+      if (doc) {
+        downloadDocument(doc);
+        toast({ title: "Success", description: `${documentName} is being downloaded` });
+      } else {
+        toast({
+          title: "Error",
+          description: "Document not found",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to download document",
+        variant: "destructive"
+      });
+    }
     onOpenChange(false);
   };
 
   const handleManageAccess = () => {
-    navigate(`/vault/manage-access/${documentId || "sample"}`);
+    navigate(`/vault/manage-access/${documentId}`);
     onOpenChange(false);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (confirm(`Are you sure you want to delete ${documentName}?`)) {
-      toast({
-        title: "Document deleted",
-        description: `${documentName} has been removed from your vault`,
-        variant: "destructive",
-      });
+      try {
+        const { deleteDocument } = await import('@/lib/documentStorage');
+        const success = deleteDocument(documentId, categoryId, subcategoryId, folderId);
+
+        if (success) {
+          toast({
+            title: "Document deleted",
+            description: `${documentName} has been removed from your vault`,
+          });
+          if (onDelete) {
+            onDelete();
+          }
+        } else {
+          toast({
+            title: "Error",
+            description: "Failed to delete document",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to delete document",
+          variant: "destructive",
+        });
+      }
       onOpenChange(false);
     }
   };

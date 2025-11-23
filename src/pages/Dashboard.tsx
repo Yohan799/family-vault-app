@@ -4,9 +4,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import FeatureTour from "@/components/FeatureTour";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const [showTour, setShowTour] = useState(false);
   const [profileData, setProfileData] = useState({
     fullName: "Guest User",
     email: "guest@example.com",
@@ -28,16 +30,24 @@ const Dashboard = () => {
 
   const calculateReadinessScore = () => {
     let score = 0;
-    if (securitySettings.twoFactorAuth) score += 25;
-    if (securitySettings.biometric) score += 25;
-    if (securitySettings.lockedDocumentsCount > 0) score += 25;
-    if (securitySettings.inactivityTriggerActive) score += 25;
+    // Each feature worth 20%
+    if (securitySettings.twoFactorAuth) score += 20;
+    if (securitySettings.biometric) score += 20;
+    if (counts.nominees > 0) score += 20;
+    if (counts.timeCapsules > 0) score += 20;
+    if (securitySettings.inactivityTriggerActive) score += 20;
     return score;
   };
 
   const readinessScore = calculateReadinessScore();
 
   useEffect(() => {
+    // Check if this is first login
+    const isFirstLogin = localStorage.getItem("isFirstLogin");
+    if (isFirstLogin === "true") {
+      setShowTour(true);
+    }
+
     const savedProfile = localStorage.getItem("profileData");
     if (savedProfile) {
       const data = JSON.parse(savedProfile);
@@ -64,8 +74,25 @@ const Dashboard = () => {
     }
 
     const loadCounts = () => {
-      const documentsCount = parseInt(localStorage.getItem("documentsCount") || "0");
-      const nomineesCount = parseInt(localStorage.getItem("nomineesCount") || "0");
+      // Calculate nominees count from actual nominees data
+      const nomineesData = JSON.parse(localStorage.getItem("nominees") || "[]");
+      const nomineesCount = nomineesData.length;
+
+      // Calculate documents count by searching all document storage keys
+      let documentsCount = 0;
+      const keys = Object.keys(localStorage);
+      keys.forEach(key => {
+        if (key.startsWith("documents_")) {
+          try {
+            const docs = JSON.parse(localStorage.getItem(key) || "[]");
+            documentsCount += docs.length;
+          } catch (e) {
+            // Skip invalid JSON
+          }
+        }
+      });
+
+      // Time capsules - currently not saving to localStorage yet, keeping fallback
       const timeCapsulesCount = parseInt(localStorage.getItem("timeCapsulesCount") || "0");
 
       setCounts({
@@ -90,6 +117,11 @@ const Dashboard = () => {
     };
   }, []);
 
+  const handleTourClose = () => {
+    setShowTour(false);
+    localStorage.removeItem("isFirstLogin");
+  };
+
   const handleInactivityToggle = (checked: boolean) => {
     setSecuritySettings(prev => ({ ...prev, inactivityTriggerActive: checked }));
     const savedSettings = localStorage.getItem("userSettings");
@@ -103,10 +135,8 @@ const Dashboard = () => {
     { icon: UserPlus, title: "Nominee Center", subtitle: "Manage trusted contacts", color: "bg-accent", onClick: () => navigate("/nominee-center") },
     { icon: Shield, title: "Inactivity Triggers", subtitle: "Set up activity monitoring", color: "bg-accent", onClick: () => navigate("/inactivity-triggers") },
     { icon: Timer, title: "Time Capsule", subtitle: "Create legacy messages", color: "bg-accent", onClick: () => navigate("/time-capsule") },
-    { icon: Plus, title: "Customize Quick Actions", subtitle: "Add your own shortcuts", color: "bg-accent", onClick: () => navigate("/customize-quick-actions") },
   ];
 
-  const recentDocs: Array<{ name: string; category: string; date: string }> = [];
 
   return (
     <div className="min-h-screen bg-background pb-16">
@@ -196,28 +226,9 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div>
-          <div className="flex justify-between items-center mb-2">
-            <h2 className="text-base font-bold text-foreground">Recent Documents</h2>
-            <button onClick={() => navigate("/vault")} className="text-xs text-primary font-medium hover:underline">
-              View All
-            </button>
-          </div>
-          <div className="space-y-2">
-            {recentDocs.map((doc, index) => (
-              <div key={index} className="bg-card rounded-lg p-2.5 flex items-center gap-3">
-                <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center flex-shrink-0">
-                  <FileText className="w-4 h-4 text-primary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-foreground text-xs truncate">{doc.name}</h3>
-                  <p className="text-[10px] text-muted-foreground">{doc.category}</p>
-                  <p className="text-[10px] text-muted-foreground">{doc.date}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+
+
+
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
@@ -236,6 +247,9 @@ const Dashboard = () => {
           </button>
         </div>
       </div>
+
+      {/* Feature Tour */}
+      <FeatureTour isOpen={showTour} onClose={handleTourClose} />
     </div>
   );
 };

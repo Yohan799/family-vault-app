@@ -29,7 +29,7 @@ const BackupFrequency = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="bg-primary text-primary-foreground p-6">
+      <div className="bg-primary/20 text-foreground p-6 rounded-b-3xl">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="text-primary-foreground">
             <ArrowLeft className="w-6 h-6" />
@@ -61,7 +61,7 @@ const BackupFrequency = () => {
           ))}
         </div>
 
-        <Button 
+        <Button
           onClick={handleSave}
           className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12"
         >

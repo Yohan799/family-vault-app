@@ -3,6 +3,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import Welcome from "./pages/Welcome";
 import Onboarding from "./pages/Onboarding";
 import SignUp from "./pages/SignUp";
@@ -12,10 +14,12 @@ import Vault from "./pages/Vault";
 import VaultHome from "./pages/vault/VaultHome";
 import CategoryView from "./pages/vault/CategoryView";
 import SubcategoryView from "./pages/vault/SubcategoryView";
+import NestedFolderView from "./pages/vault/NestedFolderView";
 import CreateCategory from "./pages/vault/CreateCategory";
 import ManageAccess from "./pages/vault/ManageAccess";
 import SettingsPage from "./pages/SettingsPage";
 import NomineeCenter from "./pages/NomineeCenter";
+import NomineeVerification from "./pages/NomineeVerification";
 import InactivityTriggers from "./pages/InactivityTriggers";
 import TimeCapsule from "./pages/TimeCapsule";
 import CustomizeQuickActions from "./pages/CustomizeQuickActions";
@@ -36,43 +40,47 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Welcome />} />
-          <Route path="/onboarding" element={<Onboarding />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/vault" element={<Vault />} />
-          <Route path="/vault/home" element={<VaultHome />} />
-          <Route path="/vault/create-category" element={<CreateCategory />} />
-          <Route path="/vault/:categoryId" element={<CategoryView />} />
-          <Route path="/vault/:categoryId/:subcategoryId" element={<SubcategoryView />} />
-          <Route path="/vault/manage-access/:documentId" element={<ManageAccess />} />
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/nominee-center" element={<NomineeCenter />} />
-          <Route path="/inactivity-triggers" element={<InactivityTriggers />} />
-          <Route path="/time-capsule" element={<TimeCapsule />} />
-          <Route path="/customize-quick-actions" element={<CustomizeQuickActions />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/edit-profile" element={<EditProfile />} />
-          <Route path="/change-password" element={<ChangePassword />} />
-          <Route path="/auto-lock-timeout" element={<AutoLockTimeout />} />
-          <Route path="/backup-frequency" element={<BackupFrequency />} />
-          <Route path="/backup-history" element={<BackupHistory />} />
-          <Route path="/notifications" element={<Notifications />} />
-          <Route path="/email-preferences" element={<EmailPreferences />} />
-          <Route path="/active-sessions" element={<ActiveSessions />} />
-          <Route path="/help-center" element={<HelpCenter />} />
-          <Route path="/contact-support" element={<ContactSupport />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Welcome />} />
+            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/signin" element={<SignIn />} />
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/vault" element={<ProtectedRoute><Vault /></ProtectedRoute>} />
+            <Route path="/vault/home" element={<ProtectedRoute><VaultHome /></ProtectedRoute>} />
+            <Route path="/vault/create-category" element={<ProtectedRoute><CreateCategory /></ProtectedRoute>} />
+            <Route path="/vault/:categoryId" element={<ProtectedRoute><CategoryView /></ProtectedRoute>} />
+            <Route path="/vault/:categoryId/:subcategoryId" element={<ProtectedRoute><SubcategoryView /></ProtectedRoute>} />
+            <Route path="/vault/:categoryId/:subcategoryId/:folderId" element={<ProtectedRoute><NestedFolderView /></ProtectedRoute>} />
+            <Route path="/vault/manage-access/:documentId" element={<ProtectedRoute><ManageAccess /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+            <Route path="/nominee-center" element={<ProtectedRoute><NomineeCenter /></ProtectedRoute>} />
+            <Route path="/nominee-verification" element={<ProtectedRoute><NomineeVerification /></ProtectedRoute>} />
+            <Route path="/inactivity-triggers" element={<ProtectedRoute><InactivityTriggers /></ProtectedRoute>} />
+            <Route path="/time-capsule" element={<ProtectedRoute><TimeCapsule /></ProtectedRoute>} />
+            <Route path="/customize-quick-actions" element={<ProtectedRoute><CustomizeQuickActions /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/edit-profile" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
+            <Route path="/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
+            <Route path="/auto-lock-timeout" element={<ProtectedRoute><AutoLockTimeout /></ProtectedRoute>} />
+            <Route path="/backup-frequency" element={<ProtectedRoute><BackupFrequency /></ProtectedRoute>} />
+            <Route path="/backup-history" element={<ProtectedRoute><BackupHistory /></ProtectedRoute>} />
+            <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+            <Route path="/email-preferences" element={<ProtectedRoute><EmailPreferences /></ProtectedRoute>} />
+            <Route path="/active-sessions" element={<ProtectedRoute><ActiveSessions /></ProtectedRoute>} />
+            <Route path="/help-center" element={<ProtectedRoute><HelpCenter /></ProtectedRoute>} />
+            <Route path="/contact-support" element={<ProtectedRoute><ContactSupport /></ProtectedRoute>} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

@@ -1,275 +1,273 @@
-import { ArrowLeft, Shield, Home, Lock as LockIcon, Settings, AlertTriangle, Upload } from "lucide-react";
+import { ArrowLeft, Shield, Clock, Mail, Phone, MessageSquare, Home, Lock, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 const InactivityTriggers = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [triggers, setTriggers] = useState<any[]>([]);
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    type: "no-login",
-    duration: "30"
+  const [settings, setSettings] = useState({
+    isActive: false,
+    inactiveDays: 60,
+    customMessage: "",
+    emailEnabled: true,
+    smsEnabled: true,
   });
 
-  const handleCreateTrigger = () => {
-    if (!formData.name || !formData.duration) {
+  // Load settings from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem("inactivityTriggerSettings");
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        setSettings(parsed);
+      } catch (error) {
+        console.error("Error loading inactivity trigger settings:", error);
+      }
+    }
+
+    const savedUserSettings = localStorage.getItem("userSettings");
+    if (savedUserSettings) {
+      try {
+        const parsed = JSON.parse(savedUserSettings);
+        if (parsed.inactivityTriggerActive !== undefined) {
+          setSettings(prev => ({ ...prev, isActive: parsed.inactivityTriggerActive }));
+        }
+      } catch (error) {
+        console.error("Error loading user settings:", error);
+      }
+    }
+  }, []);
+
+  const handleSave = () => {
+    if (settings.isActive && (!settings.customMessage || !settings.inactiveDays)) {
       toast({
         title: "Required fields missing",
-        description: "Please fill in trigger name and duration",
+        description: "Please fill in all required fields",
         variant: "destructive"
       });
       return;
     }
-    const newTrigger = {
-      id: Date.now(),
-      ...formData
-    };
-    setTriggers([...triggers, newTrigger]);
+
+    if (settings.inactiveDays < 1) {
+      toast({
+        title: "Invalid input",
+        description: "Inactive days must be at least 1",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Save to localStorage
+    localStorage.setItem("inactivityTriggerSettings", JSON.stringify(settings));
+
+    // Update user settings
+    const userSettings = JSON.parse(localStorage.getItem("userSettings") || "{}");
+    userSettings.inactivityTriggerActive = settings.isActive;
+    localStorage.setItem("userSettings", JSON.stringify(userSettings));
+
+    // Trigger dashboard update
+    window.dispatchEvent(new Event("countsUpdated"));
+
     toast({
-      title: "Trigger created successfully!",
-      description: `${formData.name} has been activated`,
+      title: "Settings saved!",
+      description: settings.isActive
+        ? `You'll be alerted if inactive for more than ${settings.inactiveDays} days`
+        : "Inactivity trigger has been disabled",
     });
-    setFormData({ name: "", description: "", type: "no-login", duration: "30" });
-    setShowCreateForm(false);
   };
 
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="bg-primary/20 text-foreground p-6 rounded-b-3xl">
-        <div className="flex items-center gap-4 mb-6">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")} className="text-foreground">
-            <ArrowLeft className="w-6 h-6" />
-          </Button>
-          <div className="flex-1 text-center -ml-10">
-            <h1 className="text-2xl font-bold">Inactivity Triggers</h1>
-            <p className="text-sm text-muted-foreground mt-1">Monitor account activity</p>
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-card/50 rounded-xl p-4 text-center backdrop-blur-sm">
-            <div className="text-3xl font-bold mb-1">0</div>
-            <div className="text-sm text-muted-foreground">Active</div>
-          </div>
-          <div className="bg-card/50 rounded-xl p-4 text-center backdrop-blur-sm">
-            <div className="text-3xl font-bold mb-1">0</div>
-            <div className="text-sm text-muted-foreground">Inactive</div>
+      <div className="bg-primary/10 p-6 rounded-b-3xl">
+        <div className="flex items-center gap-4 mb-4">
+          <button onClick={() => navigate("/dashboard")} className="p-1">
+            <ArrowLeft className="w-6 h-6 text-foreground" />
+          </button>
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold text-foreground">Inactivity Trigger</h1>
+            <p className="text-sm text-muted-foreground mt-1">Set up activity monitoring</p>
           </div>
         </div>
       </div>
 
       <div className="p-6 space-y-6">
-        {/* Create Trigger Form */}
-        {showCreateForm && (
-          <div className="bg-card rounded-2xl p-6 space-y-4">
-            <h2 className="text-lg font-bold text-foreground mb-4">+ Create New Trigger</h2>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Trigger Name *</label>
-              <Input
-                placeholder="Enter trigger name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="bg-background border-border"
-              />
+        {/* Status Card */}
+        <div className="bg-card rounded-2xl p-6 border border-border">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${settings.isActive ? "bg-green-100" : "bg-gray-100"
+                }`}>
+                <Shield className={`w-6 h-6 ${settings.isActive ? "text-green-600" : "text-gray-400"
+                  }`} />
+              </div>
+              <div>
+                <h2 className="font-bold text-foreground">Inactivity Monitoring</h2>
+                <p className="text-sm text-muted-foreground">
+                  {settings.isActive ? "Currently Active" : "Currently Inactive"}
+                </p>
+              </div>
             </div>
+            <Switch
+              checked={settings.isActive}
+              onCheckedChange={(checked) => setSettings(prev => ({ ...prev, isActive: checked }))}
+            />
+          </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Description</label>
-              <Textarea
-                placeholder="Describe what this trigger monitors..."
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="bg-background border-border min-h-[80px]"
-              />
+          {settings.isActive && (
+            <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 text-sm">
+              <p className="text-foreground font-medium">
+                ⚡ Alert will be triggered if inactive for more than {settings.inactiveDays} days
+              </p>
             </div>
+          )}
+        </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Trigger Type</label>
-              <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
-                <SelectTrigger className="bg-background border-border">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="no-login">No Login - Monitor login activity</SelectItem>
-                  <SelectItem value="no-activity">No Activity - Monitor general activity</SelectItem>
-                  <SelectItem value="custom">Custom - Define your own trigger</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+        {/* Settings Form */}
+        <div className="bg-card rounded-2xl p-6 space-y-4 border border-border">
+          <h2 className="text-lg font-bold text-foreground mb-4">Trigger Settings</h2>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Duration (Days) *</label>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">
+              Inactive Days Threshold *
+            </label>
+            <div className="relative">
+              <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
                 type="number"
-                placeholder="30"
-                value={formData.duration}
-                onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                className="bg-background border-border"
+                min="1"
+                placeholder="e.g., 60"
+                value={settings.inactiveDays}
+                onChange={(e) => setSettings(prev => ({ ...prev, inactiveDays: parseInt(e.target.value) || 0 }))}
+                className="bg-background border-border pl-12"
+                disabled={!settings.isActive}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Number of days of inactivity before alerts are sent
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">
+              Custom Alert Message *
+            </label>
+            <div className="relative">
+              <MessageSquare className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
+              <Textarea
+                placeholder="Enter the message to send when inactive..."
+                value={settings.customMessage}
+                onChange={(e) => setSettings(prev => ({ ...prev, customMessage: e.target.value }))}
+                className="bg-background border-border pl-12 min-h-24"
+                disabled={!settings.isActive}
+                rows={4}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-3 pt-2">
+            <label className="text-sm font-medium text-foreground">Notification Methods</label>
+
+            <div className="flex items-center justify-between p-3 bg-background rounded-xl">
+              <div className="flex items-center gap-3">
+                <Mail className="w-5 h-5 text-muted-foreground" />
+                <div>
+                  <p className="font-medium text-foreground">Email Notifications</p>
+                  <p className="text-xs text-muted-foreground">Send alerts via email</p>
+                </div>
+              </div>
+              <Switch
+                checked={settings.emailEnabled}
+                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, emailEnabled: checked }))}
+                disabled={!settings.isActive}
               />
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Attachment (Optional)</label>
-              <div className="border-2 border-dashed border-border rounded-xl p-6 text-center">
-                <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-                <p className="text-sm text-muted-foreground mb-3">Upload from your device, Google Drive, or DigiLocker</p>
-                <div className="flex gap-3 justify-center flex-wrap">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="gap-2"
-                    onClick={() => {
-                      const input = document.createElement('input');
-                      input.type = 'file';
-                      input.accept = 'image/*,application/pdf,video/*';
-                      input.onchange = (e: any) => {
-                        const file = e.target.files[0];
-                        if (file) {
-                          const maxSize = 20 * 1024 * 1024; // 20MB in bytes
-                          if (file.size > maxSize) {
-                            toast({
-                              title: "File too large",
-                              description: "Maximum file size is 20MB",
-                              variant: "destructive"
-                            });
-                            return;
-                          }
-                          toast({
-                            title: "File uploaded",
-                            description: `${file.name} has been attached`,
-                          });
-                        }
-                      };
-                      input.click();
-                    }}
-                  >
-                    <Upload className="w-4 h-4" />
-                    Device
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="gap-2"
-                    onClick={() => {
-                      window.open('https://drive.google.com/drive/my-drive', '_blank');
-                      toast({
-                        title: "Opening Google Drive",
-                        description: "Select your file and share it with the app",
-                      });
-                    }}
-                  >
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12.545 10.239v3.821h5.445c-.712 2.315-2.647 3.972-5.445 3.972a6.033 6.033 0 110-12.064c1.498 0 2.866.549 3.921 1.453l2.814-2.814A9.969 9.969 0 0012.545 2C7.021 2 2.543 6.477 2.543 12s4.478 10 10.002 10c8.396 0 10.249-7.85 9.426-11.748l-9.426-.013z" />
-                    </svg>
-                    Google Drive
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="gap-2"
-                    onClick={() => {
-                      window.open('https://digilocker.gov.in/', '_blank');
-                      toast({
-                        title: "Opening DigiLocker",
-                        description: "Select your file and share it with the app",
-                      });
-                    }}
-                  >
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V7.3l7-3.11v8.8z" />
-                    </svg>
-                    DigiLocker
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground mt-3">Maximum file size: 20MB</p>
-              </div>
-            </div>
-
-            <div className="flex gap-3 pt-2">
-              <Button onClick={handleCreateTrigger} className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12">
-                Create Trigger
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setShowCreateForm(false)}
-                className="flex-1 rounded-xl h-12 border-border"
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Your Triggers Section - Only show when triggers exist */}
-        {triggers.length > 0 && (
-          <div className="space-y-4">
-            <h2 className="text-lg font-bold text-foreground">Your Triggers</h2>
-
-            {triggers.map((trigger) => (
-              <div key={trigger.id} className="bg-card rounded-2xl p-4">
-                <h3 className="font-semibold text-foreground mb-1">{trigger.name}</h3>
-                <p className="text-sm text-muted-foreground mb-2">{trigger.description}</p>
-                <div className="flex gap-2 text-xs text-muted-foreground">
-                  <span>Type: {trigger.type}</span>
-                  <span>•</span>
-                  <span>Duration: {trigger.duration} days</span>
+            <div className="flex items-center justify-between p-3 bg-background rounded-xl">
+              <div className="flex items-center gap-3">
+                <Phone className="w-5 h-5 text-muted-foreground" />
+                <div>
+                  <p className="font-medium text-foreground">SMS Notifications</p>
+                  <p className="text-xs text-muted-foreground">Send alerts via text message</p>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-
-        {/* Create Trigger Button - Show when no form and no triggers */}
-        {!showCreateForm && triggers.length === 0 && (
-          <div className="bg-card rounded-2xl p-8 text-center">
-            <div className="w-24 h-24 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center">
-              <Shield className="w-12 h-12 text-primary" />
+              <Switch
+                checked={settings.smsEnabled}
+                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, smsEnabled: checked }))}
+                disabled={!settings.isActive}
+              />
             </div>
-            <h3 className="text-xl font-bold text-foreground mb-2">No Triggers Set</h3>
-            <p className="text-sm text-muted-foreground mb-6">
-              Create inactivity triggers to monitor your account and alert nominees when needed.
-            </p>
-            <Button
-              onClick={() => setShowCreateForm(true)}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-8"
-            >
-              + Create Trigger
-            </Button>
           </div>
-        )}
 
-        {/* Create Button when triggers exist */}
-        {!showCreateForm && triggers.length > 0 && (
           <Button
-            onClick={() => setShowCreateForm(true)}
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12"
+            onClick={handleSave}
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12 mt-4"
           >
-            + Create New Trigger
+            Save Settings
           </Button>
-        )}
+        </div>
+
+        {/* How It Works */}
+        <div className="bg-card rounded-2xl p-6 border border-border space-y-4">
+          <h3 className="font-bold text-foreground flex items-center gap-2">
+            <Shield className="w-5 h-5 text-primary" />
+            How Inactivity Trigger Works
+          </h3>
+
+          <div className="space-y-3 text-sm">
+            <div className="flex gap-3">
+              <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center flex-shrink-0 font-bold text-xs">
+                1
+              </div>
+              <div>
+                <p className="font-medium text-foreground">Days 1-3: User Alerts</p>
+                <p className="text-muted-foreground">
+                  You'll receive daily alerts via email and SMS for 3 consecutive days
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center flex-shrink-0 font-bold text-xs">
+                2
+              </div>
+              <div>
+                <p className="font-medium text-foreground">Days 4-6: Nominee Alerts</p>
+                <p className="text-muted-foreground">
+                  If you don't respond, your nominees will receive daily notifications for 3 days
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center flex-shrink-0 font-bold text-xs">
+                3
+              </div>
+              <div>
+                <p className="font-medium text-foreground">Verification & Access</p>
+                <p className="text-muted-foreground">
+                  Nominees verify with OTP and gain access to documents you've shared with them
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Info Box */}
         <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 flex gap-3">
           <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center flex-shrink-0">
-            <AlertTriangle className="w-4 h-4 text-primary" />
+            <span className="text-primary font-bold text-sm">i</span>
           </div>
           <div>
-            <h3 className="font-semibold text-foreground mb-1">How Inactivity Triggers Work</h3>
+            <h3 className="font-semibold text-foreground mb-1">Important Note</h3>
             <p className="text-sm text-muted-foreground">
-              Inactivity triggers monitor your account for signs of activity. If no activity is detected
-              within the specified timeframe, your nominated contacts will be alerted and may gain access
-              to your vault according to your emergency protocol.
+              This feature requires Supabase integration to work. Once set up, the system will automatically
+              monitor your activity and send alerts according to your configured settings.
             </p>
           </div>
         </div>
@@ -285,8 +283,11 @@ const InactivityTriggers = () => {
             <Home className="w-6 h-6" />
             <span className="text-xs font-medium">Home</span>
           </button>
-          <button className="flex flex-col items-center gap-1 text-primary">
-            <LockIcon className="w-6 h-6" />
+          <button
+            onClick={() => navigate("/vault")}
+            className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
+          >
+            <Lock className="w-6 h-6" />
             <span className="text-xs font-medium">Vault</span>
           </button>
           <button

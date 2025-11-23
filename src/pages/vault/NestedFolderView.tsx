@@ -1,21 +1,18 @@
-import { ArrowLeft, Search, Filter, Upload, FileText, Home, Settings, Folder, Plus, X, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Search, Filter, Upload, MoreVertical, FileText, Home, Settings, Folder, Plus, X, AlertTriangle } from "lucide-react";
 import { Vault as VaultIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useParams } from "react-router-dom";
-import { vaultCategories } from "@/data/vaultCategories";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { UploadDocumentModal } from "@/components/vault/UploadDocumentModal";
 import { DocumentOptionsModal } from "@/components/vault/DocumentOptionsModal";
 import { LockDocumentModal } from "@/components/vault/LockDocumentModal";
 import { categoryNameSchema, sanitizeInput } from "@/lib/validation";
-import { AccessControlModal } from "@/components/vault/AccessControlModal";
-import { ActionMenu, createDocumentActionMenu } from "@/components/vault/ActionMenu";
 
-const SubcategoryView = () => {
+const NestedFolderView = () => {
   const navigate = useNavigate();
-  const { categoryId, subcategoryId } = useParams();
+  const { categoryId, subcategoryId, folderId } = useParams();
   const { toast } = useToast();
   const [uploadOpen, setUploadOpen] = useState(false);
   const [optionsOpen, setOptionsOpen] = useState(false);
@@ -24,81 +21,32 @@ const SubcategoryView = () => {
   const [showAddFolderDialog, setShowAddFolderDialog] = useState(false);
   const [folderName, setFolderName] = useState("");
   const [nestedFolders, setNestedFolders] = useState<any[]>([]);
-  const [category, setCategory] = useState<any>(null);
-  const [subcategory, setSubcategory] = useState<any>(null);
+  const [currentFolder, setCurrentFolder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [documents, setDocuments] = useState<Array<{ id: string; name: string; size: string; date: string }>>([]);
-  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; folder: any | null }>({ show: false, folder: null });
-  const [deleteDocConfirm, setDeleteDocConfirm] = useState<{ show: boolean; doc: any | null }>({ show: false, doc: null });
-  const [accessControlDocument, setAccessControlDocument] = useState<any | null>(null);
-
-  const loadData = async () => {
-    try {
-      let foundCategory = vaultCategories.find((cat) => cat.id === categoryId);
-
-      if (!foundCategory) {
-        const customCats = localStorage.getItem('custom_categories');
-        if (customCats) {
-          const parsed = JSON.parse(customCats);
-          foundCategory = parsed.find((cat: any) => cat.id === categoryId);
-          if (foundCategory) foundCategory.icon = Folder;
-        }
-      }
-
-      if (!foundCategory) {
-        setLoading(false);
-        return;
-      }
-      setCategory(foundCategory);
-
-      let foundSubcategory = foundCategory.subcategories?.find((sub) => sub.id === subcategoryId);
-
-      if (!foundSubcategory) {
-        const customSubs = localStorage.getItem(`custom_subcategories_${categoryId}`);
-        if (customSubs) {
-          const parsed = JSON.parse(customSubs);
-          foundSubcategory = parsed.find((sub: any) => sub.id === subcategoryId);
-          if (foundSubcategory) foundSubcategory.icon = Folder;
-        }
-      }
-
-      setSubcategory(foundSubcategory);
-
-      const storedFolders = localStorage.getItem(`nested_folders_${subcategoryId}`);
-      if (storedFolders) {
-        setNestedFolders(JSON.parse(storedFolders));
-      } else {
-        setNestedFolders([]);
-      }
-
-      // Load documents from localStorage
-      const { getDocuments, formatFileSize } = await import('@/lib/documentStorage');
-      const storedDocs = getDocuments(categoryId, subcategoryId);
-
-      // Format documents for display
-      const formattedDocs = storedDocs.map(doc => ({
-        id: doc.id,
-        name: doc.name,
-        size: formatFileSize(doc.size),
-        date: new Date(doc.date).toLocaleDateString(),
-      }));
-
-      setDocuments(formattedDocs);
-      setLoading(false);
-    } catch (error) {
-      console.error("Error loading subcategory data:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load subcategory data",
-        variant: "destructive"
-      });
-      setLoading(false);
-    }
-  };
+  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; folder: any | null }>({
+    show: false,
+    folder: null
+  });
 
   useEffect(() => {
-    loadData();
-  }, [categoryId, subcategoryId]);
+    setLoading(true);
+
+    const stored = localStorage.getItem(`nested_folders_${subcategoryId}`);
+    if (stored) {
+      const folders = JSON.parse(stored);
+      const folder = folders.find((f: any) => f.id === folderId);
+      setCurrentFolder(folder);
+    }
+
+    const nestedStored = localStorage.getItem(`nested_folders_${folderId}`);
+    if (nestedStored) {
+      setNestedFolders(JSON.parse(nestedStored));
+    } else {
+      setNestedFolders([]);
+    }
+
+    setLoading(false);
+  }, [folderId, subcategoryId]);
 
   const handleAddFolder = () => {
     const sanitizedName = sanitizeInput(folderName);
@@ -127,20 +75,29 @@ const SubcategoryView = () => {
       return;
     }
 
+    const currentDepth = currentFolder?.depth || 1;
+    if (currentDepth >= 3) {
+      toast({
+        title: "Maximum depth reached",
+        description: "Cannot create folders beyond 3 levels deep",
+        variant: "destructive"
+      });
+      return;
+    }
+
     const newFolder = {
       id: `folder-${Date.now()}`,
       name: validation.data,
       icon: Folder,
       documentCount: 0,
-      depth: 1,
-      isNested: true,
-      parentId: subcategoryId,
+      depth: currentDepth + 1,
+      parentId: folderId,
       isCustom: true
     };
 
     const updated = [...nestedFolders, newFolder];
     setNestedFolders(updated);
-    localStorage.setItem(`nested_folders_${subcategoryId}`, JSON.stringify(updated));
+    localStorage.setItem(`nested_folders_${folderId}`, JSON.stringify(updated));
 
     toast({
       title: "Folder created!",
@@ -164,7 +121,7 @@ const SubcategoryView = () => {
 
     const updated = nestedFolders.filter(f => f.id !== folderId);
     setNestedFolders(updated);
-    localStorage.setItem(`nested_folders_${subcategoryId}`, JSON.stringify(updated));
+    localStorage.setItem(`nested_folders_${currentFolder?.id}`, JSON.stringify(updated));
     localStorage.removeItem(`nested_folders_${folderId}`);
 
     toast({
@@ -176,95 +133,13 @@ const SubcategoryView = () => {
   };
 
   const handleDocumentOptions = (doc: any) => {
-    setSelectedDoc({ name: doc.name, id: doc.id });
+    setSelectedDoc(doc);
     setOptionsOpen(true);
   };
 
   const handleLockDocument = () => {
     setOptionsOpen(false);
     setLockOpen(true);
-  };
-
-  const handleDownloadDocument = async (doc: any) => {
-    try {
-      const { getDocuments } = await import('@/lib/documentStorage');
-      const storedDocs = getDocuments(categoryId!, subcategoryId!);
-      const fullDoc = storedDocs.find(d => d.id === doc.id);
-
-      if (!fullDoc) {
-        throw new Error('Document not found');
-      }
-
-      // Create a link and trigger download
-      const link = document.createElement('a');
-      link.href = fullDoc.base64Data;
-      link.download = fullDoc.name;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      toast({
-        title: "Download started",
-        description: `Downloading ${doc.name}`,
-      });
-    } catch (error) {
-      toast({
-        title: "Download failed",
-        description: "Could not download the document",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleViewDocument = async (doc: any) => {
-    try {
-      const { getDocuments } = await import('@/lib/documentStorage');
-      const storedDocs = getDocuments(categoryId!, subcategoryId!);
-      const fullDoc = storedDocs.find(d => d.id === doc.id);
-
-      if (!fullDoc) {
-        throw new Error('Document not found');
-      }
-
-      // Open in new window
-      window.open(fullDoc.base64Data, '_blank');
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Could not view the document",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleDeleteDocument = (doc: any) => {
-    setDeleteDocConfirm({ show: true, doc });
-  };
-
-  const confirmDeleteDocument = async () => {
-    if (!deleteDocConfirm.doc) return;
-
-    try {
-      const { deleteDocument } = await import('@/lib/documentStorage');
-      // Correct parameter order: documentId, categoryId, subcategoryId, folderId?
-      deleteDocument(deleteDocConfirm.doc.id, categoryId!, subcategoryId!);
-
-      toast({
-        title: "Document deleted",
-        description: `${deleteDocConfirm.doc.name} has been removed`,
-      });
-
-      setDeleteDocConfirm({ show: false, doc: null });
-
-      // Reload documents
-      await loadData();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Could not delete the document",
-        variant: "destructive"
-      });
-    }
   };
 
   if (loading) {
@@ -275,26 +150,27 @@ const SubcategoryView = () => {
     );
   }
 
-  if (!category || !subcategory) {
-    navigate("/vault");
+  if (!currentFolder) {
+    navigate(`/vault/${categoryId}/${subcategoryId}`);
     return null;
   }
 
-  const SubcategoryIcon = subcategory.icon || Folder;
+  const canAddMore = (currentFolder?.depth || 0) < 3;
+  const documents: Array<{ id: string; name: string; size: string; date: string }> = [];
 
   return (
     <div className="min-h-screen bg-[#FCFCF9] pb-20">
       <div className="bg-[#FCFCF9] p-6">
         <div className="flex items-center gap-4 mb-4">
-          <button onClick={() => navigate(`/vault/${categoryId}`)} className="p-1">
+          <button onClick={() => navigate(`/vault/${categoryId}/${subcategoryId}`)} className="p-1">
             <ArrowLeft className="w-6 h-6 text-[#1F2121]" />
           </button>
           <div className="flex-1 text-center -ml-10">
             <div className="flex items-center justify-center gap-2">
-              <SubcategoryIcon className="w-6 h-6 text-[#1F2121]" />
-              <h1 className="text-2xl font-bold text-[#1F2121]">{subcategory.name}</h1>
+              <Folder className="w-6 h-6 text-[#1F2121]" />
+              <h1 className="text-2xl font-bold text-[#1F2121]">{currentFolder.name}</h1>
             </div>
-            <p className="text-[#626C71] text-sm mt-1">{documents.length} Documents</p>
+            <p className="text-[#626C71] text-sm mt-1">{currentFolder.documentCount || 0} Documents</p>
           </div>
         </div>
 
@@ -312,7 +188,7 @@ const SubcategoryView = () => {
 
       {nestedFolders.length > 0 && (
         <div className="px-6 mb-6">
-          <h2 className="text-lg font-semibold text-[#1F2121] mb-3">Folders</h2>
+          <h2 className="text-lg font-semibold text-[#1F2121] mb-3">Subfolders</h2>
           <div className="grid grid-cols-2 gap-3">
             {nestedFolders.map((folder) => (
               <div key={folder.id} className="relative">
@@ -320,7 +196,7 @@ const SubcategoryView = () => {
                   onClick={() => navigate(`/vault/${categoryId}/${subcategoryId}/${folder.id}`)}
                   className="w-full bg-[#F3E8FF] rounded-2xl p-5 flex flex-col items-center justify-center hover:opacity-80 transition-opacity"
                 >
-                  <div className="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center mb-3">
+                  <div className="w-14 h-14 bg-indigo-100 rounded-full flex items-center justify-center mb-3">
                     <Folder className="w-7 h-7 text-[#6D28D9]" />
                   </div>
                   <h3 className="font-semibold text-[#1F2121] text-center mb-1">{folder.name}</h3>
@@ -339,20 +215,22 @@ const SubcategoryView = () => {
               </div>
             ))}
 
-            <button
-              onClick={() => setShowAddFolderDialog(true)}
-              className="bg-[#F3E8FF] border-2 border-dashed border-[#6D28D9] rounded-2xl p-5 flex flex-col items-center justify-center hover:opacity-80 transition-opacity"
-            >
-              <div className="w-14 h-14 bg-white/60 rounded-full flex items-center justify-center mb-3">
-                <Plus className="w-7 h-7 text-[#6D28D9]" />
-              </div>
-              <h3 className="font-semibold text-[#1F2121]">Add Folder</h3>
-            </button>
+            {canAddMore && (
+              <button
+                onClick={() => setShowAddFolderDialog(true)}
+                className="bg-[#F3E8FF] border-2 border-dashed border-[#6D28D9] rounded-2xl p-5 flex flex-col items-center justify-center hover:opacity-80 transition-opacity"
+              >
+                <div className="w-14 h-14 bg-white/60 rounded-full flex items-center justify-center mb-3">
+                  <Plus className="w-7 h-7 text-[#6D28D9]" />
+                </div>
+                <h3 className="font-semibold text-[#1F2121]">Add Folder</h3>
+              </button>
+            )}
           </div>
         </div>
       )}
 
-      {nestedFolders.length === 0 && (
+      {nestedFolders.length === 0 && canAddMore && (
         <div className="px-6 mb-6">
           <button
             onClick={() => setShowAddFolderDialog(true)}
@@ -361,8 +239,8 @@ const SubcategoryView = () => {
             <div className="w-16 h-16 bg-white/60 rounded-full flex items-center justify-center mb-3">
               <Plus className="w-8 h-8 text-[#6D28D9]" />
             </div>
-            <h3 className="font-semibold text-[#1F2121] mb-1">Create Folder</h3>
-            <p className="text-sm text-[#626C71]">Organize documents into folders</p>
+            <h3 className="font-semibold text-[#1F2121] mb-1">Create Subfolder</h3>
+            <p className="text-sm text-[#626C71]">Organize documents into subfolders</p>
           </button>
         </div>
       )}
@@ -370,15 +248,13 @@ const SubcategoryView = () => {
       <div className="px-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-[#1F2121]">Documents</h2>
-          {documents.length > 0 && (
-            <Button
-              onClick={() => setUploadOpen(true)}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground"
-            >
-              <Upload className="w-4 h-4 mr-2" />
-              Upload
-            </Button>
-          )}
+          <Button
+            onClick={() => setUploadOpen(true)}
+            className="bg-primary hover:bg-primary/90 text-primary-foreground"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            Upload
+          </Button>
         </div>
 
         {documents.length === 0 ? (
@@ -408,21 +284,18 @@ const SubcategoryView = () => {
                     </p>
                   </div>
                 </div>
-                <ActionMenu
-                  items={createDocumentActionMenu(
-                    () => handleViewDocument(doc),
-                    () => handleDownloadDocument(doc),
-                    () => setAccessControlDocument(doc),
-                    () => handleDeleteDocument(doc)
-                  )}
-                />
+                <button
+                  onClick={() => handleDocumentOptions(doc)}
+                  className="p-2 hover:bg-accent rounded-lg transition-colors"
+                >
+                  <MoreVertical className="w-5 h-5 text-muted-foreground" />
+                </button>
               </div>
             ))}
           </div>
         )}
       </div>
 
-      {/* Folder Delete Confirmation */}
       {deleteConfirm.show && deleteConfirm.folder && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-card rounded-3xl p-6 w-full max-w-md">
@@ -463,43 +336,6 @@ const SubcategoryView = () => {
         </div>
       )}
 
-      {/* Document Delete Confirmation */}
-      {deleteDocConfirm.show && deleteDocConfirm.doc && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-card rounded-3xl p-6 w-full max-w-md">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                <AlertTriangle className="w-6 h-6 text-red-600" />
-              </div>
-              <h2 className="text-xl font-bold text-foreground">Delete Document?</h2>
-            </div>
-
-            <p className="text-foreground mb-4">
-              Are you sure you want to delete <span className="font-semibold">{deleteDocConfirm.doc.name}</span>?
-            </p>
-
-            <p className="text-sm text-red-600 mb-6">This action cannot be undone</p>
-
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setDeleteDocConfirm({ show: false, doc: null })}
-                className="flex-1"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={confirmDeleteDocument}
-                className="flex-1 bg-red-500 hover:bg-red-600 text-white"
-              >
-                Delete
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Add Folder Dialog */}
       {showAddFolderDialog && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-card rounded-3xl p-6 w-full max-w-md relative">
@@ -510,7 +346,7 @@ const SubcategoryView = () => {
               <X className="w-6 h-6" />
             </button>
 
-            <h2 className="text-2xl font-bold text-foreground mb-6">Add Folder</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-6">Add Subfolder</h2>
 
             <div className="space-y-4">
               <div>
@@ -518,7 +354,7 @@ const SubcategoryView = () => {
                   Folder Name
                 </label>
                 <Input
-                  placeholder="e.g. Tax Documents, Receipts, etc."
+                  placeholder="e.g. 2024 Records, Contracts, etc."
                   value={folderName}
                   onChange={(e) => setFolderName(e.target.value)}
                   className="bg-background border-border"
@@ -549,10 +385,7 @@ const SubcategoryView = () => {
       <UploadDocumentModal
         open={uploadOpen}
         onClose={() => setUploadOpen(false)}
-        subcategoryName={subcategory.name}
-        categoryId={categoryId!}
-        subcategoryId={subcategoryId!}
-        onUploadComplete={loadData}
+        subcategoryName={currentFolder.name}
       />
 
       <DocumentOptionsModal
@@ -562,7 +395,7 @@ const SubcategoryView = () => {
         documentId={selectedDoc.id}
         categoryId={categoryId!}
         subcategoryId={subcategoryId!}
-        onDelete={loadData}
+        folderId={folderId}
       />
 
       <LockDocumentModal
@@ -570,15 +403,6 @@ const SubcategoryView = () => {
         onOpenChange={(open) => setLockOpen(open)}
         documentName={selectedDoc.name}
       />
-
-      {accessControlDocument && (
-        <AccessControlModal
-          resourceType="document"
-          resourceId={accessControlDocument.id}
-          resourceName={accessControlDocument.name}
-          onClose={() => setAccessControlDocument(null)}
-        />
-      )}
 
       <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
         <div className="flex justify-around items-center h-16 max-w-md mx-auto">
@@ -603,8 +427,8 @@ const SubcategoryView = () => {
           </button>
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 
-export default SubcategoryView;
+export default NestedFolderView;
