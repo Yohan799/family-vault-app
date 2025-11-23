@@ -40,12 +40,7 @@ export const storeDocument = async (
 
     if (uploadError) throw uploadError;
 
-    // Get public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from('documents')
-      .getPublicUrl(filePath);
-
-    // Insert document record in database
+    // Insert document record in database. We store the file path and generate signed URLs when reading.
     const { data, error } = await supabase
       .from('documents')
       .insert({
@@ -54,7 +49,7 @@ export const storeDocument = async (
         subcategory_id: subcategoryId,
         folder_id: folderId,
         file_name: file.name,
-        file_url: publicUrl,
+        file_url: filePath,
         file_size: file.size,
         file_type: file.type,
         external_source: externalSource,
@@ -116,20 +111,48 @@ export const getDocuments = async (
     const { data, error } = await query;
     if (error) throw error;
 
-    return (data || []).map(doc => ({
-      id: doc.id,
-      name: doc.file_name,
-      size: doc.file_size || 0,
-      type: doc.file_type || '',
-      date: doc.uploaded_at,
-      categoryId: doc.category_id || '',
-      subcategoryId: doc.subcategory_id || undefined,
-      folderId: doc.folder_id || undefined,
-      fileUrl: doc.file_url,
-      viewCount: doc.view_count || 0,
-      downloadCount: doc.download_count || 0,
-      externalSource: doc.external_source || undefined,
-    }));
+    const docs = data || [];
+
+    // Generate signed URLs for each document. This works even when the bucket is private.
+    const documentsWithUrls: StoredDocument[] = await Promise.all(
+      docs.map(async (doc) => {
+        let path = doc.file_url as string;
+
+        // Backward compatibility: if we stored a full URL earlier, extract the path after the bucket name.
+        if (path?.startsWith('http')) {
+          const parts = path.split('/documents/');
+          if (parts.length === 2) {
+            path = parts[1];
+          }
+        }
+
+        let signedUrl = '';
+        if (path) {
+          const { data: signed } = await supabase.storage
+            .from('documents')
+            .createSignedUrl(path, 60 * 60); // 1 hour
+
+          signedUrl = signed?.signedUrl || '';
+        }
+
+        return {
+          id: doc.id,
+          name: doc.file_name,
+          size: doc.file_size || 0,
+          type: doc.file_type || '',
+          date: doc.uploaded_at,
+          categoryId: doc.category_id || '',
+          subcategoryId: doc.subcategory_id || undefined,
+          folderId: doc.folder_id || undefined,
+          fileUrl: signedUrl,
+          viewCount: doc.view_count || 0,
+          downloadCount: doc.download_count || 0,
+          externalSource: doc.external_source || undefined,
+        } as StoredDocument;
+      })
+    );
+
+    return documentsWithUrls;
   } catch (error) {
     console.error('Error retrieving documents:', error);
     return [];
@@ -153,20 +176,46 @@ export const getAllDocumentsInCategory = async (categoryId: string): Promise<Sto
 
     if (error) throw error;
 
-    return (data || []).map(doc => ({
-      id: doc.id,
-      name: doc.file_name,
-      size: doc.file_size || 0,
-      type: doc.file_type || '',
-      date: doc.uploaded_at,
-      categoryId: doc.category_id || '',
-      subcategoryId: doc.subcategory_id || undefined,
-      folderId: doc.folder_id || undefined,
-      fileUrl: doc.file_url,
-      viewCount: doc.view_count || 0,
-      downloadCount: doc.download_count || 0,
-      externalSource: doc.external_source || undefined,
-    }));
+    const docs = data || [];
+
+    const documentsWithUrls: StoredDocument[] = await Promise.all(
+      docs.map(async (doc) => {
+        let path = doc.file_url as string;
+
+        if (path?.startsWith('http')) {
+          const parts = path.split('/documents/');
+          if (parts.length === 2) {
+            path = parts[1];
+          }
+        }
+
+        let signedUrl = '';
+        if (path) {
+          const { data: signed } = await supabase.storage
+            .from('documents')
+            .createSignedUrl(path, 60 * 60);
+
+          signedUrl = signed?.signedUrl || '';
+        }
+
+        return {
+          id: doc.id,
+          name: doc.file_name,
+          size: doc.file_size || 0,
+          type: doc.file_type || '',
+          date: doc.uploaded_at,
+          categoryId: doc.category_id || '',
+          subcategoryId: doc.subcategory_id || undefined,
+          folderId: doc.folder_id || undefined,
+          fileUrl: signedUrl,
+          viewCount: doc.view_count || 0,
+          downloadCount: doc.download_count || 0,
+          externalSource: doc.external_source || undefined,
+        } as StoredDocument;
+      })
+    );
+
+    return documentsWithUrls;
   } catch (error) {
     console.error('Error retrieving documents:', error);
     return [];
