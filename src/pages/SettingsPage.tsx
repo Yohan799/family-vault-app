@@ -110,8 +110,10 @@ const SettingsPage = () => {
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
       <div className="bg-primary/20 text-foreground p-6 rounded-b-3xl mb-4">
-        <h1 className="text-2xl font-bold">Settings</h1>
-        <p className="text-sm text-muted-foreground mt-1">Manage your preferences</p>
+        <div>
+          <h1 className="text-2xl font-bold">Settings</h1>
+          <p className="text-sm text-muted-foreground mt-1">Manage your preferences</p>
+        </div>
       </div>
 
       <div className="px-4 space-y-3">
