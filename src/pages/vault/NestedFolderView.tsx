@@ -385,7 +385,10 @@ const NestedFolderView = () => {
       <UploadDocumentModal
         open={uploadOpen}
         onClose={() => setUploadOpen(false)}
-        subcategoryName={currentFolder.name}
+        categoryId={categoryId!}
+        subcategoryId={subcategoryId!}
+        folderId={folderId}
+        subcategoryName={currentFolder?.name || "Folder"}
       />
 
       <DocumentOptionsModal

@@ -161,17 +161,17 @@ export const deleteDocument = (
 /**
  * Download document (convert base64 back to file)
  */
-export const downloadDocument = (document: StoredDocument): void => {
+export const downloadDocument = (doc: StoredDocument): void => {
     try {
         // Create a link element
-        const link = document.createElement('a');
-        link.href = document.base64Data;
-        link.download = document.name;
+        const link = window.document.createElement('a');
+        link.href = doc.base64Data;
+        link.download = doc.name;
 
         // Trigger download
-        document.body.appendChild(link);
+        window.document.body.appendChild(link);
         link.click();
-        document.body.removeChild(link);
+        window.document.body.removeChild(link);
     } catch (error) {
         console.error('Error downloading document:', error);
         throw new Error('Failed to download document');
