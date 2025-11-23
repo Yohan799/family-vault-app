@@ -75,9 +75,10 @@ export const UploadDocumentModal = ({
             onUploadComplete();
           }
         } catch (error) {
+          console.error("Error storing document:", error);
           toast({
             title: "Upload Failed",
-            description: "Failed to store document. localStorage may be full.",
+            description: error instanceof Error ? error.message : "Failed to store document. Please try again.",
             variant: "destructive",
           });
         }
