@@ -19,6 +19,7 @@ const CategoryView = () => {
   const [customSubcategories, setCustomSubcategories] = useState<any[]>([]);
   const [category, setCategory] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [totalDocumentCount, setTotalDocumentCount] = useState(0);
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; subcategory: any | null }>({
     show: false,
     subcategory: null
@@ -26,40 +27,54 @@ const CategoryView = () => {
   const [accessControlSubcategory, setAccessControlSubcategory] = useState<any | null>(null);
 
   useEffect(() => {
-    setLoading(true);
+    const loadData = async () => {
+      setLoading(true);
 
-    let foundCategory = vaultCategories.find((cat) => cat.id === categoryId);
+      let foundCategory = vaultCategories.find((cat) => cat.id === categoryId);
 
-    if (!foundCategory) {
-      const customCats = localStorage.getItem('custom_categories');
-      if (customCats) {
-        const parsed = JSON.parse(customCats);
-        foundCategory = parsed.find((cat: any) => cat.id === categoryId);
+      if (!foundCategory) {
+        const customCats = localStorage.getItem('custom_categories');
+        if (customCats) {
+          const parsed = JSON.parse(customCats);
+          foundCategory = parsed.find((cat: any) => cat.id === categoryId);
+        }
       }
-    }
 
-    setCategory(foundCategory);
+      setCategory(foundCategory);
 
-    if (foundCategory) {
-      const stored = localStorage.getItem(`custom_subcategories_${categoryId}`);
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          const restored = parsed.map((sub: any) => ({
-            ...sub,
-            icon: Folder
-          }));
-          setCustomSubcategories(restored);
-        } catch (e) {
-          console.error("Failed to parse custom subcategories", e);
+      if (foundCategory) {
+        const stored = localStorage.getItem(`custom_subcategories_${categoryId}`);
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            const restored = parsed.map((sub: any) => ({
+              ...sub,
+              icon: Folder
+            }));
+            setCustomSubcategories(restored);
+          } catch (e) {
+            console.error("Failed to parse custom subcategories", e);
+            setCustomSubcategories([]);
+          }
+        } else {
           setCustomSubcategories([]);
         }
-      } else {
-        setCustomSubcategories([]);
-      }
-    }
 
-    setLoading(false);
+        // Get total document count from Supabase
+        try {
+          const { getAllDocumentsInCategory } = await import('@/lib/documentStorage');
+          const docs = await getAllDocumentsInCategory(categoryId!);
+          setTotalDocumentCount(docs.length);
+        } catch (error) {
+          console.error("Error loading document count:", error);
+          setTotalDocumentCount(0);
+        }
+      }
+
+      setLoading(false);
+    };
+
+    loadData();
   }, [categoryId]);
 
   const handleAddSubcategory = () => {
@@ -163,7 +178,7 @@ const CategoryView = () => {
               <CategoryIcon className="w-6 h-6 text-[#1F2121]" />
               <h1 className="text-2xl font-bold text-[#1F2121]">{category.name}</h1>
             </div>
-            <p className="text-[#626C71] text-sm mt-1">{category.documentCount} Documents</p>
+            <p className="text-[#626C71] text-sm mt-1">{totalDocumentCount} Documents</p>
           </div>
         </div>
 
