@@ -14,7 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          auto_lock_minutes: number | null
+          backup_frequency: string | null
+          biometric_enabled: boolean | null
+          created_at: string
+          date_of_birth: string | null
+          email: string
+          full_name: string | null
+          id: string
+          last_login: string | null
+          phone: string | null
+          profile_image_url: string | null
+          two_factor_enabled: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          auto_lock_minutes?: number | null
+          backup_frequency?: string | null
+          biometric_enabled?: boolean | null
+          created_at?: string
+          date_of_birth?: string | null
+          email: string
+          full_name?: string | null
+          id: string
+          last_login?: string | null
+          phone?: string | null
+          profile_image_url?: string | null
+          two_factor_enabled?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          auto_lock_minutes?: number | null
+          backup_frequency?: string | null
+          biometric_enabled?: boolean | null
+          created_at?: string
+          date_of_birth?: string | null
+          email?: string
+          full_name?: string | null
+          id?: string
+          last_login?: string | null
+          phone?: string | null
+          profile_image_url?: string | null
+          two_factor_enabled?: boolean | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
