@@ -192,7 +192,12 @@ const SubcategoryView = () => {
       const fullDoc = storedDocs.find(d => d.id === doc.id);
 
       if (!fullDoc) {
-        throw new Error('Document not found');
+        toast({
+          title: "Error",
+          description: "Document not found",
+          variant: "destructive"
+        });
+        return;
       }
 
       // Trigger download
@@ -203,6 +208,7 @@ const SubcategoryView = () => {
         description: `Downloading ${doc.name}`,
       });
     } catch (error) {
+      console.error("Error downloading document:", error);
       toast({
         title: "Download failed",
         description: "Could not download the document",
@@ -218,7 +224,12 @@ const SubcategoryView = () => {
       const fullDoc = storedDocs.find(d => d.id === doc.id);
 
       if (!fullDoc) {
-        throw new Error('Document not found');
+        toast({
+          title: "Error",
+          description: "Document not found",
+          variant: "destructive"
+        });
+        return;
       }
 
       // Increment view count
@@ -226,7 +237,13 @@ const SubcategoryView = () => {
 
       // Open in new window
       window.open(fullDoc.fileUrl, '_blank');
+      
+      toast({
+        title: "Opening document",
+        description: `Viewing ${doc.name}`,
+      });
     } catch (error) {
+      console.error("Error viewing document:", error);
       toast({
         title: "Error",
         description: "Could not view the document",
@@ -244,7 +261,11 @@ const SubcategoryView = () => {
 
     try {
       const { deleteDocument } = await import('@/lib/documentStorage');
-      await deleteDocument(deleteDocConfirm.doc.id);
+      const success = await deleteDocument(deleteDocConfirm.doc.id);
+
+      if (!success) {
+        throw new Error("Delete operation failed");
+      }
 
       toast({
         title: "Document deleted",
@@ -256,11 +277,13 @@ const SubcategoryView = () => {
       // Reload documents
       await loadData();
     } catch (error) {
+      console.error("Error deleting document:", error);
       toast({
         title: "Error",
         description: "Could not delete the document",
         variant: "destructive"
       });
+      setDeleteDocConfirm({ show: false, doc: null });
     }
   };
 

@@ -65,7 +65,15 @@ export const DocumentOptionsModal = ({
   };
 
   const handleManageAccess = () => {
-    navigate(`/vault/manage-access/${documentId}`);
+    // Navigate to access control - pass document ID not subcategory
+    navigate(`/vault/manage-access/${documentId}`, {
+      state: { 
+        resourceType: 'document',
+        resourceId: documentId,
+        categoryId,
+        subcategoryId 
+      }
+    });
     onOpenChange(false);
   };
 
