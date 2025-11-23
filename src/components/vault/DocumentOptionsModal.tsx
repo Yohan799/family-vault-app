@@ -41,7 +41,7 @@ export const DocumentOptionsModal = ({
   const handleDownload = async () => {
     try {
       const { getDocuments, downloadDocument } = await import('@/lib/documentStorage');
-      const storedDocs = getDocuments(categoryId, subcategoryId, folderId);
+      const storedDocs = await getDocuments(categoryId, subcategoryId, folderId);
       const doc = storedDocs.find(d => d.id === documentId);
 
       if (doc) {
@@ -73,7 +73,7 @@ export const DocumentOptionsModal = ({
     if (confirm(`Are you sure you want to delete ${documentName}?`)) {
       try {
         const { deleteDocument } = await import('@/lib/documentStorage');
-        const success = deleteDocument(documentId, categoryId, subcategoryId, folderId);
+        const success = await deleteDocument(documentId);
 
         if (success) {
           toast({

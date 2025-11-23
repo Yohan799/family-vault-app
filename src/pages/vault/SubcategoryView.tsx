@@ -71,9 +71,9 @@ const SubcategoryView = () => {
         setNestedFolders([]);
       }
 
-      // Load documents from localStorage
+      // Load documents from Supabase
       const { getDocuments, formatFileSize } = await import('@/lib/documentStorage');
-      const storedDocs = getDocuments(categoryId, subcategoryId);
+      const storedDocs = await getDocuments(categoryId!, subcategoryId!);
 
       // Format documents for display
       const formattedDocs = storedDocs.map(doc => ({
@@ -187,21 +187,16 @@ const SubcategoryView = () => {
 
   const handleDownloadDocument = async (doc: any) => {
     try {
-      const { getDocuments } = await import('@/lib/documentStorage');
-      const storedDocs = getDocuments(categoryId!, subcategoryId!);
+      const { getDocuments, downloadDocument } = await import('@/lib/documentStorage');
+      const storedDocs = await getDocuments(categoryId!, subcategoryId!);
       const fullDoc = storedDocs.find(d => d.id === doc.id);
 
       if (!fullDoc) {
         throw new Error('Document not found');
       }
 
-      // Create a link and trigger download
-      const link = document.createElement('a');
-      link.href = fullDoc.base64Data;
-      link.download = fullDoc.name;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      // Trigger download
+      await downloadDocument(fullDoc);
 
       toast({
         title: "Download started",
@@ -218,16 +213,19 @@ const SubcategoryView = () => {
 
   const handleViewDocument = async (doc: any) => {
     try {
-      const { getDocuments } = await import('@/lib/documentStorage');
-      const storedDocs = getDocuments(categoryId!, subcategoryId!);
+      const { getDocuments, incrementViewCount } = await import('@/lib/documentStorage');
+      const storedDocs = await getDocuments(categoryId!, subcategoryId!);
       const fullDoc = storedDocs.find(d => d.id === doc.id);
 
       if (!fullDoc) {
         throw new Error('Document not found');
       }
 
+      // Increment view count
+      await incrementViewCount(fullDoc.id);
+
       // Open in new window
-      window.open(fullDoc.base64Data, '_blank');
+      window.open(fullDoc.fileUrl, '_blank');
     } catch (error) {
       toast({
         title: "Error",
@@ -246,8 +244,7 @@ const SubcategoryView = () => {
 
     try {
       const { deleteDocument } = await import('@/lib/documentStorage');
-      // Correct parameter order: documentId, categoryId, subcategoryId, folderId?
-      deleteDocument(deleteDocConfirm.doc.id, categoryId!, subcategoryId!);
+      await deleteDocument(deleteDocConfirm.doc.id);
 
       toast({
         title: "Document deleted",

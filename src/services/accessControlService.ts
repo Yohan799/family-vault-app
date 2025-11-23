@@ -1,245 +1,268 @@
+import { supabase } from "@/integrations/supabase/client";
 import {
-    AccessLevel,
-    NomineeAccess,
-    CategoryAccess,
-    SubcategoryAccess,
-    DocumentAccess,
-    AccessSummary
+  AccessLevel,
+  NomineeAccess,
+  AccessSummary
 } from '../types/access';
 
-// This service will be replaced with Supabase implementation
-// For now, using localStorage to demonstrate the functionality
-
-const STORAGE_KEYS = {
-    categoryAccess: 'family_vault_category_access',
-    subcategoryAccess: 'family_vault_subcategory_access',
-    documentAccess: 'family_vault_document_access',
-};
-
 export const accessControlService = {
-    // Get all nominees with their access status for a resource
-    async getAccessSummary(
-        resourceType: AccessLevel,
-        resourceId: string
-    ): Promise<AccessSummary> {
-        const nominees = JSON.parse(localStorage.getItem('nominees') || '[]');
-        const accessList = this.getAccessList(resourceType);
+  // Get all nominees with their access status for a resource
+  async getAccessSummary(
+    resourceType: AccessLevel,
+    resourceId: string
+  ): Promise<AccessSummary> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
 
-        const accessDetails: NomineeAccess[] = nominees.map((nominee: any) => ({
-            nomineeId: nominee.id,
-            nomineeName: nominee.fullName,
-            nomineeEmail: nominee.email,
-            nomineeAvatar: nominee.avatar,
-            hasAccess: accessList.some(
-                (access: any) =>
-                    access.nomineeId === nominee.id &&
-                    this.getResourceIdFromAccess(resourceType, access) === resourceId
-            ),
-        }));
+      // Get all nominees for this user
+      const { data: nominees, error: nomineesError } = await supabase
+        .from('nominees')
+        .select('*')
+        .eq('user_id', user.id)
+        .is('deleted_at', null);
 
-        return {
-            totalNominees: nominees.length,
-            nomineesWithAccess: accessDetails.filter(n => n.hasAccess).length,
-            accessDetails,
-        };
-    },
+      if (nomineesError) throw nomineesError;
 
-    // Grant access to a nominee for a resource
-    async grantAccess(
-        resourceType: AccessLevel,
-        resourceId: string,
-        nomineeId: string
-    ): Promise<void> {
-        const accessList = this.getAccessList(resourceType);
+      // Get access controls for this resource
+      const { data: accessControls, error: accessError } = await supabase
+        .from('access_controls')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('resource_type', resourceType)
+        .eq('resource_id', resourceId);
 
-        // Check if access already exists
-        const existingAccess = accessList.find(
-            (access: any) =>
-                access.nomineeId === nomineeId &&
-                this.getResourceIdFromAccess(resourceType, access) === resourceId
-        );
+      if (accessError) throw accessError;
 
-        if (!existingAccess) {
-            const newAccess = this.createAccessRecord(resourceType, resourceId, nomineeId);
-            accessList.push(newAccess);
-            this.saveAccessList(resourceType, accessList);
+      const accessDetails: NomineeAccess[] = (nominees || []).map((nominee) => ({
+        nomineeId: nominee.id,
+        nomineeName: nominee.full_name,
+        nomineeEmail: nominee.email,
+        nomineeAvatar: undefined,
+        hasAccess: (accessControls || []).some(
+          (access) => access.nominee_id === nominee.id
+        ),
+      }));
+
+      return {
+        totalNominees: nominees?.length || 0,
+        nomineesWithAccess: accessDetails.filter(n => n.hasAccess).length,
+        accessDetails,
+      };
+    } catch (error) {
+      console.error('Error getting access summary:', error);
+      return {
+        totalNominees: 0,
+        nomineesWithAccess: 0,
+        accessDetails: [],
+      };
+    }
+  },
+
+  // Grant access to a nominee for a resource
+  async grantAccess(
+    resourceType: AccessLevel,
+    resourceId: string,
+    nomineeId: string,
+    accessLevel: 'view' | 'download' = 'view'
+  ): Promise<void> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
+
+      const { error } = await supabase
+        .from('access_controls')
+        .insert({
+          user_id: user.id,
+          nominee_id: nomineeId,
+          resource_type: resourceType,
+          resource_id: resourceId,
+          access_level: accessLevel,
+        });
+
+      if (error && !error.message.includes('duplicate')) {
+        throw error;
+      }
+    } catch (error) {
+      console.error('Error granting access:', error);
+      throw error;
+    }
+  },
+
+  // Revoke access from a nominee for a resource
+  async revokeAccess(
+    resourceType: AccessLevel,
+    resourceId: string,
+    nomineeId: string
+  ): Promise<void> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
+
+      const { error } = await supabase
+        .from('access_controls')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('nominee_id', nomineeId)
+        .eq('resource_type', resourceType)
+        .eq('resource_id', resourceId);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error revoking access:', error);
+      throw error;
+    }
+  },
+
+  // Toggle access for a nominee
+  async toggleAccess(
+    resourceType: AccessLevel,
+    resourceId: string,
+    nomineeId: string,
+    grant: boolean
+  ): Promise<void> {
+    if (grant) {
+      await this.grantAccess(resourceType, resourceId, nomineeId);
+    } else {
+      await this.revokeAccess(resourceType, resourceId, nomineeId);
+    }
+  },
+
+  // Check if a nominee has access to a resource (including inherited access)
+  async hasAccess(
+    resourceType: AccessLevel,
+    resourceId: string,
+    nomineeId: string,
+    categoryId?: string,
+    subcategoryId?: string
+  ): Promise<boolean> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return false;
+
+      // Check direct access
+      const { data: directAccess } = await supabase
+        .from('access_controls')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('nominee_id', nomineeId)
+        .eq('resource_type', resourceType)
+        .eq('resource_id', resourceId)
+        .single();
+
+      if (directAccess) return true;
+
+      // Check inherited access (category -> subcategory -> document)
+      if (resourceType === 'document' && categoryId) {
+        const { data: categoryAccess } = await supabase
+          .from('access_controls')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('nominee_id', nomineeId)
+          .eq('resource_type', 'category')
+          .eq('resource_id', categoryId)
+          .single();
+
+        if (categoryAccess) return true;
+
+        if (subcategoryId) {
+          const { data: subcategoryAccess } = await supabase
+            .from('access_controls')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('nominee_id', nomineeId)
+            .eq('resource_type', 'subcategory')
+            .eq('resource_id', subcategoryId)
+            .single();
+
+          if (subcategoryAccess) return true;
         }
-    },
+      }
 
-    // Revoke access from a nominee for a resource
-    async revokeAccess(
-        resourceType: AccessLevel,
-        resourceId: string,
-        nomineeId: string
-    ): Promise<void> {
-        const accessList = this.getAccessList(resourceType);
+      if (resourceType === 'subcategory' && categoryId) {
+        const { data: categoryAccess } = await supabase
+          .from('access_controls')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('nominee_id', nomineeId)
+          .eq('resource_type', 'category')
+          .eq('resource_id', categoryId)
+          .single();
 
-        const filteredList = accessList.filter(
-            (access: any) =>
-                !(access.nomineeId === nomineeId &&
-                    this.getResourceIdFromAccess(resourceType, access) === resourceId)
-        );
+        if (categoryAccess) return true;
+      }
 
-        this.saveAccessList(resourceType, filteredList);
-    },
+      return false;
+    } catch (error) {
+      console.error('Error checking access:', error);
+      return false;
+    }
+  },
 
-    // Toggle access for a nominee
-    async toggleAccess(
-        resourceType: AccessLevel,
-        resourceId: string,
-        nomineeId: string,
-        grant: boolean
-    ): Promise<void> {
-        if (grant) {
-            await this.grantAccess(resourceType, resourceId, nomineeId);
-        } else {
-            await this.revokeAccess(resourceType, resourceId, nomineeId);
-        }
-    },
+  // Get all resources a nominee has access to
+  async getNomineeAccessibleResources(
+    resourceType: AccessLevel,
+    nomineeId: string
+  ): Promise<string[]> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
 
-    // Check if a nominee has access to a resource (including inherited access)
-    async hasAccess(
-        resourceType: AccessLevel,
-        resourceId: string,
-        nomineeId: string,
-        categoryId?: string,
-        subcategoryId?: string
-    ): Promise<boolean> {
-        // Check direct access
-        const accessList = this.getAccessList(resourceType);
-        const directAccess = accessList.some(
-            (access: any) =>
-                access.nomineeId === nomineeId &&
-                this.getResourceIdFromAccess(resourceType, access) === resourceId
-        );
+      const { data, error } = await supabase
+        .from('access_controls')
+        .select('resource_id')
+        .eq('user_id', user.id)
+        .eq('nominee_id', nomineeId)
+        .eq('resource_type', resourceType);
 
-        if (directAccess) return true;
+      if (error) throw error;
 
-        // Check inherited access (category -> subcategory -> document)
-        if (resourceType === 'document' && categoryId) {
-            const categoryAccessList = this.getAccessList('category');
-            const hasCategoryAccess = categoryAccessList.some(
-                (access: any) => access.nomineeId === nomineeId && access.categoryId === categoryId
-            );
-            if (hasCategoryAccess) return true;
+      return (data || []).map(access => access.resource_id);
+    } catch (error) {
+      console.error('Error getting accessible resources:', error);
+      return [];
+    }
+  },
 
-            if (subcategoryId) {
-                const subcategoryAccessList = this.getAccessList('subcategory');
-                const hasSubcategoryAccess = subcategoryAccessList.some(
-                    (access: any) => access.nomineeId === nomineeId && access.subcategoryId === subcategoryId
-                );
-                if (hasSubcategoryAccess) return true;
-            }
-        }
+  // Clear all access for a resource (useful when deleting)
+  async clearAllAccess(resourceType: AccessLevel, resourceId: string): Promise<void> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
 
-        if (resourceType === 'subcategory' && categoryId) {
-            const categoryAccessList = this.getAccessList('category');
-            const hasCategoryAccess = categoryAccessList.some(
-                (access: any) => access.nomineeId === nomineeId && access.categoryId === categoryId
-            );
-            if (hasCategoryAccess) return true;
-        }
+      const { error } = await supabase
+        .from('access_controls')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('resource_type', resourceType)
+        .eq('resource_id', resourceId);
 
-        return false;
-    },
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error clearing access:', error);
+      throw error;
+    }
+  },
 
-    // Get all resources a nominee has access to
-    async getNomineeAccessibleResources(
-        resourceType: AccessLevel,
-        nomineeId: string
-    ): Promise<string[]> {
-        const accessList = this.getAccessList(resourceType);
-        return accessList
-            .filter((access: any) => access.nomineeId === nomineeId)
-            .map((access: any) => this.getResourceIdFromAccess(resourceType, access));
-    },
+  // Bulk grant access
+  async bulkGrantAccess(
+    resourceType: AccessLevel,
+    resourceId: string,
+    nomineeIds: string[]
+  ): Promise<void> {
+    for (const nomineeId of nomineeIds) {
+      await this.grantAccess(resourceType, resourceId, nomineeId);
+    }
+  },
 
-    // Helper: Get access list from localStorage
-    getAccessList(resourceType: AccessLevel): any[] {
-        const key = this.getStorageKey(resourceType);
-        return JSON.parse(localStorage.getItem(key) || '[]');
-    },
-
-    // Helper: Save access list to localStorage
-    saveAccessList(resourceType: AccessLevel, accessList: any[]): void {
-        const key = this.getStorageKey(resourceType);
-        localStorage.setItem(key, JSON.stringify(accessList));
-    },
-
-    // Helper: Get storage key for resource type
-    getStorageKey(resourceType: AccessLevel): string {
-        switch (resourceType) {
-            case 'category':
-                return STORAGE_KEYS.categoryAccess;
-            case 'subcategory':
-                return STORAGE_KEYS.subcategoryAccess;
-            case 'document':
-                return STORAGE_KEYS.documentAccess;
-        }
-    },
-
-    // Helper: Create access record
-    createAccessRecord(
-        resourceType: AccessLevel,
-        resourceId: string,
-        nomineeId: string
-    ): any {
-        const baseRecord = {
-            id: `access_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            nomineeId,
-            grantedAt: new Date().toISOString(),
-        };
-
-        switch (resourceType) {
-            case 'category':
-                return { ...baseRecord, categoryId: resourceId };
-            case 'subcategory':
-                return { ...baseRecord, subcategoryId: resourceId };
-            case 'document':
-                return { ...baseRecord, documentId: resourceId };
-        }
-    },
-
-    // Helper: Get resource ID from access record
-    getResourceIdFromAccess(resourceType: AccessLevel, access: any): string {
-        switch (resourceType) {
-            case 'category':
-                return access.categoryId;
-            case 'subcategory':
-                return access.subcategoryId;
-            case 'document':
-                return access.documentId;
-        }
-    },
-
-    // Clear all access for a resource (useful when deleting)
-    async clearAllAccess(resourceType: AccessLevel, resourceId: string): Promise<void> {
-        const accessList = this.getAccessList(resourceType);
-        const filteredList = accessList.filter(
-            (access: any) => this.getResourceIdFromAccess(resourceType, access) !== resourceId
-        );
-        this.saveAccessList(resourceType, filteredList);
-    },
-
-    // Bulk grant access
-    async bulkGrantAccess(
-        resourceType: AccessLevel,
-        resourceId: string,
-        nomineeIds: string[]
-    ): Promise<void> {
-        for (const nomineeId of nomineeIds) {
-            await this.grantAccess(resourceType, resourceId, nomineeId);
-        }
-    },
-
-    // Bulk revoke access
-    async bulkRevokeAccess(
-        resourceType: AccessLevel,
-        resourceId: string,
-        nomineeIds: string[]
-    ): Promise<void> {
-        for (const nomineeId of nomineeIds) {
-            await this.revokeAccess(resourceType, resourceId, nomineeId);
-        }
-    },
+  // Bulk revoke access
+  async bulkRevokeAccess(
+    resourceType: AccessLevel,
+    resourceId: string,
+    nomineeIds: string[]
+  ): Promise<void> {
+    for (const nomineeId of nomineeIds) {
+      await this.revokeAccess(resourceType, resourceId, nomineeId);
+    }
+  },
 };
