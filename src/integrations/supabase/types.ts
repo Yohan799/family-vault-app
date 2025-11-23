@@ -14,6 +14,161 @@ export type Database = {
   }
   public: {
     Tables: {
+      categories: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          icon: string | null
+          icon_bg_color: string | null
+          id: string
+          is_custom: boolean | null
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          icon?: string | null
+          icon_bg_color?: string | null
+          id?: string
+          is_custom?: boolean | null
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          icon?: string | null
+          icon_bg_color?: string | null
+          id?: string
+          is_custom?: boolean | null
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      documents: {
+        Row: {
+          category_id: string | null
+          deleted_at: string | null
+          file_name: string
+          file_size: number | null
+          file_type: string | null
+          file_url: string
+          id: string
+          uploaded_at: string
+          user_id: string
+        }
+        Insert: {
+          category_id?: string | null
+          deleted_at?: string | null
+          file_name: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url: string
+          id?: string
+          uploaded_at?: string
+          user_id: string
+        }
+        Update: {
+          category_id?: string | null
+          deleted_at?: string | null
+          file_name?: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          uploaded_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inactivity_triggers: {
+        Row: {
+          created_at: string
+          custom_message: string | null
+          email_enabled: boolean | null
+          id: string
+          inactive_days_threshold: number | null
+          is_active: boolean | null
+          last_activity_at: string | null
+          sms_enabled: boolean | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          custom_message?: string | null
+          email_enabled?: boolean | null
+          id?: string
+          inactive_days_threshold?: number | null
+          is_active?: boolean | null
+          last_activity_at?: string | null
+          sms_enabled?: boolean | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          custom_message?: string | null
+          email_enabled?: boolean | null
+          id?: string
+          inactive_days_threshold?: number | null
+          is_active?: boolean | null
+          last_activity_at?: string | null
+          sms_enabled?: boolean | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      nominees: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          email: string
+          full_name: string
+          id: string
+          phone: string | null
+          relation: string | null
+          status: string | null
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          email: string
+          full_name: string
+          id?: string
+          phone?: string | null
+          relation?: string | null
+          status?: string | null
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          relation?: string | null
+          status?: string | null
+          user_id?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           auto_lock_minutes: number | null
@@ -59,6 +214,54 @@ export type Database = {
           profile_image_url?: string | null
           two_factor_enabled?: boolean | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      time_capsules: {
+        Row: {
+          attachment_url: string | null
+          created_at: string
+          deleted_at: string | null
+          id: string
+          message: string
+          phone: string | null
+          recipient_email: string
+          release_date: string
+          released_at: string | null
+          status: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attachment_url?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          message: string
+          phone?: string | null
+          recipient_email: string
+          release_date: string
+          released_at?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attachment_url?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          message?: string
+          phone?: string | null
+          recipient_email?: string
+          release_date?: string
+          released_at?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

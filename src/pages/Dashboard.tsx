@@ -5,38 +5,26 @@ import { Switch } from "@/components/ui/switch";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { fetchDashboardStats, calculateReadinessScore, updateInactivityTrigger, type DashboardStats } from "@/services/dashboardService";
 import FeatureTour from "@/components/FeatureTour";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { profile, user } = useAuth();
   const [showTour, setShowTour] = useState(false);
-
-  const [securitySettings, setSecuritySettings] = useState({
-    twoFactorAuth: false,
-    biometric: false,
-    lockedDocumentsCount: 0,
-    inactivityTriggerActive: false,
-  });
-
-  const [counts, setCounts] = useState({
+  const [stats, setStats] = useState<DashboardStats>({
     documents: 0,
     nominees: 0,
     timeCapsules: 0,
+    inactivityTriggerActive: false,
   });
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
 
-  const calculateReadinessScore = () => {
-    let score = 0;
-    // Each feature worth 20%
-    if (securitySettings.twoFactorAuth) score += 20;
-    if (securitySettings.biometric) score += 20;
-    if (counts.nominees > 0) score += 20;
-    if (counts.timeCapsules > 0) score += 20;
-    if (securitySettings.inactivityTriggerActive) score += 20;
-    return score;
-  };
-
-  const readinessScore = calculateReadinessScore();
+  const readinessScore = calculateReadinessScore(
+    stats,
+    profile?.two_factor_enabled || false,
+    profile?.biometric_enabled || false
+  );
 
   useEffect(() => {
     // Check if this is first login
@@ -44,73 +32,42 @@ const Dashboard = () => {
     if (isFirstLogin === "true") {
       setShowTour(true);
     }
-
-    const savedSettings = localStorage.getItem("userSettings");
-    if (savedSettings) {
-      const settings = JSON.parse(savedSettings);
-      setSecuritySettings({
-        twoFactorAuth: settings.twoFactorAuth || false,
-        biometric: settings.biometric || false,
-        lockedDocumentsCount: 0,
-        inactivityTriggerActive: settings.inactivityTriggerActive || false,
-      });
-    }
-
-    const loadCounts = () => {
-      // Calculate nominees count from actual nominees data
-      const nomineesData = JSON.parse(localStorage.getItem("nominees") || "[]");
-      const nomineesCount = nomineesData.length;
-
-      // Calculate documents count by searching all document storage keys
-      let documentsCount = 0;
-      const keys = Object.keys(localStorage);
-      keys.forEach(key => {
-        if (key.startsWith("documents_")) {
-          try {
-            const docs = JSON.parse(localStorage.getItem(key) || "[]");
-            documentsCount += docs.length;
-          } catch (e) {
-            // Skip invalid JSON
-          }
-        }
-      });
-
-      // Time capsules - currently not saving to localStorage yet, keeping fallback
-      const timeCapsulesCount = parseInt(localStorage.getItem("timeCapsulesCount") || "0");
-
-      setCounts({
-        documents: documentsCount,
-        nominees: nomineesCount,
-        timeCapsules: timeCapsulesCount,
-      });
-    };
-
-    loadCounts();
-
-    const handleStorageChange = () => {
-      loadCounts();
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    window.addEventListener("countsUpdated", handleStorageChange);
-
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener("countsUpdated", handleStorageChange);
-    };
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      loadDashboardStats();
+    }
+  }, [user]);
+
+  const loadDashboardStats = async () => {
+    if (!user) return;
+    
+    setIsLoadingStats(true);
+    try {
+      const dashboardStats = await fetchDashboardStats(user.id);
+      setStats(dashboardStats);
+    } catch (error) {
+      console.error('Error loading dashboard stats:', error);
+    } finally {
+      setIsLoadingStats(false);
+    }
+  };
 
   const handleTourClose = () => {
     setShowTour(false);
     localStorage.removeItem("isFirstLogin");
   };
 
-  const handleInactivityToggle = (checked: boolean) => {
-    setSecuritySettings(prev => ({ ...prev, inactivityTriggerActive: checked }));
-    const savedSettings = localStorage.getItem("userSettings");
-    const settings = savedSettings ? JSON.parse(savedSettings) : {};
-    settings.inactivityTriggerActive = checked;
-    localStorage.setItem("userSettings", JSON.stringify(settings));
+  const handleInactivityToggle = async (checked: boolean) => {
+    if (!user) return;
+    
+    try {
+      await updateInactivityTrigger(user.id, checked);
+      setStats(prev => ({ ...prev, inactivityTriggerActive: checked }));
+    } catch (error) {
+      console.error('Error updating inactivity trigger:', error);
+    }
   };
 
   const quickActions = [
@@ -179,24 +136,24 @@ const Dashboard = () => {
         <div className="grid grid-cols-2 gap-2">
           <div className="bg-card rounded-lg p-2.5 text-center flex flex-col items-center justify-center h-20">
             <FileText className="w-5 h-5 text-primary mb-1.5" />
-            <span className="text-xs font-medium text-foreground truncate">{counts.documents} Docs</span>
+            <span className="text-xs font-medium text-foreground truncate">{stats.documents} Docs</span>
           </div>
 
           <div className="bg-card rounded-lg p-2.5 text-center flex flex-col items-center justify-center h-20">
             <Users className="w-5 h-5 text-primary mb-1.5" />
-            <span className="text-xs font-medium text-foreground truncate">{counts.nominees} Nominees</span>
+            <span className="text-xs font-medium text-foreground truncate">{stats.nominees} Nominees</span>
           </div>
 
           <div className="bg-card rounded-lg p-2.5 text-center flex flex-col items-center justify-center h-20">
             <Clock className="w-5 h-5 text-primary mb-1.5" />
-            <span className="text-xs font-medium text-foreground truncate">{counts.timeCapsules} Capsules</span>
+            <span className="text-xs font-medium text-foreground truncate">{stats.timeCapsules} Capsules</span>
           </div>
 
           <div className="bg-card rounded-lg p-2.5 text-center flex flex-col items-center justify-center h-20">
             <Shield className="w-5 h-5 text-primary mb-0.5" />
             <span className="text-[10px] font-medium text-foreground truncate mb-0.5">Trigger</span>
             <Switch
-              checked={securitySettings.inactivityTriggerActive}
+              checked={stats.inactivityTriggerActive}
               onCheckedChange={handleInactivityToggle}
               className="scale-75"
             />
