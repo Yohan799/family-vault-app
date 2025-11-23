@@ -4,16 +4,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import FeatureTour from "@/components/FeatureTour";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { profile, user } = useAuth();
   const [showTour, setShowTour] = useState(false);
-  const [profileData, setProfileData] = useState({
-    fullName: "Guest User",
-    email: "guest@example.com",
-    profileImage: null as string | null,
-  });
 
   const [securitySettings, setSecuritySettings] = useState({
     twoFactorAuth: false,
@@ -46,20 +43,6 @@ const Dashboard = () => {
     const isFirstLogin = localStorage.getItem("isFirstLogin");
     if (isFirstLogin === "true") {
       setShowTour(true);
-    }
-
-    const savedProfile = localStorage.getItem("profileData");
-    if (savedProfile) {
-      const data = JSON.parse(savedProfile);
-      setProfileData({
-        fullName: data.fullName || "Guest User",
-        email: data.email || "guest@example.com",
-        profileImage: null,
-      });
-    }
-    const savedPhoto = localStorage.getItem("currentProfilePhoto");
-    if (savedPhoto) {
-      setProfileData(prev => ({ ...prev, profileImage: savedPhoto }));
     }
 
     const savedSettings = localStorage.getItem("userSettings");
@@ -137,6 +120,22 @@ const Dashboard = () => {
     { icon: Timer, title: "Time Capsule", subtitle: "Create legacy messages", color: "bg-accent", onClick: () => navigate("/time-capsule") },
   ];
 
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
+
+  const displayName = profile.full_name || "User";
+  const firstName = displayName.split(' ')[0];
+  const initials = displayName
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
 
   return (
     <div className="min-h-screen bg-background pb-16">
@@ -144,7 +143,7 @@ const Dashboard = () => {
         <div className="flex justify-between items-start mb-3">
           <div>
             <p className="text-xs text-muted-foreground mb-0.5">Welcome,</p>
-            <h1 className="text-xl font-bold text-foreground">{profileData.fullName.split(' ')[0]}</h1>
+            <h1 className="text-xl font-bold text-foreground">{firstName}</h1>
           </div>
           <div className="flex gap-2">
             <Button variant="ghost" size="icon" className="text-foreground h-8 w-8" onClick={() => navigate("/notifications")}>
@@ -152,9 +151,9 @@ const Dashboard = () => {
             </Button>
             <Button variant="ghost" size="icon" className="text-foreground p-0 h-8 w-8" onClick={() => navigate("/profile")}>
               <Avatar className="w-8 h-8 bg-primary">
-                {profileData.profileImage && <AvatarImage src={profileData.profileImage} alt="Profile" />}
+                {profile.profile_image_url && <AvatarImage src={profile.profile_image_url} alt="Profile" />}
                 <AvatarFallback className="bg-primary text-primary-foreground font-semibold text-xs">
-                  {profileData.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                  {initials}
                 </AvatarFallback>
               </Avatar>
             </Button>
