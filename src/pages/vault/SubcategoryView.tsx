@@ -609,6 +609,10 @@ const SubcategoryView = () => {
         categoryId={categoryId!}
         subcategoryId={subcategoryId!}
         onDelete={loadData}
+        onView={(fileUrl, name, type) => {
+          setViewingDoc({ fileUrl, name, type });
+          setViewerOpen(true);
+        }}
       />
 
       <LockDocumentModal

@@ -227,31 +227,10 @@ export const getAllDocumentsInCategory = async (categoryId: string): Promise<Sto
  */
 export const deleteDocument = async (documentId: string): Promise<boolean> => {
   try {
-    // First, get the document to find the file path
-    const { data: doc, error: fetchError } = await supabase
-      .from('documents')
-      .select('file_url')
-      .eq('id', documentId)
-      .single();
-
-    if (fetchError) throw fetchError;
-
-    // Delete from storage bucket
-    if (doc?.file_url) {
-      const { error: storageError } = await supabase.storage
-        .from('documents')
-        .remove([doc.file_url]);
-
-      if (storageError) {
-        console.warn('Storage deletion failed:', storageError);
-        // Continue with database deletion even if storage fails
-      }
-    }
-
-    // Delete from database
+    // Soft delete - set deleted_at timestamp
     const { error } = await supabase
       .from('documents')
-      .delete()
+      .update({ deleted_at: new Date().toISOString() })
       .eq('id', documentId);
 
     if (error) throw error;

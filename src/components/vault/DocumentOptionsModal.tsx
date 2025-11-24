@@ -18,6 +18,7 @@ interface DocumentOptionsModalProps {
   subcategoryId: string;
   folderId?: string;
   onDelete?: () => void;
+  onView?: (fileUrl: string, name: string, type: string) => void;
 }
 
 export const DocumentOptionsModal = ({
@@ -29,12 +30,33 @@ export const DocumentOptionsModal = ({
   subcategoryId,
   folderId,
   onDelete,
+  onView,
 }: DocumentOptionsModalProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleView = () => {
-    toast({ title: "Opening document", description: `Viewing ${documentName}` });
+  const handleView = async () => {
+    try {
+      const { getDocuments } = await import('@/lib/documentStorage');
+      const storedDocs = await getDocuments(categoryId, subcategoryId, folderId);
+      const doc = storedDocs.find(d => d.id === documentId);
+
+      if (doc && onView) {
+        onView(doc.fileUrl, doc.name, doc.type);
+      } else {
+        toast({
+          title: "Error",
+          description: "Document not found",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to open document",
+        variant: "destructive"
+      });
+    }
     onOpenChange(false);
   };
 
