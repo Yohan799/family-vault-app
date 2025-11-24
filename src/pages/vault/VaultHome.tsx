@@ -45,8 +45,8 @@ const VaultHome = () => {
 
       if (error) throw error;
 
-      // Map to UI format with document counts
-      const allCats = await Promise.all((data || []).map(async (cat: any) => {
+      // Map to UI format with document counts from database
+      let allCats = await Promise.all((data || []).map(async (cat: any) => {
         const docCount = await getCategoryDocumentCount(cat.id, user.id);
         return {
           id: cat.id,
@@ -58,6 +58,19 @@ const VaultHome = () => {
           isCustom: cat.is_custom
         };
       }));
+
+      // Fallback: if no categories found in DB, use hardcoded default categories
+      if (!allCats.length) {
+        allCats = vaultCategories.map((cat) => ({
+          id: cat.id,
+          name: cat.name,
+          icon: cat.icon,
+          iconBgColor: cat.iconBgColor,
+          documentCount: 0,
+          subcategories: [],
+          isCustom: cat.isCustom ?? false,
+        }));
+      }
 
       setCustomCategories(allCats);
     } catch (error) {
