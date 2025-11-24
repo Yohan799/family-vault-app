@@ -247,13 +247,13 @@ const SubcategoryView = () => {
       // Increment view count
       await incrementViewCount(fullDoc.id);
 
-      // Open in new window
-      window.open(fullDoc.fileUrl, '_blank');
-
-      toast({
-        title: "Opening document",
-        description: `Viewing ${doc.name}`,
+      // Open in modal viewer
+      setViewingDoc({
+        fileUrl: fullDoc.fileUrl,
+        name: fullDoc.name,
+        type: fullDoc.type
       });
+      setViewerOpen(true);
     } catch (error) {
       console.error("Error viewing document:", error);
       toast({
@@ -625,6 +625,17 @@ const SubcategoryView = () => {
           onClose={() => setAccessControlDocument(null)}
         />
       )}
+
+      <DocumentViewerModal
+        isOpen={viewerOpen}
+        onClose={() => {
+          setViewerOpen(false);
+          setViewingDoc(null);
+        }}
+        documentUrl={viewingDoc?.fileUrl || ''}
+        documentName={viewingDoc?.name || ''}
+        documentType={viewingDoc?.type || ''}
+      />
 
       <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
         <div className="flex justify-around items-center h-16 max-w-md mx-auto">
