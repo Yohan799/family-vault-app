@@ -15,6 +15,7 @@ export interface Category {
   iconBgColor: string;
   documentCount: number;
   subcategories: Subcategory[];
+  isCustom?: boolean;
 }
 
 export const vaultCategories: Category[] = [
