@@ -31,85 +31,83 @@ const CategoryView = () => {
     const loadData = async () => {
       setLoading(true);
 
-      let foundCategory = vaultCategories.find((cat) => cat.id === categoryId);
-
-      // If not found in hardcoded categories, check Supabase
-      if (!foundCategory) {
-        try {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            const { data, error } = await supabase
-              .from('categories')
-              .select('*')
-              .eq('id', categoryId)
-              .eq('user_id', user.id)
-              .is('deleted_at', null)
-              .single();
-
-            if (!error && data) {
-              foundCategory = {
-                id: data.id,
-                name: data.name,
-                icon: Folder,
-                iconBgColor: data.icon_bg_color || "bg-yellow-100",
-                documentCount: 0,
-                subcategories: [],
-                isCustom: true
-              };
-            }
-          }
-        } catch (e) {
-          console.error("Error loading category from Supabase:", e);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          navigate("/vault");
+          return;
         }
-      }
 
-      // Fallback to localStorage for backward compatibility
-      if (!foundCategory) {
-        const customCats = localStorage.getItem('custom_categories');
-        if (customCats) {
-          const parsed = JSON.parse(customCats);
-          foundCategory = parsed.find((cat: any) => cat.id === categoryId);
+        // Load category from database only
+        const { data: categoryData, error: catError } = await supabase
+          .from('categories')
+          .select('*')
+          .eq('id', categoryId)
+          .eq('user_id', user.id)
+          .is('deleted_at', null)
+          .single();
+
+        if (catError || !categoryData) {
+          console.error("Category not found:", catError);
+          navigate("/vault");
+          return;
         }
-      }
 
-      setCategory(foundCategory);
+        const foundCategory = {
+          id: categoryData.id,
+          name: categoryData.name,
+          icon: Folder,
+          iconBgColor: categoryData.icon_bg_color || "bg-yellow-100",
+          documentCount: 0,
+          subcategories: [],
+          isCustom: categoryData.is_custom
+        };
 
-      if (foundCategory) {
-        const stored = localStorage.getItem(`custom_subcategories_${categoryId}`);
-        if (stored) {
-          try {
-            const parsed = JSON.parse(stored);
-            const restored = parsed.map((sub: any) => ({
-              ...sub,
-              icon: Folder
-            }));
-            setCustomSubcategories(restored);
-          } catch (e) {
-            console.error("Failed to parse custom subcategories", e);
-            setCustomSubcategories([]);
-          }
-        } else {
+        setCategory(foundCategory);
+
+        // Load subcategories from database only
+        const { data: subcategoryData, error: subError } = await supabase
+          .from('subcategories')
+          .select('*')
+          .eq('category_id', categoryId)
+          .eq('user_id', user.id)
+          .is('deleted_at', null)
+          .order('created_at', { ascending: true });
+
+        if (subError) {
+          console.error("Error loading subcategories:", subError);
           setCustomSubcategories([]);
+        } else {
+          const { getSubcategoryDocumentCount } = await import('@/services/vaultService');
+          const subs = await Promise.all((subcategoryData || []).map(async (sub: any) => {
+            const docCount = await getSubcategoryDocumentCount(sub.id, user.id);
+            return {
+              id: sub.id,
+              name: sub.name,
+              icon: Folder,
+              documentCount: docCount,
+              isCustom: sub.is_custom
+            };
+          }));
+          setCustomSubcategories(subs);
         }
 
-        // Get total document count from Supabase
-        try {
-          const { getAllDocumentsInCategory } = await import('@/lib/documentStorage');
-          const docs = await getAllDocumentsInCategory(categoryId!);
-          setTotalDocumentCount(docs.length);
-        } catch (error) {
-          console.error("Error loading document count:", error);
-          setTotalDocumentCount(0);
-        }
+        // Get total document count
+        const { getCategoryDocumentCount } = await import('@/services/vaultService');
+        const docCount = await getCategoryDocumentCount(categoryId!, user.id);
+        setTotalDocumentCount(docCount);
+      } catch (error) {
+        console.error("Error loading category data:", error);
+        navigate("/vault");
       }
 
       setLoading(false);
     };
 
     loadData();
-  }, [categoryId]);
+  }, [categoryId, navigate]);
 
-  const handleAddSubcategory = () => {
+  const handleAddSubcategory = async () => {
     const sanitizedName = sanitizeInput(subcategoryName);
     const validation = categoryNameSchema.safeParse(sanitizedName);
 
@@ -123,8 +121,7 @@ const CategoryView = () => {
       return;
     }
 
-    const allSubs = [...(category?.subcategories || []), ...customSubcategories];
-    const isDuplicate = allSubs.some(
+    const isDuplicate = customSubcategories.some(
       sub => sub.name.toLowerCase() === validation.data.toLowerCase()
     );
 
@@ -137,25 +134,41 @@ const CategoryView = () => {
       return;
     }
 
-    const newSubcategory = {
-      id: `custom-${Date.now()}`,
-      name: validation.data,
-      icon: Folder,
-      documentCount: 0,
-      isCustom: true
-    };
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
 
-    const updated = [...customSubcategories, newSubcategory];
-    setCustomSubcategories(updated);
-    localStorage.setItem(`custom_subcategories_${categoryId}`, JSON.stringify(updated));
+      const { data, error } = await supabase
+        .from('subcategories')
+        .insert({
+          user_id: user.id,
+          category_id: categoryId,
+          name: validation.data,
+          is_custom: true
+        })
+        .select()
+        .single();
 
-    toast({
-      title: "Subcategory created!",
-      description: `${validation.data} has been added`
-    });
+      if (error) throw error;
 
-    setSubcategoryName("");
-    setShowAddDialog(false);
+      toast({
+        title: "Subcategory created!",
+        description: `${validation.data} has been added`
+      });
+
+      setSubcategoryName("");
+      setShowAddDialog(false);
+      
+      // Reload data
+      window.location.reload();
+    } catch (error) {
+      console.error('Error adding subcategory:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create subcategory",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleDeleteClick = (subcategory: any, e: React.MouseEvent) => {
@@ -163,23 +176,37 @@ const CategoryView = () => {
     setDeleteConfirm({ show: true, subcategory });
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!deleteConfirm.subcategory) return;
 
     const subcategoryId = deleteConfirm.subcategory.id;
     const subcategoryName = deleteConfirm.subcategory.name;
 
-    const updated = customSubcategories.filter(sub => sub.id !== subcategoryId);
-    setCustomSubcategories(updated);
-    localStorage.setItem(`custom_subcategories_${categoryId}`, JSON.stringify(updated));
-    localStorage.removeItem(`nested_folders_${subcategoryId}`);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
 
-    toast({
-      title: "Subcategory deleted",
-      description: `${subcategoryName} has been removed`
-    });
+      // Use cascade delete from vault service
+      const { deleteSubcategoryWithCascade } = await import('@/services/vaultService');
+      await deleteSubcategoryWithCascade(subcategoryId, categoryId!, user.id);
 
-    setDeleteConfirm({ show: false, subcategory: null });
+      toast({
+        title: "Subcategory deleted",
+        description: `${subcategoryName} and all related content have been removed`
+      });
+
+      setDeleteConfirm({ show: false, subcategory: null });
+      
+      // Reload data
+      window.location.reload();
+    } catch (error) {
+      console.error('Error deleting subcategory:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete subcategory",
+        variant: "destructive"
+      });
+    }
   };
 
   if (loading) {
@@ -196,7 +223,7 @@ const CategoryView = () => {
   }
 
   const CategoryIcon = category?.icon || Folder;
-  const allSubcategories = [...(category?.subcategories || []), ...customSubcategories];
+  const allSubcategories = customSubcategories;
 
   return (
     <div className="min-h-screen bg-[#FCFCF9] pb-20">

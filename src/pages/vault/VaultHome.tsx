@@ -31,36 +31,38 @@ const VaultHome = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Sync default categories on first load
+      const { syncDefaultCategories, getCategoryDocumentCount } = await import('@/services/vaultService');
+      await syncDefaultCategories(user.id);
+
+      // Load ALL categories from database (both default and custom)
       const { data, error } = await supabase
         .from('categories')
         .select('*')
         .eq('user_id', user.id)
-        .eq('is_custom', true)
-        .is('deleted_at', null);
+        .is('deleted_at', null)
+        .order('created_at', { ascending: true });
 
       if (error) throw error;
 
-      const customCats = (data || []).map((cat: any) => ({
-        id: cat.id,
-        name: cat.name,
-        icon: Folder,
-        iconBgColor: cat.icon_bg_color || "bg-yellow-100",
-        documentCount: 0,
-        subcategories: [],
-        isCustom: true
+      // Map to UI format with document counts
+      const allCats = await Promise.all((data || []).map(async (cat: any) => {
+        const docCount = await getCategoryDocumentCount(cat.id, user.id);
+        return {
+          id: cat.id,
+          name: cat.name,
+          icon: Folder,
+          iconBgColor: cat.icon_bg_color || "bg-yellow-100",
+          documentCount: docCount,
+          subcategories: [],
+          isCustom: cat.is_custom
+        };
       }));
 
-      setCustomCategories(customCats);
-
-      // Load document counts for all categories
-      await loadDocumentCounts();
+      setCustomCategories(allCats);
     } catch (error) {
       console.error('Error loading categories:', error);
     }
-  };
-
-  const loadDocumentCounts = async () => {
-    // This will be implemented to count documents per category
   };
 
   const handleAddCategory = async () => {
@@ -77,7 +79,7 @@ const VaultHome = () => {
       return;
     }
 
-    const isDuplicate = [...vaultCategories, ...customCategories].some(
+    const isDuplicate = customCategories.some(
       cat => cat.name.toLowerCase() === validation.data.toLowerCase()
     );
 
@@ -137,16 +139,16 @@ const VaultHome = () => {
     const categoryName = deleteConfirm.category.name;
 
     try {
-      const { error } = await supabase
-        .from('categories')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('id', categoryId);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
 
-      if (error) throw error;
+      // Use cascade delete from vault service
+      const { deleteCategoryWithCascade } = await import('@/services/vaultService');
+      await deleteCategoryWithCascade(categoryId, user.id);
 
       toast({
         title: "Category deleted",
-        description: `${categoryName} has been removed from your vault`
+        description: `${categoryName} and all related content have been removed`
       });
 
       setDeleteConfirm({ show: false, category: null });
@@ -161,8 +163,8 @@ const VaultHome = () => {
     }
   };
 
-  const totalDocuments = vaultCategories.reduce((sum, cat) => sum + cat.documentCount, 0);
-  const allCategories = [...vaultCategories, ...customCategories];
+  const totalDocuments = customCategories.reduce((sum, cat) => sum + cat.documentCount, 0);
+  const allCategories = customCategories;
 
   return (
     <div className="min-h-screen bg-[#FCFCF9] pb-20">
