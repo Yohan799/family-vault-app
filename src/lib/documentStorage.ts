@@ -223,13 +223,14 @@ export const getAllDocumentsInCategory = async (categoryId: string): Promise<Sto
 };
 
 /**
- * Delete document from Supabase (soft delete)
+ * Delete document from Supabase (hard delete)
  */
 export const deleteDocument = async (documentId: string): Promise<boolean> => {
   try {
+    // Hard delete - permanently removes the document
     const { error } = await supabase
       .from('documents')
-      .update({ deleted_at: new Date().toISOString() })
+      .delete()
       .eq('id', documentId);
 
     if (error) throw error;

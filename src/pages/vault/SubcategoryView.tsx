@@ -12,6 +12,7 @@ import { LockDocumentModal } from "@/components/vault/LockDocumentModal";
 import { categoryNameSchema, sanitizeInput } from "@/lib/validation";
 import { AccessControlModal } from "@/components/vault/AccessControlModal";
 import { ActionMenu, createDocumentActionMenu } from "@/components/vault/ActionMenu";
+import { DocumentViewerModal } from "@/components/vault/DocumentViewerModal";
 
 const SubcategoryView = () => {
   const navigate = useNavigate();
@@ -31,6 +32,8 @@ const SubcategoryView = () => {
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; folder: any | null }>({ show: false, folder: null });
   const [deleteDocConfirm, setDeleteDocConfirm] = useState<{ show: boolean; doc: any | null }>({ show: false, doc: null });
   const [accessControlDocument, setAccessControlDocument] = useState<any | null>(null);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewingDoc, setViewingDoc] = useState<any>(null);
 
   const loadData = async () => {
     try {
