@@ -488,13 +488,24 @@ const NomineeCenter = () => {
         cancelText="Cancel"
         variant="destructive"
         onConfirm={async () => {
+          if (!user) {
+            toast({
+              title: 'Authentication required',
+              description: 'Please sign in to remove nominees',
+              variant: 'destructive'
+            });
+            return;
+          }
+
           if (deleteDialog.nominee) {
             const { error } = await supabase
               .from("nominees")
               .update({ deleted_at: new Date().toISOString() })
-              .eq("id", deleteDialog.nominee.id);
+              .eq("id", deleteDialog.nominee.id)
+              .eq("user_id", user.id);
 
             if (error) {
+              console.error("Delete nominee error:", error);
               toast({
                 title: 'Error removing nominee',
                 description: error.message,

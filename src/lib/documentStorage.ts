@@ -227,11 +227,15 @@ export const getAllDocumentsInCategory = async (categoryId: string): Promise<Sto
  */
 export const deleteDocument = async (documentId: string): Promise<boolean> => {
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("User not authenticated");
+
     // Soft delete - set deleted_at timestamp
     const { error } = await supabase
       .from('documents')
       .update({ deleted_at: new Date().toISOString() })
-      .eq('id', documentId);
+      .eq('id', documentId)
+      .eq('user_id', user.id);
 
     if (error) throw error;
     return true;
@@ -246,11 +250,15 @@ export const deleteDocument = async (documentId: string): Promise<boolean> => {
  */
 export const downloadDocument = async (doc: StoredDocument): Promise<void> => {
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("User not authenticated");
+
     // Increment download count
     await supabase
       .from('documents')
       .update({ download_count: doc.downloadCount + 1 })
-      .eq('id', doc.id);
+      .eq('id', doc.id)
+      .eq('user_id', user.id);
 
     // Try blob download first (works locally), fallback to direct link (for CORS issues)
     try {
@@ -296,17 +304,22 @@ export const downloadDocument = async (doc: StoredDocument): Promise<void> => {
  */
 export const incrementViewCount = async (documentId: string): Promise<void> => {
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("User not authenticated");
+
     const { data } = await supabase
       .from('documents')
       .select('view_count')
       .eq('id', documentId)
+      .eq('user_id', user.id)
       .single();
 
     if (data) {
       await supabase
         .from('documents')
         .update({ view_count: (data.view_count || 0) + 1 })
-        .eq('id', documentId);
+        .eq('id', documentId)
+        .eq('user_id', user.id);
     }
   } catch (error) {
     console.error('Error incrementing view count:', error);
