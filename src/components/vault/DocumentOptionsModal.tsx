@@ -103,9 +103,9 @@ export const DocumentOptionsModal = ({
     if (confirm(`Are you sure you want to delete ${documentName}?`)) {
       try {
         const { deleteDocument } = await import('@/lib/documentStorage');
-        const success = await deleteDocument(documentId);
+        const result = await deleteDocument(documentId);
 
-        if (success) {
+        if (result.success) {
           toast({
             title: "Document deleted",
             description: `${documentName} has been removed from your vault`,
@@ -116,7 +116,7 @@ export const DocumentOptionsModal = ({
         } else {
           toast({
             title: "Error",
-            description: "Failed to delete document",
+            description: result.error || "Failed to delete document",
             variant: "destructive",
           });
         }

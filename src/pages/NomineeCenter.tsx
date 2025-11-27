@@ -500,6 +500,37 @@ const NomineeCenter = () => {
           }
 
           if (deleteDialog.nominee) {
+            // Verify nominee exists and belongs to user first
+            const { data: existingNominee, error: checkError } = await supabase
+              .from("nominees")
+              .select("id")
+              .eq("id", deleteDialog.nominee.id)
+              .eq("user_id", user.id)
+              .is("deleted_at", null)
+              .maybeSingle();
+
+            if (checkError) {
+              console.error("Check nominee error:", checkError);
+              toast({
+                title: 'Error removing nominee',
+                description: 'Failed to verify nominee',
+                variant: 'destructive'
+              });
+              setDeleteDialog({ open: false, nominee: null });
+              return;
+            }
+
+            if (!existingNominee) {
+              toast({
+                title: 'Error removing nominee',
+                description: 'Nominee not found or already deleted',
+                variant: 'destructive'
+              });
+              setDeleteDialog({ open: false, nominee: null });
+              return;
+            }
+
+            // Perform soft delete
             const { error } = await supabase
               .from("nominees")
               .update({ deleted_at: new Date().toISOString() })

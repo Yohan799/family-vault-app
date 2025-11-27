@@ -223,17 +223,40 @@ export const getAllDocumentsInCategory = async (categoryId: string): Promise<Sto
 };
 
 /**
- * Delete document from Supabase (hard delete)
+ * Delete document from Supabase (soft delete)
  */
-export const deleteDocument = async (documentId: string): Promise<boolean> => {
+export const deleteDocument = async (documentId: string): Promise<{ success: boolean; error?: string }> => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError) {
+      console.error('Auth error:', authError);
+      return { success: false, error: 'Authentication failed' };
+    }
+    
     if (!user) {
-      console.error('Delete document failed: User not authenticated');
-      throw new Error("User not authenticated");
+      return { success: false, error: 'User not authenticated' };
     }
 
-    // Soft delete - set deleted_at timestamp
+    // Verify document exists and belongs to user first
+    const { data: existingDoc, error: checkError } = await supabase
+      .from('documents')
+      .select('id')
+      .eq('id', documentId)
+      .eq('user_id', user.id)
+      .is('deleted_at', null)
+      .maybeSingle();
+
+    if (checkError) {
+      console.error('Check document error:', checkError);
+      return { success: false, error: 'Failed to verify document' };
+    }
+
+    if (!existingDoc) {
+      return { success: false, error: 'Document not found or already deleted' };
+    }
+
+    // Perform soft delete
     const { error } = await supabase
       .from('documents')
       .update({ deleted_at: new Date().toISOString() })
@@ -241,14 +264,14 @@ export const deleteDocument = async (documentId: string): Promise<boolean> => {
       .eq('user_id', user.id);
 
     if (error) {
-      console.error('Delete document error:', error);
-      throw error;
+      console.error('Delete error:', error);
+      return { success: false, error: error.message };
     }
 
-    return true;
-  } catch (error) {
-    console.error('Error deleting document:', error);
-    return false;
+    return { success: true };
+  } catch (error: any) {
+    console.error('Unexpected error:', error);
+    return { success: false, error: error.message || 'Unexpected error occurred' };
   }
 };
 
