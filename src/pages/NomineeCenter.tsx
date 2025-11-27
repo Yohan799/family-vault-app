@@ -498,26 +498,62 @@ const NomineeCenter = () => {
           }
 
           if (deleteDialog.nominee) {
-            const { error } = await supabase
-              .from("nominees")
-              .update({ deleted_at: new Date().toISOString() })
-              .eq("id", deleteDialog.nominee.id)
-              .eq("user_id", user.id);
+            try {
+              console.log('Attempting to delete nominee:', {
+                nomineeId: deleteDialog.nominee.id,
+                userId: user.id
+              });
 
-            if (error) {
-              console.error("Delete nominee error:", error);
+              const { data, error } = await supabase
+                .from("nominees")
+                .update({ deleted_at: new Date().toISOString() })
+                .eq("id", deleteDialog.nominee.id)
+                .eq("user_id", user.id)
+                .select();
+
+              if (error) {
+                console.error("Delete nominee error:", error);
+                toast({
+                  title: 'Error removing nominee',
+                  description: `Failed: ${error.message}`,
+                  variant: 'destructive'
+                });
+              } else if (!data || data.length === 0) {
+                console.error("No nominee deleted - possible ID/user mismatch");
+                toast({
+                  title: 'Error removing nominee',
+                  description: 'Nominee not found or access denied',
+                  variant: 'destructive'
+                });
+              } else {
+                console.log('Nominee deleted successfully');
+                toast({
+                  title: 'Nominee Removed',
+                  description: `${deleteDialog.nominee.full_name} has been removed from your nominees.`
+                });
+                
+                // Refresh nominees list
+                const { data: updatedNominees } = await supabase
+                  .from("nominees")
+                  .select("*")
+                  .eq("user_id", user.id)
+                  .is("deleted_at", null)
+                  .order("created_at", { ascending: false });
+                
+                if (updatedNominees) {
+                  setNominees(updatedNominees);
+                }
+              }
+            } catch (err) {
+              console.error("Unexpected error:", err);
               toast({
                 title: 'Error removing nominee',
-                description: error.message,
+                description: 'An unexpected error occurred',
                 variant: 'destructive'
               });
-            } else {
-              toast({
-                title: 'Nominee Removed',
-                description: `${deleteDialog.nominee.full_name} has been removed from your nominees.`
-              });
+            } finally {
+              setDeleteDialog({ open: false, nominee: null });
             }
-            setDeleteDialog({ open: false, nominee: null });
           }
         }}
       />
