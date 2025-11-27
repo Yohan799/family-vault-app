@@ -29,8 +29,6 @@ const NomineeVerification = () => {
     }, [countdown]);
 
     const handleVerify = async () => {
-        console.log("OTP entered:", otp, "Length:", otp.length);
-
         if (otp.length !== 6) {
             toast({
                 title: "Invalid OTP",
@@ -62,8 +60,6 @@ const NomineeVerification = () => {
                 const nominees = JSON.parse(localStorage.getItem("nominees") || "[]");
                 const updated = [...nominees, newNominee];
                 localStorage.setItem("nominees", JSON.stringify(updated));
-
-                console.log("Nominee saved:", newNominee);
             }
 
             toast({
