@@ -233,27 +233,18 @@ export const deleteDocument = async (documentId: string): Promise<boolean> => {
       throw new Error("User not authenticated");
     }
 
-    console.log('Attempting to delete document:', { documentId, userId: user.id });
-
     // Soft delete - set deleted_at timestamp
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('documents')
       .update({ deleted_at: new Date().toISOString() })
       .eq('id', documentId)
-      .eq('user_id', user.id)
-      .select();
+      .eq('user_id', user.id);
 
     if (error) {
       console.error('Delete document error:', error);
       throw error;
     }
-    
-    if (!data || data.length === 0) {
-      console.error('No document was deleted - ID or user_id mismatch');
-      throw new Error('Document not found or access denied');
-    }
 
-    console.log('Document deleted successfully:', data);
     return true;
   } catch (error) {
     console.error('Error deleting document:', error);
