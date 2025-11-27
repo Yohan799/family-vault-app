@@ -4,17 +4,21 @@ import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const ChangePassword = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: ""
   });
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.currentPassword || !formData.newPassword || !formData.confirmPassword) {
       toast({
         title: "All fields required",
@@ -31,11 +35,58 @@ const ChangePassword = () => {
       });
       return;
     }
-    toast({
-      title: "Password changed!",
-      description: "Your password has been updated successfully",
-    });
-    navigate("/settings");
+    
+    if (formData.newPassword.length < 8) {
+      toast({
+        title: "Password too short",
+        description: "Password must be at least 8 characters long",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Verify current password by attempting to sign in
+      if (user?.email) {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: user.email,
+          password: formData.currentPassword,
+        });
+
+        if (signInError) {
+          toast({
+            title: "Current password incorrect",
+            description: "Please check your current password and try again",
+            variant: "destructive"
+          });
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      // Update to new password
+      const { error } = await supabase.auth.updateUser({
+        password: formData.newPassword
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Password changed!",
+        description: "Your password has been updated successfully",
+      });
+      navigate("/settings");
+    } catch (error: any) {
+      toast({
+        title: "Error changing password",
+        description: error.message || "An error occurred while changing your password",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -93,9 +144,10 @@ const ChangePassword = () => {
 
         <Button
           onClick={handleSave}
+          disabled={isLoading}
           className="w-full bg-primary/20 hover:bg-primary/30 text-primary rounded-xl h-12"
         >
-          Update Password
+          {isLoading ? "Updating..." : "Update Password"}
         </Button>
       </div>
     </div>
