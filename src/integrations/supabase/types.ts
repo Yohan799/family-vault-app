@@ -208,6 +208,7 @@ export type Database = {
       }
       nominees: {
         Row: {
+          avatar_url: string | null
           created_at: string
           deleted_at: string | null
           email: string
@@ -220,6 +221,7 @@ export type Database = {
           verified_at: string | null
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
           deleted_at?: string | null
           email: string
@@ -232,6 +234,7 @@ export type Database = {
           verified_at?: string | null
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
           deleted_at?: string | null
           email?: string
