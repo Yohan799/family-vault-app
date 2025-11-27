@@ -20,6 +20,7 @@ import ManageAccess from "./pages/vault/ManageAccess";
 import SettingsPage from "./pages/SettingsPage";
 import NomineeCenter from "./pages/NomineeCenter";
 import NomineeVerification from "./pages/NomineeVerification";
+import VerifyNominee from "./pages/VerifyNominee";
 import InactivityTriggers from "./pages/InactivityTriggers";
 import TimeCapsule from "./pages/TimeCapsule";
 import CustomizeQuickActions from "./pages/CustomizeQuickActions";
@@ -61,6 +62,7 @@ const App = () => (
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
             <Route path="/nominee-center" element={<ProtectedRoute><NomineeCenter /></ProtectedRoute>} />
             <Route path="/nominee-verification" element={<ProtectedRoute><NomineeVerification /></ProtectedRoute>} />
+            <Route path="/verify-nominee" element={<VerifyNominee />} />
             <Route path="/inactivity-triggers" element={<ProtectedRoute><InactivityTriggers /></ProtectedRoute>} />
             <Route path="/time-capsule" element={<ProtectedRoute><TimeCapsule /></ProtectedRoute>} />
             <Route path="/customize-quick-actions" element={<ProtectedRoute><CustomizeQuickActions /></ProtectedRoute>} />

@@ -7,24 +7,28 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Nominee {
   id: string;
-  fullName: string;
+  full_name: string;
   relation: string;
   email: string;
-  phone: string;
-  verified: boolean;
-  avatar: string;
+  phone: string | null;
+  status: string;
+  verified_at: string | null;
 }
 
 const NomineeCenter = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [nominees, setNominees] = useState<Nominee[]>([]);
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; nominee: Nominee | null }>({ open: false, nominee: null });
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
     relation: "",
@@ -32,42 +36,59 @@ const NomineeCenter = () => {
     phone: ""
   });
 
-  // Load nominees from localStorage
+  // Load nominees from Supabase
   useEffect(() => {
-    const loadNominees = () => {
-      const stored = localStorage.getItem("nominees");
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          setNominees(parsed);
-        } catch (error) {
-          console.error("Error loading nominees:", error);
-        }
+    if (!user) return;
+
+    const loadNominees = async () => {
+      const { data, error } = await supabase
+        .from("nominees")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error loading nominees:", error);
+        toast({
+          title: "Error loading nominees",
+          description: error.message,
+          variant: "destructive"
+        });
+        return;
       }
+
+      setNominees(data || []);
     };
 
     loadNominees();
 
-    // Listen for updates
-    const handleStorageChange = () => {
-      loadNominees();
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    window.addEventListener("nomineesUpdated", handleStorageChange);
+    // Set up realtime subscription
+    const channel = supabase
+      .channel('nominees-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'nominees',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          loadNominees();
+        }
+      )
+      .subscribe();
 
     return () => {
-      window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener("nomineesUpdated", handleStorageChange);
+      supabase.removeChannel(channel);
     };
-  }, []);
+  }, [user]);
 
   // Calculate stats
   const totalNominees = nominees.length;
-  const verifiedNominees = nominees.filter(n => n.verified).length;
-  const pendingNominees = nominees.filter(n => !n.verified).length;
+  const verifiedNominees = nominees.filter(n => n.status === 'verified').length;
+  const pendingNominees = nominees.filter(n => n.status === 'pending').length;
 
-  const handleAddNominee = () => {
+  const handleAddNominee = async () => {
     if (!formData.fullName || !formData.email) {
       toast({
         title: "Required fields missing",
@@ -77,53 +98,95 @@ const NomineeCenter = () => {
       return;
     }
 
-    // If editing, update existing nominee
-    if (editingId) {
-      const updated = nominees.map(n =>
-        n.id === editingId
-          ? {
-            ...n,
-            fullName: formData.fullName,
-            relation: formData.relation,
-            email: formData.email,
-            phone: formData.phone
-          }
-          : n
-      );
-      setNominees(updated);
-      localStorage.setItem('nominees', JSON.stringify(updated));
-      window.dispatchEvent(new Event('nomineesUpdated'));
-
+    if (!user) {
       toast({
-        title: 'Nominee Updated',
-        description: `${formData.fullName} has been updated successfully.`
+        title: "Authentication required",
+        description: "Please sign in to add nominees",
+        variant: "destructive"
       });
-
-      setFormData({ fullName: '', relation: '', email: '', phone: '' });
-      setEditingId(null);
-      setShowAddForm(false);
       return;
     }
 
-    // Show success toast for new nominee
-    toast({
-      title: "Verification code sent!",
-      description: `OTP sent to ${formData.email}`,
-    });
+    setIsLoading(true);
 
-    // Navigate to OTP verification
-    setTimeout(() => {
-      navigate('/nominee-verification', {
-        state: {
+    try {
+      // If editing, update existing nominee
+      if (editingId) {
+        const { error } = await supabase
+          .from("nominees")
+          .update({
+            full_name: formData.fullName,
+            relation: formData.relation,
+            email: formData.email,
+            phone: formData.phone || null
+          })
+          .eq("id", editingId);
+
+        if (error) throw error;
+
+        toast({
+          title: 'Nominee Updated',
+          description: `${formData.fullName} has been updated successfully.`
+        });
+
+        setFormData({ fullName: '', relation: '', email: '', phone: '' });
+        setEditingId(null);
+        setShowAddForm(false);
+        setIsLoading(false);
+        return;
+      }
+
+      // Add new nominee
+      const { data: newNominee, error: insertError } = await supabase
+        .from("nominees")
+        .insert({
+          user_id: user.id,
+          full_name: formData.fullName,
+          relation: formData.relation || "Other",
           email: formData.email,
-          nomineeData: {
-            fullName: formData.fullName,
-            relation: formData.relation || "Other",
-            phone: formData.phone,
-          }
+          phone: formData.phone || null,
+          status: "pending"
+        })
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      // Send verification email
+      const { error: emailError } = await supabase.functions.invoke('send-nominee-verification', {
+        body: {
+          nomineeId: newNominee.id,
+          nomineeEmail: formData.email,
+          nomineeName: formData.fullName
         }
       });
-    }, 1500);
+
+      if (emailError) {
+        console.error("Error sending verification email:", emailError);
+        toast({
+          title: "Nominee added but email failed",
+          description: "Nominee was added but verification email could not be sent",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Nominee added successfully!",
+          description: `Verification email sent to ${formData.email}`,
+        });
+      }
+
+      setFormData({ fullName: '', relation: '', email: '', phone: '' });
+      setShowAddForm(false);
+    } catch (error: any) {
+      console.error("Error adding nominee:", error);
+      toast({
+        title: "Error adding nominee",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -216,8 +279,12 @@ const NomineeCenter = () => {
             </div>
 
             <div className="flex gap-3 pt-2">
-              <Button onClick={handleAddNominee} className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12">
-                Add & Send Code
+              <Button 
+                onClick={handleAddNominee} 
+                disabled={isLoading}
+                className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12"
+              >
+                {isLoading ? "Sending..." : (editingId ? "Update Nominee" : "Add & Send Link")}
               </Button>
               <Button
                 variant="outline"
@@ -272,17 +339,16 @@ const NomineeCenter = () => {
                 >
                   {/* Avatar */}
                   <Avatar className="w-14 h-14 border-2 border-primary/20">
-                    <AvatarImage src={nominee.avatar} alt={nominee.fullName} />
                     <AvatarFallback className="bg-primary/10 text-primary font-bold">
-                      {nominee.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                      {nominee.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                     </AvatarFallback>
                   </Avatar>
 
                   {/* Info */}
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-bold text-foreground">{nominee.fullName}</h3>
-                      {nominee.verified ? (
+                      <h3 className="font-bold text-foreground">{nominee.full_name}</h3>
+                      {nominee.status === 'verified' ? (
                         <div className="flex items-center gap-1 bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs font-medium">
                           <CheckCircle className="w-3 h-3" />
                           Verified
@@ -316,8 +382,8 @@ const NomineeCenter = () => {
                       size="icon"
                       onClick={() => {
                         setFormData({
-                          fullName: nominee.fullName,
-                          relation: nominee.relation,
+                          fullName: nominee.full_name,
+                          relation: nominee.relation || '',
                           email: nominee.email,
                           phone: nominee.phone || ''
                         });
@@ -390,21 +456,29 @@ const NomineeCenter = () => {
         open={deleteDialog.open}
         onOpenChange={(open) => setDeleteDialog({ open, nominee: null })}
         title="Remove Nominee?"
-        description={`Are you sure you want to remove ${deleteDialog.nominee?.fullName} as a nominee? This action cannot be undone.`}
+        description={`Are you sure you want to remove ${deleteDialog.nominee?.full_name} as a nominee? This action cannot be undone.`}
         confirmText="Remove"
         cancelText="Cancel"
         variant="destructive"
-        onConfirm={() => {
+        onConfirm={async () => {
           if (deleteDialog.nominee) {
-            const updated = nominees.filter(n => n.id !== deleteDialog.nominee!.id);
-            setNominees(updated);
-            localStorage.setItem('nominees', JSON.stringify(updated));
-            window.dispatchEvent(new Event('nomineesUpdated'));
-            window.dispatchEvent(new Event('countsUpdated'));
-            toast({
-              title: 'Nominee Removed',
-              description: `${deleteDialog.nominee.fullName} has been removed from your nominees.`
-            });
+            const { error } = await supabase
+              .from("nominees")
+              .update({ deleted_at: new Date().toISOString() })
+              .eq("id", deleteDialog.nominee.id);
+
+            if (error) {
+              toast({
+                title: 'Error removing nominee',
+                description: error.message,
+                variant: 'destructive'
+              });
+            } else {
+              toast({
+                title: 'Nominee Removed',
+                description: `${deleteDialog.nominee.full_name} has been removed from your nominees.`
+              });
+            }
             setDeleteDialog({ open: false, nominee: null });
           }
         }}
