@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { AvatarSelector, getAvatarById } from "@/components/AvatarSelector";
 
 interface Nominee {
   id: string;
@@ -18,6 +19,7 @@ interface Nominee {
   phone: string | null;
   status: string;
   verified_at: string | null;
+  avatar_url: string | null;
 }
 
 const NomineeCenter = () => {
@@ -33,7 +35,8 @@ const NomineeCenter = () => {
     fullName: "",
     relation: "",
     email: "",
-    phone: ""
+    phone: "",
+    avatarUrl: "avatar-1"
   });
 
   // Load nominees from Supabase
@@ -118,7 +121,8 @@ const NomineeCenter = () => {
             full_name: formData.fullName,
             relation: formData.relation,
             email: formData.email,
-            phone: formData.phone || null
+            phone: formData.phone || null,
+            avatar_url: formData.avatarUrl
           })
           .eq("id", editingId);
 
@@ -129,7 +133,7 @@ const NomineeCenter = () => {
           description: `${formData.fullName} has been updated successfully.`
         });
 
-        setFormData({ fullName: '', relation: '', email: '', phone: '' });
+        setFormData({ fullName: '', relation: '', email: '', phone: '', avatarUrl: 'avatar-1' });
         setEditingId(null);
         setShowAddForm(false);
         setIsLoading(false);
@@ -145,7 +149,8 @@ const NomineeCenter = () => {
           relation: formData.relation || "Other",
           email: formData.email,
           phone: formData.phone || null,
-          status: "pending"
+          status: "pending",
+          avatar_url: formData.avatarUrl
         })
         .select()
         .single();
@@ -175,7 +180,7 @@ const NomineeCenter = () => {
         });
       }
 
-      setFormData({ fullName: '', relation: '', email: '', phone: '' });
+      setFormData({ fullName: '', relation: '', email: '', phone: '', avatarUrl: 'avatar-1' });
       setShowAddForm(false);
     } catch (error: any) {
       console.error("Error adding nominee:", error);
@@ -227,6 +232,14 @@ const NomineeCenter = () => {
             <h2 className="text-lg font-bold text-foreground mb-4">
               {editingId ? '✏️ Edit Nominee' : '+ Add New Nominee'}
             </h2>
+
+            {/* Avatar Selector */}
+            <div className="flex justify-center mb-4">
+              <AvatarSelector
+                selectedAvatar={formData.avatarUrl}
+                onSelectAvatar={(avatarId) => setFormData({ ...formData, avatarUrl: avatarId })}
+              />
+            </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -339,9 +352,17 @@ const NomineeCenter = () => {
                 >
                   {/* Avatar */}
                   <Avatar className="w-14 h-14 border-2 border-primary/20">
-                    <AvatarFallback className="bg-primary/10 text-primary font-bold">
-                      {nominee.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-                    </AvatarFallback>
+                    {nominee.avatar_url ? (
+                      <div className={`w-full h-full rounded-full ${getAvatarById(nominee.avatar_url).bg} flex items-center justify-center`}>
+                        <span className={`text-2xl ${getAvatarById(nominee.avatar_url).color}`}>
+                          {getAvatarById(nominee.avatar_url).emoji}
+                        </span>
+                      </div>
+                    ) : (
+                      <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                        {nominee.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                      </AvatarFallback>
+                    )}
                   </Avatar>
 
                   {/* Info */}
@@ -385,7 +406,8 @@ const NomineeCenter = () => {
                           fullName: nominee.full_name,
                           relation: nominee.relation || '',
                           email: nominee.email,
-                          phone: nominee.phone || ''
+                          phone: nominee.phone || '',
+                          avatarUrl: nominee.avatar_url || 'avatar-1'
                         });
                         setEditingId(nominee.id);
                         setShowAddForm(true);
