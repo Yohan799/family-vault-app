@@ -90,26 +90,26 @@ const VerifyNominee = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-card rounded-2xl p-8 text-center shadow-lg">
+      <div className="max-w-md w-full bg-card rounded-2xl p-6 sm:p-8 text-center shadow-lg">
         {status === "verifying" && (
           <>
-            <Loader2 className="w-16 h-16 mx-auto mb-4 text-primary animate-spin" />
-            <h1 className="text-2xl font-bold mb-2">Verifying...</h1>
-            <p className="text-muted-foreground">Please wait while we verify your email address.</p>
+            <Loader2 className="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 text-primary animate-spin" />
+            <h1 className="text-xl sm:text-2xl font-bold mb-2">Verifying...</h1>
+            <p className="text-sm sm:text-base text-muted-foreground px-2">Please wait while we verify your email address.</p>
           </>
         )}
 
         {status === "success" && (
           <>
-            <CheckCircle2 className="w-16 h-16 mx-auto mb-4 text-green-500" />
-            <h1 className="text-2xl font-bold mb-2 text-green-700">Verification Successful!</h1>
-            <p className="text-muted-foreground mb-6">{message}</p>
-            <p className="text-sm text-muted-foreground mb-6">
+            <CheckCircle2 className="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 text-green-500" />
+            <h1 className="text-xl sm:text-2xl font-bold mb-2 text-green-700">Verification Successful!</h1>
+            <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6 px-2">{message}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 px-2">
               You are now a verified nominee and may receive access to important documents in case of emergency.
             </p>
             <Button 
               onClick={() => navigate("/")} 
-              className="w-full"
+              className="w-full h-11 sm:h-12 text-sm sm:text-base"
             >
               Close This Page
             </Button>
@@ -118,13 +118,13 @@ const VerifyNominee = () => {
 
         {status === "error" && (
           <>
-            <XCircle className="w-16 h-16 mx-auto mb-4 text-destructive" />
-            <h1 className="text-2xl font-bold mb-2 text-destructive">Verification Failed</h1>
-            <p className="text-muted-foreground mb-6">{message}</p>
+            <XCircle className="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 text-destructive" />
+            <h1 className="text-xl sm:text-2xl font-bold mb-2 text-destructive">Verification Failed</h1>
+            <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6 px-2">{message}</p>
             <Button 
               onClick={() => navigate("/")} 
               variant="outline"
-              className="w-full"
+              className="w-full h-11 sm:h-12 text-sm sm:text-base"
             >
               Close This Page
             </Button>
