@@ -14,48 +14,62 @@ export const syncDefaultCategories = async (userId: string): Promise<void> => {
       .eq('user_id', userId)
       .eq('is_custom', false);
 
-    // If user already has default categories, skip sync
-    if (existingCategories && existingCategories.length > 0) {
-      return;
-    }
+    // If user already has default categories, skip category sync but still check subcategories
+    const shouldSyncCategories = !existingCategories || existingCategories.length === 0;
 
-    // Insert default categories
+    // Sync default categories
     for (const template of vaultCategories) {
-      const { data: category, error: catError } = await supabase
-        .from('categories')
-        .insert({
-          id: template.id,
-          user_id: userId,
-          name: template.name,
-          icon: template.icon.name || 'Folder',
-          icon_bg_color: template.iconBgColor,
-          is_custom: false
-        })
-        .select()
-        .single();
+      // Insert category if not exists
+      if (shouldSyncCategories) {
+        const { error: catError } = await supabase
+          .from('categories')
+          .insert({
+            id: template.id,
+            user_id: userId,
+            name: template.name,
+            icon: template.icon.name || 'Folder',
+            icon_bg_color: template.iconBgColor,
+            is_custom: false
+          });
 
-      if (catError) {
-        console.error(`Error inserting category ${template.name}:`, catError);
-        continue;
+        if (catError && catError.code !== '23505') { // Ignore duplicate key errors
+          console.error(`Error inserting category ${template.name}:`, catError);
+          continue;
+        }
       }
 
-      // Insert subcategories for this category
+      // Always ensure all subcategories are synced (fixes missing Personal subcategories issue)
       if (template.subcategories && template.subcategories.length > 0) {
-        const subcategoriesToInsert = template.subcategories.map(sub => ({
-          id: sub.id,
-          user_id: userId,
-          category_id: template.id,
-          name: sub.name,
-          icon: sub.icon.name || 'Folder',
-          is_custom: false
-        }));
-
-        const { error: subError } = await supabase
+        // Check which subcategories already exist
+        const { data: existingSubs } = await supabase
           .from('subcategories')
-          .insert(subcategoriesToInsert);
+          .select('id')
+          .eq('category_id', template.id)
+          .eq('user_id', userId)
+          .eq('is_custom', false);
 
-        if (subError) {
-          console.error(`Error inserting subcategories for ${template.name}:`, subError);
+        const existingSubIds = new Set((existingSubs || []).map(s => s.id));
+
+        // Insert only missing subcategories
+        const missingSubcategories = template.subcategories
+          .filter(sub => !existingSubIds.has(sub.id))
+          .map(sub => ({
+            id: sub.id,
+            user_id: userId,
+            category_id: template.id,
+            name: sub.name,
+            icon: sub.icon.name || 'Folder',
+            is_custom: false
+          }));
+
+        if (missingSubcategories.length > 0) {
+          const { error: subError } = await supabase
+            .from('subcategories')
+            .insert(missingSubcategories);
+
+          if (subError && subError.code !== '23505') { // Ignore duplicate key errors
+            console.error(`Error inserting subcategories for ${template.name}:`, subError);
+          }
         }
       }
     }

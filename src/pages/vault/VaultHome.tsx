@@ -29,24 +29,41 @@ const VaultHome = () => {
   const loadCategories = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        navigate("/signin");
+        return;
+      }
 
-      // Sync default categories on first load
+      // Sync default categories first
       const { syncDefaultCategories, getCategoryDocumentCount } = await import('@/services/vaultService');
       await syncDefaultCategories(user.id);
 
-      // Load ALL categories from database (both default and custom)
-      const { data, error } = await supabase
+      // Start with hardcoded default categories as the base
+      const baseCategories = vaultCategories.map((cat) => ({
+        id: cat.id,
+        name: cat.name,
+        icon: cat.icon,
+        iconBgColor: cat.iconBgColor,
+        documentCount: 0,
+        subcategories: [],
+        isCustom: false,
+      }));
+
+      // Query custom categories from database
+      const { data: customCatsData, error } = await supabase
         .from('categories')
         .select('*')
         .eq('user_id', user.id)
+        .eq('is_custom', true)
         .is('deleted_at', null)
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error loading custom categories:", error);
+      }
 
-      // Map to UI format with document counts from database
-      let allCats = await Promise.all((data || []).map(async (cat: any) => {
+      // Add custom categories to the list
+      const customCats = await Promise.all((customCatsData || []).map(async (cat: any) => {
         const docCount = await getCategoryDocumentCount(cat.id, user.id);
         return {
           id: cat.id,
@@ -55,26 +72,40 @@ const VaultHome = () => {
           iconBgColor: cat.icon_bg_color || "bg-yellow-100",
           documentCount: docCount,
           subcategories: [],
-          isCustom: cat.is_custom
+          isCustom: true
         };
       }));
 
-      // Fallback: if no categories found in DB, use hardcoded default categories
-      if (!allCats.length) {
-        allCats = vaultCategories.map((cat) => ({
-          id: cat.id,
-          name: cat.name,
-          icon: cat.icon,
-          iconBgColor: cat.iconBgColor,
-          documentCount: 0,
-          subcategories: [],
-          isCustom: cat.isCustom ?? false,
-        }));
-      }
+      // Get document counts for default categories
+      const categoriesWithCounts = await Promise.all(baseCategories.map(async (cat) => {
+        const docCount = await getCategoryDocumentCount(cat.id, user.id);
+        return {
+          ...cat,
+          documentCount: docCount
+        };
+      }));
+
+      // Merge: defaults + custom categories
+      const allCats = [...categoriesWithCounts, ...customCats];
 
       setCustomCategories(allCats);
     } catch (error) {
       console.error('Error loading categories:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load categories. Showing default categories.",
+        variant: "destructive"
+      });
+      // Fallback to hardcoded defaults on error
+      setCustomCategories(vaultCategories.map((cat) => ({
+        id: cat.id,
+        name: cat.name,
+        icon: cat.icon,
+        iconBgColor: cat.iconBgColor,
+        documentCount: 0,
+        subcategories: [],
+        isCustom: false,
+      })));
     }
   };
 
@@ -142,6 +173,17 @@ const VaultHome = () => {
 
   const handleDeleteClick = (category: any, e: React.MouseEvent) => {
     e.stopPropagation();
+    
+    // Prevent deletion of default categories
+    if (!category.isCustom) {
+      toast({
+        title: "Cannot delete",
+        description: "Default categories cannot be deleted",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setDeleteConfirm({ show: true, category });
   };
 
