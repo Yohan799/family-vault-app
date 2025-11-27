@@ -38,59 +38,97 @@ const CategoryView = () => {
           return;
         }
 
-        // Load category from database only
+        // Check if this is a default category from hardcoded data
+        const defaultCategory = vaultCategories.find(cat => cat.id === categoryId);
+
+        // Load category from database
         const { data: categoryData, error: catError } = await supabase
           .from('categories')
           .select('*')
           .eq('id', categoryId)
           .eq('user_id', user.id)
           .is('deleted_at', null)
-          .single();
+          .maybeSingle();
 
-        if (catError || !categoryData) {
-          console.error("Category not found:", catError);
-          navigate("/vault");
-          return;
+        if (catError) {
+          console.error("Error loading category:", catError);
         }
 
-        const foundCategory = {
+        // Use hardcoded category if it's a default, otherwise use DB data
+        const foundCategory = defaultCategory ? {
+          id: defaultCategory.id,
+          name: defaultCategory.name,
+          icon: defaultCategory.icon,
+          iconBgColor: defaultCategory.iconBgColor,
+          documentCount: 0,
+          subcategories: defaultCategory.subcategories,
+          isCustom: false
+        } : categoryData ? {
           id: categoryData.id,
           name: categoryData.name,
           icon: Folder,
           iconBgColor: categoryData.icon_bg_color || "bg-yellow-100",
           documentCount: 0,
           subcategories: [],
-          isCustom: categoryData.is_custom
-        };
+          isCustom: true
+        } : null;
+
+        if (!foundCategory) {
+          navigate("/vault");
+          return;
+        }
 
         setCategory(foundCategory);
 
-        // Load subcategories from database only
-        const { data: subcategoryData, error: subError } = await supabase
+        // Start with hardcoded subcategories if this is a default category
+        let baseSubcategories = defaultCategory ? defaultCategory.subcategories.map(sub => ({
+          id: sub.id,
+          name: sub.name,
+          icon: sub.icon,
+          documentCount: 0,
+          isCustom: false
+        })) : [];
+
+        // Load custom subcategories from database
+        const { data: customSubsData, error: subError } = await supabase
           .from('subcategories')
           .select('*')
           .eq('category_id', categoryId)
           .eq('user_id', user.id)
+          .eq('is_custom', true)
           .is('deleted_at', null)
           .order('created_at', { ascending: true });
 
         if (subError) {
-          console.error("Error loading subcategories:", subError);
-          setCustomSubcategories([]);
-        } else {
-          const { getSubcategoryDocumentCount } = await import('@/services/vaultService');
-          const subs = await Promise.all((subcategoryData || []).map(async (sub: any) => {
-            const docCount = await getSubcategoryDocumentCount(sub.id, user.id);
-            return {
-              id: sub.id,
-              name: sub.name,
-              icon: Folder,
-              documentCount: docCount,
-              isCustom: sub.is_custom
-            };
-          }));
-          setCustomSubcategories(subs);
+          console.error("Error loading custom subcategories:", subError);
         }
+
+        const { getSubcategoryDocumentCount } = await import('@/services/vaultService');
+
+        // Get document counts for base subcategories
+        const baseWithCounts = await Promise.all(baseSubcategories.map(async (sub) => {
+          const docCount = await getSubcategoryDocumentCount(sub.id, user.id);
+          return {
+            ...sub,
+            documentCount: docCount
+          };
+        }));
+
+        // Add custom subcategories
+        const customSubs = await Promise.all((customSubsData || []).map(async (sub: any) => {
+          const docCount = await getSubcategoryDocumentCount(sub.id, user.id);
+          return {
+            id: sub.id,
+            name: sub.name,
+            icon: Folder,
+            documentCount: docCount,
+            isCustom: true
+          };
+        }));
+
+        // Merge: defaults + custom subcategories
+        const allSubs = [...baseWithCounts, ...customSubs];
+        setCustomSubcategories(allSubs);
 
         // Get total document count
         const { getCategoryDocumentCount } = await import('@/services/vaultService');
@@ -173,6 +211,17 @@ const CategoryView = () => {
 
   const handleDeleteClick = (subcategory: any, e: React.MouseEvent) => {
     e.stopPropagation();
+    
+    // Prevent deletion of default subcategories
+    if (!subcategory.isCustom) {
+      toast({
+        title: "Cannot delete",
+        description: "Default subcategories cannot be deleted",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setDeleteConfirm({ show: true, subcategory });
   };
 
