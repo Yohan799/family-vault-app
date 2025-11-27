@@ -272,25 +272,17 @@ const SubcategoryView = () => {
     if (!deleteDocConfirm.doc) return;
 
     try {
-      // Check authentication first
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data: { user } } = await supabase.auth.getUser();
+      const { deleteDocument } = await import('@/lib/documentStorage');
+      const result = await deleteDocument(deleteDocConfirm.doc.id);
 
-      if (!user) {
+      if (!result.success) {
         toast({
-          title: "Authentication required",
-          description: "Please log in to delete documents",
+          title: "Error",
+          description: result.error || "Failed to delete document",
           variant: "destructive"
         });
         setDeleteDocConfirm({ show: false, doc: null });
         return;
-      }
-
-      const { deleteDocument } = await import('@/lib/documentStorage');
-      const success = await deleteDocument(deleteDocConfirm.doc.id);
-
-      if (!success) {
-        throw new Error("Delete operation failed");
       }
 
       toast({
