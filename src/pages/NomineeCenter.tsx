@@ -197,51 +197,51 @@ const NomineeCenter = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="bg-primary/20 text-foreground p-6 rounded-b-3xl">
-        <div className="flex items-center gap-4 mb-6">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")} className="text-foreground">
-            <ArrowLeft className="w-6 h-6" />
+      <div className="bg-primary/20 text-foreground p-4 sm:p-6 rounded-b-3xl">
+        <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")} className="text-foreground h-9 w-9 sm:h-10 sm:w-10">
+            <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6" />
           </Button>
-          <div className="flex-1 text-center -ml-10">
-            <h1 className="text-2xl font-bold">Nominee Center</h1>
-            <p className="text-sm text-muted-foreground mt-1">Manage trusted contacts</p>
+          <div className="flex-1 text-center -ml-9 sm:-ml-10">
+            <h1 className="text-xl sm:text-2xl font-bold">Nominee Center</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">Manage trusted contacts</p>
           </div>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-3">
-          <div className="bg-card/50 rounded-xl p-4 text-center backdrop-blur-sm">
-            <div className="text-3xl font-bold mb-1">{totalNominees}</div>
-            <div className="text-sm text-muted-foreground">Total</div>
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
+          <div className="bg-card/50 rounded-xl p-3 sm:p-4 text-center backdrop-blur-sm">
+            <div className="text-2xl sm:text-3xl font-bold mb-1">{totalNominees}</div>
+            <div className="text-xs sm:text-sm text-muted-foreground">Total</div>
           </div>
-          <div className="bg-card/50 rounded-xl p-4 text-center backdrop-blur-sm">
-            <div className="text-3xl font-bold mb-1 text-green-600">{verifiedNominees}</div>
-            <div className="text-sm text-muted-foreground">Verified</div>
+          <div className="bg-card/50 rounded-xl p-3 sm:p-4 text-center backdrop-blur-sm">
+            <div className="text-2xl sm:text-3xl font-bold mb-1 text-green-600">{verifiedNominees}</div>
+            <div className="text-xs sm:text-sm text-muted-foreground">Verified</div>
           </div>
-          <div className="bg-card/50 rounded-xl p-4 text-center backdrop-blur-sm">
-            <div className="text-3xl font-bold mb-1 text-orange-600">{pendingNominees}</div>
-            <div className="text-sm text-muted-foreground">Pending</div>
+          <div className="bg-card/50 rounded-xl p-3 sm:p-4 text-center backdrop-blur-sm">
+            <div className="text-2xl sm:text-3xl font-bold mb-1 text-orange-600">{pendingNominees}</div>
+            <div className="text-xs sm:text-sm text-muted-foreground">Pending</div>
           </div>
         </div>
       </div>
 
-      <div className="p-6 space-y-6">
+      <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
         {/* Add Nominee Form */}
         {showAddForm && (
-          <div className="bg-card rounded-2xl p-6 space-y-4">
-            <h2 className="text-lg font-bold text-foreground mb-4">
+          <div className="bg-card rounded-2xl p-4 sm:p-6 space-y-4">
+            <h2 className="text-base sm:text-lg font-bold text-foreground mb-3 sm:mb-4">
               {editingId ? '✏️ Edit Nominee' : '+ Add New Nominee'}
             </h2>
 
             {/* Avatar Selector */}
-            <div className="flex justify-center mb-4">
+            <div className="flex justify-center mb-3 sm:mb-4">
               <AvatarSelector
                 selectedAvatar={formData.avatarUrl}
                 onSelectAvatar={(avatarId) => setFormData({ ...formData, avatarUrl: avatarId })}
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">Full Name *</label>
                 <Input
@@ -291,18 +291,22 @@ const NomineeCenter = () => {
               />
             </div>
 
-            <div className="flex gap-3 pt-2">
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <Button 
                 onClick={handleAddNominee} 
                 disabled={isLoading}
-                className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12"
+                className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-11 sm:h-12 text-sm sm:text-base"
               >
                 {isLoading ? "Sending..." : (editingId ? "Update Nominee" : "Add & Send Link")}
               </Button>
               <Button
                 variant="outline"
-                onClick={() => setShowAddForm(false)}
-                className="flex-1 rounded-xl h-12 border-border"
+                onClick={() => {
+                  setShowAddForm(false);
+                  setEditingId(null);
+                  setFormData({ fullName: '', relation: '', email: '', phone: '', avatarUrl: 'avatar-1' });
+                }}
+                className="flex-1 rounded-xl h-11 sm:h-12 border-border text-sm sm:text-base"
               >
                 Cancel
               </Button>
@@ -311,14 +315,14 @@ const NomineeCenter = () => {
         )}
 
         {/* Your Nominees Section */}
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-foreground">Your Nominees</h2>
+            <h2 className="text-base sm:text-lg font-bold text-foreground">Your Nominees</h2>
             {nominees.length > 0 && !showAddForm && (
               <Button
                 onClick={() => setShowAddForm(true)}
                 size="sm"
-                className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl text-xs sm:text-sm h-8 sm:h-9 px-3 sm:px-4"
               >
                 + Add Nominee
               </Button>
@@ -326,32 +330,32 @@ const NomineeCenter = () => {
           </div>
 
           {nominees.length === 0 ? (
-            <div className="bg-card rounded-2xl p-8 text-center">
-              <div className="w-24 h-24 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center">
-                <Users className="w-12 h-12 text-primary" />
+            <div className="bg-card rounded-2xl p-6 sm:p-8 text-center">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-3 sm:mb-4 bg-primary/10 rounded-full flex items-center justify-center">
+                <Users className="w-10 h-10 sm:w-12 sm:h-12 text-primary" />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-2">No Nominees Yet</h3>
-              <p className="text-sm text-muted-foreground mb-6">
+              <h3 className="text-lg sm:text-xl font-bold text-foreground mb-2">No Nominees Yet</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 px-4">
                 Add trusted contacts who can access your vault in emergencies.
               </p>
               {!showAddForm && (
                 <Button
                   onClick={() => setShowAddForm(true)}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-8"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-6 sm:px-8 h-10 sm:h-11 text-sm sm:text-base"
                 >
                   + Add Nominee
                 </Button>
               )}
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {nominees.map((nominee) => (
                 <div
                   key={nominee.id}
-                  className="bg-card rounded-2xl p-4 flex items-center gap-4 hover:bg-accent/50 transition-colors"
+                  className="bg-card rounded-2xl p-3 sm:p-4 flex items-start sm:items-center gap-3 sm:gap-4 hover:bg-accent/50 transition-colors"
                 >
                   {/* Avatar */}
-                  <Avatar className="w-14 h-14 border-2 border-primary/20">
+                  <Avatar className="w-12 h-12 sm:w-14 sm:h-14 border-2 border-primary/20 flex-shrink-0">
                     {nominee.avatar_url ? (
                       <div className={`w-full h-full rounded-full ${getAvatarById(nominee.avatar_url).bg} flex items-center justify-center`}>
                         <span className={`text-2xl ${getAvatarById(nominee.avatar_url).color}`}>
@@ -366,38 +370,38 @@ const NomineeCenter = () => {
                   </Avatar>
 
                   {/* Info */}
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-bold text-foreground">{nominee.full_name}</h3>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start sm:items-center gap-2 mb-1 flex-wrap">
+                      <h3 className="font-bold text-foreground text-sm sm:text-base truncate">{nominee.full_name}</h3>
                       {nominee.status === 'verified' ? (
-                        <div className="flex items-center gap-1 bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs font-medium">
-                          <CheckCircle className="w-3 h-3" />
+                        <div className="flex items-center gap-1 bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium whitespace-nowrap">
+                          <CheckCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                           Verified
                         </div>
                       ) : (
-                        <div className="flex items-center gap-1 bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full text-xs font-medium">
-                          <Clock className="w-3 h-3" />
+                        <div className="flex items-center gap-1 bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium whitespace-nowrap">
+                          <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                           Pending
                         </div>
                       )}
                     </div>
-                    <p className="text-sm text-muted-foreground mb-2">{nominee.relation}</p>
-                    <div className="flex flex-col gap-1 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Mail className="w-3 h-3" />
-                        {nominee.email}
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-1.5 sm:mb-2 capitalize">{nominee.relation}</p>
+                    <div className="flex flex-col gap-0.5 sm:gap-1 text-[10px] sm:text-xs text-muted-foreground">
+                      <div className="flex items-center gap-1 truncate">
+                        <Mail className="w-2.5 h-2.5 sm:w-3 sm:h-3 flex-shrink-0" />
+                        <span className="truncate">{nominee.email}</span>
                       </div>
                       {nominee.phone && (
                         <div className="flex items-center gap-1">
-                          <Phone className="w-3 h-3" />
-                          {nominee.phone}
+                          <Phone className="w-2.5 h-2.5 sm:w-3 sm:h-3 flex-shrink-0" />
+                          <span>{nominee.phone}</span>
                         </div>
                       )}
                     </div>
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-1 sm:gap-2 flex-shrink-0">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -411,18 +415,19 @@ const NomineeCenter = () => {
                         });
                         setEditingId(nominee.id);
                         setShowAddForm(true);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
                       }}
-                      className="hover:bg-blue-100 hover:text-blue-600"
+                      className="hover:bg-blue-100 hover:text-blue-600 h-8 w-8 sm:h-9 sm:w-9"
                     >
-                      <Edit2 className="w-4 h-4" />
+                      <Edit2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => setDeleteDialog({ open: true, nominee })}
-                      className="hover:bg-red-100 hover:text-red-600"
+                      className="hover:bg-red-100 hover:text-red-600 h-8 w-8 sm:h-9 sm:w-9"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </Button>
                   </div>
                 </div>
@@ -432,15 +437,15 @@ const NomineeCenter = () => {
         </div>
 
         {/* Info Box */}
-        < div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 flex gap-3" >
-          <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center flex-shrink-0">
-            <span className="text-primary font-bold text-sm">i</span>
+        <div className="bg-primary/5 border border-primary/20 rounded-2xl p-3 sm:p-4 flex gap-2.5 sm:gap-3">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 bg-primary/20 rounded-full flex items-center justify-center flex-shrink-0">
+            <span className="text-primary font-bold text-xs sm:text-sm">i</span>
           </div>
           <div>
-            <h3 className="font-semibold text-foreground mb-1">About Nominees</h3>
-            <p className="text-sm text-muted-foreground">
+            <h3 className="font-semibold text-foreground mb-1 text-sm sm:text-base">About Nominees</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
               Nominees are trusted individuals who can access your vault under specific conditions.
-              They must verify their identity through OTP before gaining access. You can add up to 5 nominees.
+              They must verify their email before gaining access. You can add up to 5 nominees.
             </p>
           </div>
         </div>
