@@ -427,6 +427,10 @@ export type Database = {
         Args: { _nominee_id: string; _user_id: string }
         Returns: boolean
       }
+      soft_delete_nominee: {
+        Args: { _nominee_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
