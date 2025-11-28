@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { validateFile } from "@/lib/validation";
+import { openGoogleDrivePicker, downloadFileFromGoogleDrive } from "@/lib/googleDrivePicker";
 
 interface UploadDocumentModalProps {
   open: boolean;
@@ -87,13 +88,52 @@ export const UploadDocumentModal = ({
     input.click();
   };
 
-  const handleGoogleDrive = () => {
-    window.open("https://drive.google.com/drive/my-drive", "_blank");
-    toast({
-      title: "Opening Google Drive",
-      description: "Select your file and share it with the app",
-    });
-    handleClose();
+  const handleGoogleDrive = async () => {
+    try {
+      const file = await openGoogleDrivePicker();
+      if (file) {
+        toast({
+          title: "Downloading from Google Drive",
+          description: "Please wait...",
+        });
+
+        const blob = await downloadFileFromGoogleDrive(file);
+        const driveFile = new File([blob], file.name, { type: file.mimeType });
+        
+        // Validate the file
+        const validation = validateFile(driveFile);
+        if (!validation.valid) {
+          toast({
+            title: "Upload Failed",
+            description: validation.error,
+            variant: "destructive",
+          });
+          return;
+        }
+
+        // Store the document
+        const { storeDocument } = await import('@/lib/documentStorage');
+        await storeDocument(driveFile, categoryId, subcategoryId, folderId, 'google_drive');
+
+        toast({
+          title: "File imported successfully",
+          description: `${file.name} has been added from Google Drive`,
+        });
+
+        handleClose();
+
+        if (onUploadComplete) {
+          onUploadComplete();
+        }
+      }
+    } catch (error) {
+      console.error('Error importing from Google Drive:', error);
+      toast({
+        title: "Google Drive Error",
+        description: "Failed to import file. Make sure you've configured the API keys.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleScanDocument = () => {
@@ -179,7 +219,7 @@ export const UploadDocumentModal = ({
                 <path d="M12.545 10.239v3.821h5.445c-.712 2.315-2.647 3.972-5.445 3.972a6.033 6.033 0 110-12.064c1.498 0 2.866.549 3.921 1.453l2.814-2.814A9.969 9.969 0 0012.545 2C7.021 2 2.543 6.477 2.543 12s4.478 10 10.002 10c8.396 0 10.249-7.85 9.426-11.748l-9.426-.013z" />
               </svg>
             </div>
-            <span className="flex-1 text-left font-medium">Sync from Google Drive</span>
+            <span className="flex-1 text-left font-medium">Import from Google Drive</span>
           </button>
 
           <button
