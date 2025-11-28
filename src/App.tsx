@@ -21,6 +21,7 @@ import SettingsPage from "./pages/SettingsPage";
 import NomineeCenter from "./pages/NomineeCenter";
 import NomineeVerification from "./pages/NomineeVerification";
 import VerifyNominee from "./pages/VerifyNominee";
+import EmergencyAccess from "./pages/EmergencyAccess";
 import InactivityTriggers from "./pages/InactivityTriggers";
 import TimeCapsule from "./pages/TimeCapsule";
 import CustomizeQuickActions from "./pages/CustomizeQuickActions";

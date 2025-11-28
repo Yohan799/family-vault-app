@@ -167,11 +167,49 @@ export type Database = {
         }
         Relationships: []
       }
+      inactivity_alerts: {
+        Row: {
+          alert_stage: string
+          created_at: string
+          custom_message: string | null
+          id: string
+          inactive_days: number
+          recipient_email: string | null
+          recipient_type: string
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          alert_stage: string
+          created_at?: string
+          custom_message?: string | null
+          id?: string
+          inactive_days: number
+          recipient_email?: string | null
+          recipient_type: string
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          alert_stage?: string
+          created_at?: string
+          custom_message?: string | null
+          id?: string
+          inactive_days?: number
+          recipient_email?: string | null
+          recipient_type?: string
+          sent_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       inactivity_triggers: {
         Row: {
           created_at: string
           custom_message: string | null
           email_enabled: boolean | null
+          emergency_access_granted: boolean | null
+          emergency_granted_at: string | null
           id: string
           inactive_days_threshold: number | null
           is_active: boolean | null
@@ -184,6 +222,8 @@ export type Database = {
           created_at?: string
           custom_message?: string | null
           email_enabled?: boolean | null
+          emergency_access_granted?: boolean | null
+          emergency_granted_at?: string | null
           id?: string
           inactive_days_threshold?: number | null
           is_active?: boolean | null
@@ -196,6 +236,8 @@ export type Database = {
           created_at?: string
           custom_message?: string | null
           email_enabled?: boolean | null
+          emergency_access_granted?: boolean | null
+          emergency_granted_at?: string | null
           id?: string
           inactive_days_threshold?: number | null
           is_active?: boolean | null
@@ -243,6 +285,36 @@ export type Database = {
           phone?: string | null
           relation?: string | null
           status?: string | null
+          user_id?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
+      otp_verifications: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          nominee_email: string
+          otp_code: string
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          nominee_email: string
+          otp_code: string
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          nominee_email?: string
+          otp_code?: string
           user_id?: string
           verified_at?: string | null
         }
