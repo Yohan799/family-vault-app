@@ -1,4 +1,4 @@
-import { X, Upload } from "lucide-react";
+import { X, Upload, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -96,13 +96,50 @@ export const UploadDocumentModal = ({
     handleClose();
   };
 
-  const handleDigiLocker = () => {
-    window.open("https://digilocker.gov.in/", "_blank");
-    toast({
-      title: "Opening DigiLocker",
-      description: "Select your file and share it with the app",
-    });
-    handleClose();
+  const handleScanDocument = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.capture = "environment";
+    input.onchange = async (e: any) => {
+      const file = e.target.files[0];
+      if (file) {
+        const validation = validateFile(file);
+
+        if (!validation.valid) {
+          toast({
+            title: "Scan Failed",
+            description: validation.error,
+            variant: "destructive",
+          });
+          return;
+        }
+
+        try {
+          const { storeDocument } = await import('@/lib/documentStorage');
+          await storeDocument(file, categoryId, subcategoryId, folderId);
+
+          toast({
+            title: "Document scanned successfully",
+            description: `${file.name} has been added to your vault`,
+          });
+
+          handleClose();
+
+          if (onUploadComplete) {
+            onUploadComplete();
+          }
+        } catch (error) {
+          console.error("Error storing scanned document:", error);
+          toast({
+            title: "Scan Failed",
+            description: error instanceof Error ? error.message : "Failed to store document. Please try again.",
+            variant: "destructive",
+          });
+        }
+      }
+    };
+    input.click();
   };
 
   return (
@@ -146,15 +183,13 @@ export const UploadDocumentModal = ({
           </button>
 
           <button
-            onClick={handleDigiLocker}
+            onClick={handleScanDocument}
             className="w-full flex items-center gap-4 p-4 bg-muted/50 hover:bg-muted rounded-xl transition-colors"
           >
-            <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center">
-              <svg className="w-5 h-5 text-teal-600" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V7.3l7-3.11v8.8z" />
-              </svg>
+            <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+              <Camera className="w-5 h-5 text-purple-600" />
             </div>
-            <span className="flex-1 text-left font-medium">Fetch from DigiLocker</span>
+            <span className="flex-1 text-left font-medium">Scan Document</span>
           </button>
 
           <Button
