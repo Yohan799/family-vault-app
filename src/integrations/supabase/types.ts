@@ -499,8 +499,24 @@ export type Database = {
         Args: { _nominee_id: string; _user_id: string }
         Returns: boolean
       }
+      soft_delete_category: {
+        Args: { _category_id: string; _user_id: string }
+        Returns: boolean
+      }
+      soft_delete_document: {
+        Args: { _document_id: string; _user_id: string }
+        Returns: boolean
+      }
       soft_delete_nominee: {
         Args: { _nominee_id: string; _user_id: string }
+        Returns: boolean
+      }
+      soft_delete_subcategory: {
+        Args: {
+          _category_id: string
+          _subcategory_id: string
+          _user_id: string
+        }
         Returns: boolean
       }
     }

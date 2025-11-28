@@ -80,47 +80,23 @@ export const syncDefaultCategories = async (userId: string): Promise<void> => {
 };
 
 /**
- * Soft-deletes a category and cascades to all related entities
+ * Soft-deletes a category and cascades to all related entities using security definer function
  */
 export const deleteCategoryWithCascade = async (categoryId: string, userId: string): Promise<void> => {
   try {
-    const now = new Date().toISOString();
+    const { data, error } = await supabase.rpc('soft_delete_category', {
+      _category_id: categoryId,
+      _user_id: userId
+    });
 
-    // Soft delete the category
-    const { error: catError } = await supabase
-      .from('categories')
-      .update({ deleted_at: now })
-      .eq('id', categoryId)
-      .eq('user_id', userId);
+    if (error) {
+      console.error('Error deleting category:', error);
+      throw error;
+    }
 
-    if (catError) throw catError;
-
-    // Soft delete all subcategories in this category
-    const { error: subError } = await supabase
-      .from('subcategories')
-      .update({ deleted_at: now })
-      .eq('category_id', categoryId)
-      .eq('user_id', userId);
-
-    if (subError) console.warn('Error deleting subcategories:', subError);
-
-    // Soft delete all folders in this category
-    const { error: folderError } = await supabase
-      .from('folders')
-      .update({ deleted_at: now })
-      .eq('category_id', categoryId)
-      .eq('user_id', userId);
-
-    if (folderError) console.warn('Error deleting folders:', folderError);
-
-    // Soft delete all documents in this category
-    const { error: docError } = await supabase
-      .from('documents')
-      .update({ deleted_at: now })
-      .eq('category_id', categoryId)
-      .eq('user_id', userId);
-
-    if (docError) console.warn('Error deleting documents:', docError);
+    if (!data) {
+      throw new Error('Category not found or access denied');
+    }
   } catch (error) {
     console.error('Error deleting category with cascade:', error);
     throw error;
@@ -128,7 +104,7 @@ export const deleteCategoryWithCascade = async (categoryId: string, userId: stri
 };
 
 /**
- * Soft-deletes a subcategory and cascades to all related entities
+ * Soft-deletes a subcategory and cascades to all related entities using security definer function
  */
 export const deleteSubcategoryWithCascade = async (
   subcategoryId: string,
@@ -136,35 +112,20 @@ export const deleteSubcategoryWithCascade = async (
   userId: string
 ): Promise<void> => {
   try {
-    const now = new Date().toISOString();
+    const { data, error } = await supabase.rpc('soft_delete_subcategory', {
+      _subcategory_id: subcategoryId,
+      _category_id: categoryId,
+      _user_id: userId
+    });
 
-    // Soft delete the subcategory
-    const { error: subError } = await supabase
-      .from('subcategories')
-      .update({ deleted_at: now })
-      .eq('id', subcategoryId)
-      .eq('category_id', categoryId)
-      .eq('user_id', userId);
+    if (error) {
+      console.error('Error deleting subcategory:', error);
+      throw error;
+    }
 
-    if (subError) throw subError;
-
-    // Soft delete all folders in this subcategory
-    const { error: folderError } = await supabase
-      .from('folders')
-      .update({ deleted_at: now })
-      .eq('subcategory_id', subcategoryId)
-      .eq('user_id', userId);
-
-    if (folderError) console.warn('Error deleting folders:', folderError);
-
-    // Soft delete all documents in this subcategory
-    const { error: docError } = await supabase
-      .from('documents')
-      .update({ deleted_at: now })
-      .eq('subcategory_id', subcategoryId)
-      .eq('user_id', userId);
-
-    if (docError) console.warn('Error deleting documents:', docError);
+    if (!data) {
+      throw new Error('Subcategory not found or access denied');
+    }
   } catch (error) {
     console.error('Error deleting subcategory with cascade:', error);
     throw error;
