@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
+import { updateActivityTimestamp } from '@/lib/activityTracking';
 
 interface Profile {
   id: string;
@@ -64,6 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Use setTimeout to defer Supabase calls
           setTimeout(() => {
             fetchProfile(session.user.id);
+            updateActivityTimestamp(session.user.id);
           }, 0);
         } else {
           setProfile(null);
@@ -78,6 +80,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (session?.user) {
         fetchProfile(session.user.id);
+        updateActivityTimestamp(session.user.id);
       }
       setIsLoading(false);
     });
