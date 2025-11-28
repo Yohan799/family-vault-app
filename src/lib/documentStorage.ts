@@ -238,34 +238,19 @@ export const deleteDocument = async (documentId: string): Promise<{ success: boo
       return { success: false, error: 'User not authenticated' };
     }
 
-    // Verify document exists and belongs to user first
-    const { data: existingDoc, error: checkError } = await supabase
-      .from('documents')
-      .select('id')
-      .eq('id', documentId)
-      .eq('user_id', user.id)
-      .is('deleted_at', null)
-      .maybeSingle();
-
-    if (checkError) {
-      console.error('Check document error:', checkError);
-      return { success: false, error: 'Failed to verify document' };
-    }
-
-    if (!existingDoc) {
-      return { success: false, error: 'Document not found or already deleted' };
-    }
-
-    // Perform soft delete
-    const { error } = await supabase
-      .from('documents')
-      .update({ deleted_at: new Date().toISOString() })
-      .eq('id', documentId)
-      .eq('user_id', user.id);
+    // Use security definer function for atomic cascade deletion
+    const { data, error } = await supabase.rpc('soft_delete_document', {
+      _document_id: documentId,
+      _user_id: user.id
+    });
 
     if (error) {
-      console.error('Delete error:', error);
+      console.error('Error deleting document:', error);
       return { success: false, error: error.message };
+    }
+
+    if (!data) {
+      return { success: false, error: 'Document not found or access denied' };
     }
 
     return { success: true };
