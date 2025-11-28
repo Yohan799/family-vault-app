@@ -518,56 +518,79 @@ const NomineeCenter = () => {
         cancelText="Cancel"
         variant="destructive"
         onConfirm={async () => {
-          // Force refresh the session to get a fresh JWT token
-          await supabase.auth.refreshSession();
+          if (!deleteDialog.nominee) return;
           
-          // Get fresh auth state directly from Supabase
-          const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
+          const nomineeToDelete = deleteDialog.nominee;
           
-          if (authError || !currentUser) {
-            console.error('Auth error:', authError);
-            toast({
-              title: 'Authentication error',
-              description: 'Please sign in again',
-              variant: 'destructive'
-            });
-            setDeleteDialog({ open: false, nominee: null });
-            return;
-          }
-
-          if (deleteDialog.nominee) {
-            // Perform soft delete with fresh user ID
-            const { error } = await supabase
-              .from("nominees")
-              .update({ deleted_at: new Date().toISOString() })
-              .eq("id", deleteDialog.nominee.id)
-              .eq("user_id", currentUser.id);
-
-            if (error) {
-              console.error("Delete nominee error:", error);
+          try {
+            // 1. Force refresh session and CHECK for errors
+            const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+            
+            if (refreshError) {
+              console.error('Session refresh failed:', refreshError);
               toast({
-                title: 'Error removing nominee',
-                description: error.message,
+                title: 'Session expired',
+                description: 'Please sign in again to continue',
                 variant: 'destructive'
               });
-            } else {
+              setDeleteDialog({ open: false, nominee: null });
+              return;
+            }
+            
+            // 2. Get fresh user from the refreshed session
+            const currentUser = refreshData?.session?.user;
+            
+            if (!currentUser) {
               toast({
-                title: 'Nominee Removed',
-                description: `${deleteDialog.nominee.full_name} has been removed from your nominees.`
+                title: 'Authentication error',
+                description: 'Please sign in again',
+                variant: 'destructive'
               });
-              
-              // Refresh nominees list with fresh user ID
-              const { data: updatedNominees } = await supabase
+              setDeleteDialog({ open: false, nominee: null });
+              return;
+            }
+            
+            // 3. Optimistic UI update - immediately remove from local state
+            setNominees(prev => prev.filter(n => n.id !== nomineeToDelete.id));
+            setDeleteDialog({ open: false, nominee: null });
+            
+            // 4. Perform soft delete
+            const { error: deleteError } = await supabase
+              .from("nominees")
+              .update({ deleted_at: new Date().toISOString() })
+              .eq("id", nomineeToDelete.id)
+              .eq("user_id", currentUser.id);
+
+            if (deleteError) {
+              console.error("Delete nominee error:", deleteError);
+              // Rollback optimistic update by re-fetching
+              const { data: revertData } = await supabase
                 .from("nominees")
                 .select("*")
                 .eq("user_id", currentUser.id)
                 .is("deleted_at", null)
                 .order("created_at", { ascending: false });
               
-              if (updatedNominees) {
-                setNominees(updatedNominees);
-              }
+              if (revertData) setNominees(revertData);
+              
+              toast({
+                title: 'Error removing nominee',
+                description: deleteError.message,
+                variant: 'destructive'
+              });
+            } else {
+              toast({
+                title: 'Nominee Removed',
+                description: `${nomineeToDelete.full_name} has been removed from your nominees.`
+              });
             }
+          } catch (err: any) {
+            console.error("Unexpected error:", err);
+            toast({
+              title: 'Error',
+              description: err.message || 'An unexpected error occurred',
+              variant: 'destructive'
+            });
             setDeleteDialog({ open: false, nominee: null });
           }
         }}
