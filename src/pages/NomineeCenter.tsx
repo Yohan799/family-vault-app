@@ -554,7 +554,29 @@ const NomineeCenter = () => {
             setNominees(prev => prev.filter(n => n.id !== nomineeToDelete.id));
             setDeleteDialog({ open: false, nominee: null });
             
-            // 4. Perform soft delete
+            // 4. Cascade cleanup - remove related records
+            // Delete verification tokens
+            const { error: tokenError } = await supabase
+              .from("verification_tokens")
+              .delete()
+              .eq("nominee_id", nomineeToDelete.id);
+            
+            if (tokenError) {
+              console.error("Error deleting verification tokens:", tokenError);
+            }
+            
+            // Delete access control records
+            const { error: accessError } = await supabase
+              .from("access_controls")
+              .delete()
+              .eq("nominee_id", nomineeToDelete.id)
+              .eq("user_id", currentUser.id);
+            
+            if (accessError) {
+              console.error("Error deleting access controls:", accessError);
+            }
+            
+            // 5. Perform soft delete of nominee
             const { error: deleteError } = await supabase
               .from("nominees")
               .update({ deleted_at: new Date().toISOString() })
