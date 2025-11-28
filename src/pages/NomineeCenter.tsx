@@ -117,6 +117,20 @@ const NomineeCenter = () => {
     try {
       // If editing, update existing nominee
       if (editingId) {
+        // Get fresh auth state
+        await supabase.auth.refreshSession();
+        const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
+        
+        if (authError || !currentUser) {
+          toast({
+            title: "Authentication error",
+            description: "Please sign in again",
+            variant: "destructive"
+          });
+          setIsLoading(false);
+          return;
+        }
+
         const { error } = await supabase
           .from("nominees")
           .update({
@@ -127,7 +141,7 @@ const NomineeCenter = () => {
             avatar_url: formData.avatarUrl
           })
           .eq("id", editingId)
-          .eq("user_id", user.id);
+          .eq("user_id", currentUser.id);
 
         if (error) throw error;
 
@@ -143,11 +157,24 @@ const NomineeCenter = () => {
         return;
       }
 
-      // Add new nominee
+      // Add new nominee with fresh auth
+      await supabase.auth.refreshSession();
+      const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !currentUser) {
+        toast({
+          title: "Authentication error",
+          description: "Please sign in again",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        return;
+      }
+
       const { data: newNominee, error: insertError } = await supabase
         .from("nominees")
         .insert({
-          user_id: user.id,
+          user_id: currentUser.id,
           full_name: formData.fullName,
           relation: formData.relation || "Other",
           email: formData.email,
@@ -491,6 +518,9 @@ const NomineeCenter = () => {
         cancelText="Cancel"
         variant="destructive"
         onConfirm={async () => {
+          // Force refresh the session to get a fresh JWT token
+          await supabase.auth.refreshSession();
+          
           // Get fresh auth state directly from Supabase
           const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
           
