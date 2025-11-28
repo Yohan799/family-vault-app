@@ -554,36 +554,15 @@ const NomineeCenter = () => {
             setNominees(prev => prev.filter(n => n.id !== nomineeToDelete.id));
             setDeleteDialog({ open: false, nominee: null });
             
-            // 4. Cascade cleanup - remove related records
-            // Delete verification tokens
-            const { error: tokenError } = await supabase
-              .from("verification_tokens")
-              .delete()
-              .eq("nominee_id", nomineeToDelete.id);
+            // 4. Use security definer function for cascade deletion
+            const { data: success, error: deleteError } = await supabase
+              .rpc('soft_delete_nominee', {
+                _nominee_id: nomineeToDelete.id,
+                _user_id: currentUser.id
+              });
             
-            if (tokenError) {
-              console.error("Error deleting verification tokens:", tokenError);
-            }
-            
-            // Delete access control records
-            const { error: accessError } = await supabase
-              .from("access_controls")
-              .delete()
-              .eq("nominee_id", nomineeToDelete.id)
-              .eq("user_id", currentUser.id);
-            
-            if (accessError) {
-              console.error("Error deleting access controls:", accessError);
-            }
-            
-            // 5. Perform soft delete of nominee
-            const { error: deleteError } = await supabase
-              .from("nominees")
-              .update({ deleted_at: new Date().toISOString() })
-              .eq("id", nomineeToDelete.id)
-              .eq("user_id", currentUser.id);
-
-            if (deleteError) {
+            // 5. Check for errors or if function returned false
+            if (deleteError || !success) {
               console.error("Delete nominee error:", deleteError);
               // Rollback optimistic update by re-fetching
               const { data: revertData } = await supabase
@@ -597,7 +576,7 @@ const NomineeCenter = () => {
               
               toast({
                 title: 'Error removing nominee',
-                description: deleteError.message,
+                description: deleteError?.message || 'Failed to remove nominee',
                 variant: 'destructive'
               });
             } else {
