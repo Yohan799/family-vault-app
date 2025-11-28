@@ -126,7 +126,8 @@ const NomineeCenter = () => {
             phone: formData.phone || null,
             avatar_url: formData.avatarUrl
           })
-          .eq("id", editingId);
+          .eq("id", editingId)
+          .eq("user_id", user.id);
 
         if (error) throw error;
 
@@ -490,52 +491,27 @@ const NomineeCenter = () => {
         cancelText="Cancel"
         variant="destructive"
         onConfirm={async () => {
-          if (!user) {
+          // Get fresh auth state directly from Supabase
+          const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
+          
+          if (authError || !currentUser) {
+            console.error('Auth error:', authError);
             toast({
-              title: 'Authentication required',
-              description: 'Please sign in to remove nominees',
+              title: 'Authentication error',
+              description: 'Please sign in again',
               variant: 'destructive'
             });
+            setDeleteDialog({ open: false, nominee: null });
             return;
           }
 
           if (deleteDialog.nominee) {
-            // Verify nominee exists and belongs to user first
-            const { data: existingNominee, error: checkError } = await supabase
-              .from("nominees")
-              .select("id")
-              .eq("id", deleteDialog.nominee.id)
-              .eq("user_id", user.id)
-              .is("deleted_at", null)
-              .maybeSingle();
-
-            if (checkError) {
-              console.error("Check nominee error:", checkError);
-              toast({
-                title: 'Error removing nominee',
-                description: 'Failed to verify nominee',
-                variant: 'destructive'
-              });
-              setDeleteDialog({ open: false, nominee: null });
-              return;
-            }
-
-            if (!existingNominee) {
-              toast({
-                title: 'Error removing nominee',
-                description: 'Nominee not found or already deleted',
-                variant: 'destructive'
-              });
-              setDeleteDialog({ open: false, nominee: null });
-              return;
-            }
-
-            // Perform soft delete
+            // Perform soft delete with fresh user ID
             const { error } = await supabase
               .from("nominees")
               .update({ deleted_at: new Date().toISOString() })
               .eq("id", deleteDialog.nominee.id)
-              .eq("user_id", user.id);
+              .eq("user_id", currentUser.id);
 
             if (error) {
               console.error("Delete nominee error:", error);
@@ -550,11 +526,11 @@ const NomineeCenter = () => {
                 description: `${deleteDialog.nominee.full_name} has been removed from your nominees.`
               });
               
-              // Refresh nominees list
+              // Refresh nominees list with fresh user ID
               const { data: updatedNominees } = await supabase
                 .from("nominees")
                 .select("*")
-                .eq("user_id", user.id)
+                .eq("user_id", currentUser.id)
                 .is("deleted_at", null)
                 .order("created_at", { ascending: false });
               
