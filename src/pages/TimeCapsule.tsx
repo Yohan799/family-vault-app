@@ -1,4 +1,4 @@
-import { ArrowLeft, Clock, Home, Vault, Settings, Info, Upload, Send, Edit2, Trash2 } from "lucide-react";
+import { ArrowLeft, Clock, Home, Vault, Settings, Info, Send, Edit2, Trash2, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -6,73 +6,154 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { timeCapsuleService, TimeCapsule as TimeCapsuleType } from "@/services/timeCapsuleService";
 
 const TimeCapsule = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; capsule: any | null }>({ open: false, capsule: null });
-  const [capsules, setCapsules] = useState<any[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; capsule: TimeCapsuleType | null }>({ open: false, capsule: null });
+  const [capsules, setCapsules] = useState<TimeCapsuleType[]>([]);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     message: "",
     releaseDate: "",
     recipientEmail: "",
-    phone: ""
+    phone: "",
+    attachmentFile: null as File | null
   });
 
   useEffect(() => {
-    const stored = localStorage.getItem('timeCapsules');
-    if (stored) {
-      try {
-        setCapsules(JSON.parse(stored));
-      } catch (e) {
-        setCapsules([]);
-      }
-    }
+    loadCapsules();
   }, []);
 
-  const handleCreateCapsule = () => {
-    // If editing, update existing capsule
-    if (editingId) {
-      const updatedCapsules = capsules.map(c =>
-        c.id === editingId ? { ...c, ...formData } : c
-      );
-      setCapsules(updatedCapsules);
-      localStorage.setItem('timeCapsules', JSON.stringify(updatedCapsules));
-
+  const loadCapsules = async () => {
+    try {
+      const data = await timeCapsuleService.getAll();
+      setCapsules(data);
+    } catch (error) {
+      console.error("Error loading capsules:", error);
       toast({
-        title: "Time capsule updated!",
-        description: `${formData.title} has been updated successfully`,
+        title: "Error",
+        description: "Failed to load time capsules",
+        variant: "destructive"
       });
+    }
+  };
 
-      setFormData({ title: "", message: "", releaseDate: "", recipientEmail: "", phone: "" });
-      setEditingId(null);
-      setShowCreateForm(false);
+  const handleScanDocument = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.capture = 'environment';
+    input.onchange = (e: any) => {
+      const file = e.target.files[0];
+      if (file) {
+        setFormData({ ...formData, attachmentFile: file });
+        toast({
+          title: "Document scanned",
+          description: `${file.name} has been attached`,
+        });
+      }
+    };
+    input.click();
+  };
+
+  const handleCreateCapsule = async () => {
+    if (!formData.title || !formData.releaseDate || !formData.recipientEmail) {
+      toast({
+        title: "Missing fields",
+        description: "Please fill in all required fields",
+        variant: "destructive"
+      });
       return;
     }
 
-    // Create new capsule
-    const newCapsule = {
-      id: Date.now(),
-      ...formData
-    };
-    const updatedCapsules = [...capsules, newCapsule];
-    setCapsules(updatedCapsules);
-    localStorage.setItem('timeCapsules', JSON.stringify(updatedCapsules));
-    localStorage.setItem('timeCapsulesCount', String(updatedCapsules.length));
+    setLoading(true);
+    try {
+      let attachmentUrl: string | undefined;
 
-    // Trigger dashboard update
-    window.dispatchEvent(new Event("countsUpdated"));
+      // Upload attachment if exists
+      if (formData.attachmentFile && !editingId) {
+        const tempId = crypto.randomUUID();
+        attachmentUrl = await timeCapsuleService.uploadAttachment(formData.attachmentFile, tempId);
+      }
 
-    toast({
-      title: "Time capsule created!",
-      description: `${formData.title} will be released on ${formData.releaseDate}`,
-    });
-    setFormData({ title: "", message: "", releaseDate: "", recipientEmail: "", phone: "" });
-    setShowCreateForm(false);
+      if (editingId) {
+        // Update existing capsule
+        await timeCapsuleService.update(editingId, {
+          title: formData.title,
+          message: formData.message,
+          release_date: formData.releaseDate,
+          recipient_email: formData.recipientEmail,
+          phone: formData.phone || null
+        });
+
+        toast({
+          title: "Time capsule updated!",
+          description: `${formData.title} has been updated successfully`,
+        });
+      } else {
+        // Create new capsule
+        await timeCapsuleService.create({
+          title: formData.title,
+          message: formData.message,
+          release_date: formData.releaseDate,
+          recipient_email: formData.recipientEmail,
+          phone: formData.phone,
+          attachment_url: attachmentUrl
+        });
+
+        toast({
+          title: "Time capsule created!",
+          description: `${formData.title} will be released on ${formData.releaseDate}`,
+        });
+      }
+
+      await loadCapsules();
+      setFormData({ title: "", message: "", releaseDate: "", recipientEmail: "", phone: "", attachmentFile: null });
+      setEditingId(null);
+      setShowCreateForm(false);
+    } catch (error) {
+      console.error("Error saving capsule:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to save time capsule",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleDelete = async () => {
+    if (!deleteDialog.capsule) return;
+
+    setLoading(true);
+    try {
+      await timeCapsuleService.delete(deleteDialog.capsule.id);
+      await loadCapsules();
+      toast({
+        title: 'Time Capsule Deleted',
+        description: `"${deleteDialog.capsule.title}" has been deleted.`
+      });
+      setDeleteDialog({ open: false, capsule: null });
+    } catch (error) {
+      console.error("Error deleting capsule:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete time capsule",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const scheduledCount = capsules.filter(c => c.status === 'scheduled').length;
+  const releasedCount = capsules.filter(c => c.status === 'released').length;
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -91,11 +172,11 @@ const TimeCapsule = () => {
         {/* Stats */}
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-card/50 rounded-xl p-4 text-center backdrop-blur-sm">
-            <div className="text-3xl font-bold mb-1 text-blue-600">{capsules.length}</div>
+            <div className="text-3xl font-bold mb-1 text-blue-600">{scheduledCount}</div>
             <div className="text-sm text-muted-foreground">Scheduled</div>
           </div>
           <div className="bg-card/50 rounded-xl p-4 text-center backdrop-blur-sm">
-            <div className="text-3xl font-bold mb-1 text-green-600">0</div>
+            <div className="text-3xl font-bold mb-1 text-green-600">{releasedCount}</div>
             <div className="text-sm text-muted-foreground">Released</div>
           </div>
         </div>
@@ -163,90 +244,90 @@ const TimeCapsule = () => {
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Attachment (Optional)</label>
-              <div className="border-2 border-dashed border-border rounded-xl p-6 text-center">
-                <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-                <p className="text-sm text-muted-foreground mb-3">Upload from your device, Google Drive, or DigiLocker</p>
-                <div className="flex gap-3 justify-center flex-wrap">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="gap-2"
-                    onClick={() => {
-                      const input = document.createElement('input');
-                      input.type = 'file';
-                      input.accept = 'image/*,application/pdf,video/*';
-                      input.onchange = (e: any) => {
-                        const file = e.target.files[0];
-                        if (file) {
-                          const maxSize = 20 * 1024 * 1024; // 20MB in bytes
-                          if (file.size > maxSize) {
-                            toast({
-                              title: "File too large",
-                              description: "Maximum file size is 20MB",
-                              variant: "destructive"
-                            });
-                            return;
-                          }
-                          toast({
-                            title: "File uploaded",
-                            description: `${file.name} has been attached`,
-                          });
-                        }
-                      };
-                      input.click();
-                    }}
-                  >
-                    <Upload className="w-4 h-4" />
-                    Device
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="gap-2"
-                    onClick={() => {
-                      window.open('https://drive.google.com/drive/my-drive', '_blank');
-                      toast({
-                        title: "Opening Google Drive",
-                        description: "Select your file and share it with the app",
-                      });
-                    }}
-                  >
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12.545 10.239v3.821h5.445c-.712 2.315-2.647 3.972-5.445 3.972a6.033 6.033 0 110-12.064c1.498 0 2.866.549 3.921 1.453l2.814-2.814A9.969 9.969 0 0012.545 2C7.021 2 2.543 6.477 2.543 12s4.478 10 10.002 10c8.396 0 10.249-7.85 9.426-11.748l-9.426-.013z" />
-                    </svg>
-                    Google Drive
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="gap-2"
-                    onClick={() => {
-                      window.open('https://digilocker.gov.in/', '_blank');
-                      toast({
-                        title: "Opening DigiLocker",
-                        description: "Select your file and share it with the app",
-                      });
-                    }}
-                  >
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V7.3l7-3.11v8.8z" />
-                    </svg>
-                    DigiLocker
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground mt-3">Maximum file size: 20MB</p>
+              <div className="border-2 border-dashed border-border rounded-xl p-6">
+                {formData.attachmentFile ? (
+                  <div className="text-center">
+                    <p className="text-sm text-foreground mb-2">📎 {formData.attachmentFile.name}</p>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setFormData({ ...formData, attachmentFile: null })}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <Camera className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+                    <p className="text-sm text-muted-foreground mb-3">Scan a document or upload from device</p>
+                    <div className="flex gap-3 justify-center flex-wrap">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="gap-2"
+                        onClick={handleScanDocument}
+                      >
+                        <Camera className="w-4 h-4" />
+                        Scan Document
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="gap-2"
+                        onClick={() => {
+                          const input = document.createElement('input');
+                          input.type = 'file';
+                          input.accept = 'image/*,application/pdf';
+                          input.onchange = (e: any) => {
+                            const file = e.target.files[0];
+                            if (file) {
+                              const maxSize = 20 * 1024 * 1024;
+                              if (file.size > maxSize) {
+                                toast({
+                                  title: "File too large",
+                                  description: "Maximum file size is 20MB",
+                                  variant: "destructive"
+                                });
+                                return;
+                              }
+                              setFormData({ ...formData, attachmentFile: file });
+                              toast({
+                                title: "File attached",
+                                description: `${file.name} has been attached`,
+                              });
+                            }
+                          };
+                          input.click();
+                        }}
+                      >
+                        📁 From Device
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-3">Maximum file size: 20MB</p>
+                  </>
+                )}
               </div>
             </div>
 
             <div className="flex gap-3 pt-2">
-              <Button onClick={handleCreateCapsule} className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12 gap-2">
+              <Button 
+                onClick={handleCreateCapsule} 
+                className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12 gap-2"
+                disabled={loading}
+              >
                 <Send className="w-4 h-4" />
-                Create Capsule
+                {loading ? "Saving..." : editingId ? "Update Capsule" : "Create Capsule"}
               </Button>
               <Button
                 variant="outline"
-                onClick={() => setShowCreateForm(false)}
+                onClick={() => {
+                  setShowCreateForm(false);
+                  setEditingId(null);
+                  setFormData({ title: "", message: "", releaseDate: "", recipientEmail: "", phone: "", attachmentFile: null });
+                }}
                 className="flex-1 rounded-xl h-12 border-border"
+                disabled={loading}
               >
                 Cancel
               </Button>
@@ -254,7 +335,7 @@ const TimeCapsule = () => {
           </div>
         )}
 
-        {/* Your Capsules Section - Only show when capsules exist */}
+        {/* Your Capsules Section */}
         {capsules.length > 0 && (
           <div className="space-y-4">
             <h2 className="text-lg font-bold text-foreground">Your Time Capsules</h2>
@@ -262,52 +343,59 @@ const TimeCapsule = () => {
             {capsules.map((capsule) => (
               <div key={capsule.id} className="bg-card rounded-2xl p-4 flex justify-between items-start gap-4">
                 <div className="flex-1">
-                  <h3 className="font-semibold text-foreground mb-1">{capsule.title}</h3>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-semibold text-foreground">{capsule.title}</h3>
+                    {capsule.status === 'released' && (
+                      <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Released</span>
+                    )}
+                    {capsule.attachment_url && <span className="text-xs">📎</span>}
+                  </div>
                   <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{capsule.message}</p>
                   <div className="flex gap-2 text-xs text-muted-foreground">
-                    <span>Release: {capsule.releaseDate}</span>
+                    <span>Release: {new Date(capsule.release_date).toLocaleDateString()}</span>
                     <span>•</span>
-                    <span>{capsule.recipientEmail}</span>
+                    <span>{capsule.recipient_email}</span>
                   </div>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => {
-                      setFormData({
-                        title: capsule.title,
-                        message: capsule.message,
-                        releaseDate: capsule.releaseDate,
-                        recipientEmail: capsule.recipientEmail,
-                        phone: capsule.phone || ''
-                      });
-                      setEditingId(capsule.id);
-                      setShowCreateForm(true);
-                    }}
-                    className="hover:bg-blue-100 hover:text-blue-600"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setDeleteDialog({ open: true, capsule })}
-                    className="hover:bg-red-100 hover:text-red-600"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
+                {capsule.status !== 'released' && (
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setFormData({
+                          title: capsule.title,
+                          message: capsule.message,
+                          releaseDate: capsule.release_date,
+                          recipientEmail: capsule.recipient_email,
+                          phone: capsule.phone || '',
+                          attachmentFile: null
+                        });
+                        setEditingId(capsule.id);
+                        setShowCreateForm(true);
+                      }}
+                      className="hover:bg-blue-100 hover:text-blue-600"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setDeleteDialog({ open: true, capsule })}
+                      className="hover:bg-red-100 hover:text-red-600"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
         )}
       </div>
 
-
-      {/* Create Capsule Button - Show when no form and no capsules */}
+      {/* Create Capsule Button */}
       {!showCreateForm && capsules.length === 0 && (
         <div className="bg-card rounded-2xl p-8 text-center">
           <div className="w-24 h-24 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
@@ -326,7 +414,6 @@ const TimeCapsule = () => {
         </div>
       )}
 
-      {/* Create Button when capsules exist */}
       {!showCreateForm && capsules.length > 0 && (
         <Button
           onClick={() => setShowCreateForm(true)}
@@ -345,8 +432,8 @@ const TimeCapsule = () => {
         <div>
           <h3 className="font-semibold text-foreground mb-1">About Time Capsules</h3>
           <p className="text-sm text-muted-foreground">
-            Time capsules allow you to create messages that will be automatically released at a future date.
-            They can be sent to specific recipients or accessed by your nominees when conditions are met.
+            Time capsules are automatically delivered to recipients on the scheduled release date via email.
+            They're stored securely in your backend and can include attachments.
           </p>
         </div>
       </div>
@@ -387,20 +474,7 @@ const TimeCapsule = () => {
         confirmText="Delete"
         cancelText="Cancel"
         variant="destructive"
-        onConfirm={() => {
-          if (deleteDialog.capsule) {
-            const updated = capsules.filter(c => c.id !== deleteDialog.capsule!.id);
-            setCapsules(updated);
-            localStorage.setItem('timeCapsules', JSON.stringify(updated));
-            localStorage.setItem('timeCapsulesCount', String(updated.length));
-            window.dispatchEvent(new Event('countsUpdated'));
-            toast({
-              title: 'Time Capsule Deleted',
-              description: `"${deleteDialog.capsule.title}" has been deleted.`
-            });
-            setDeleteDialog({ open: false, capsule: null });
-          }
-        }}
+        onConfirm={handleDelete}
       />
     </div>
   );
