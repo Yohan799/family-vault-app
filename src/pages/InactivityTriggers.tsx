@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Shield, Clock, AlertTriangle, Mail, MessageSquare, Info, Home, Lock, Settings } from "lucide-react";
+import { ArrowLeft, Shield, Clock, AlertTriangle, Mail, MessageSquare, Info, Home, Vault, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -339,7 +339,7 @@ const InactivityTriggers = () => {
                         onClick={() => navigate("/vault")}
                         className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
                     >
-                        <Lock className="w-6 h-6" />
+                        <Vault className="w-6 h-6" />
                         <span className="text-xs font-medium">Vault</span>
                     </button>
                     <button

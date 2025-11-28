@@ -1,4 +1,4 @@
-import { ArrowLeft, Clock, Home, Lock as LockIcon, Settings, Info, Upload, Send, Edit2, Trash2 } from "lucide-react";
+import { ArrowLeft, Clock, Home, Vault, Settings, Info, Upload, Send, Edit2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -361,8 +361,11 @@ const TimeCapsule = () => {
             <Home className="w-6 h-6" />
             <span className="text-xs font-medium">Home</span>
           </button>
-          <button className="flex flex-col items-center gap-1 text-primary">
-            <LockIcon className="w-6 h-6" />
+          <button
+            onClick={() => navigate("/vault")}
+            className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
+          >
+            <Vault className="w-6 h-6" />
             <span className="text-xs font-medium">Vault</span>
           </button>
           <button
