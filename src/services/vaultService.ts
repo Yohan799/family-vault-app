@@ -171,3 +171,23 @@ export const getSubcategoryDocumentCount = async (subcategoryId: string, userId:
     return 0;
   }
 };
+
+/**
+ * Gets all documents for a user (for search functionality)
+ */
+export const getAllUserDocuments = async (userId: string): Promise<any[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('user_id', userId)
+      .is('deleted_at', null)
+      .order('uploaded_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error getting all user documents:', error);
+    return [];
+  }
+};

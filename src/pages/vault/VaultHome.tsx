@@ -1,20 +1,24 @@
-import { Search, Filter, Home, Settings, Vault, Plus, Folder, X, AlertTriangle } from "lucide-react";
+import { Search, Filter, Home, Settings, Vault, Plus, Folder, X, AlertTriangle, FileX } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { vaultCategories } from "@/data/vaultCategories";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { categoryNameSchema, sanitizeInput } from "@/lib/validation";
 import { AccessControlModal } from "@/components/vault/AccessControlModal";
 import { ActionMenu, createCategoryActionMenu } from "@/components/vault/ActionMenu";
+import { format, parse } from "date-fns";
 
 const VaultHome = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [categoryName, setCategoryName] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const [allDocuments, setAllDocuments] = useState<any[]>([]);
   // Initialize with hardcoded categories immediately for instant display
   const [customCategories, setCustomCategories] = useState<any[]>(
     vaultCategories.map((cat) => ({
@@ -35,7 +39,36 @@ const VaultHome = () => {
 
   useEffect(() => {
     loadCategories();
+    loadAllDocuments();
   }, []);
+
+  // Real-time search with debounce
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchQuery.trim()) {
+        setIsSearching(true);
+        // Search is performed via useMemo below
+        setTimeout(() => setIsSearching(false), 100);
+      } else {
+        setIsSearching(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const loadAllDocuments = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { getAllUserDocuments } = await import('@/services/vaultService');
+      const docs = await getAllUserDocuments(user.id);
+      setAllDocuments(docs);
+    } catch (error) {
+      console.error('Error loading documents:', error);
+    }
+  };
 
   const loadCategories = async () => {
     try {
@@ -230,7 +263,60 @@ const VaultHome = () => {
   };
 
   const totalDocuments = customCategories.reduce((sum, cat) => sum + cat.documentCount, 0);
-  const allCategories = customCategories;
+
+  // Perform search and filter results
+  const filteredResults = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return customCategories;
+    }
+
+    const query = searchQuery.toLowerCase().trim();
+    const results: any[] = [];
+
+    customCategories.forEach((category) => {
+      const categoryMatches = category.name.toLowerCase().includes(query);
+      const matchingDocs = allDocuments.filter((doc) => {
+        if (doc.category_id !== category.id) return false;
+
+        // Match by document name
+        const nameMatch = doc.file_name?.toLowerCase().includes(query);
+
+        // Match by upload date (flexible parsing)
+        let dateMatch = false;
+        if (doc.uploaded_at) {
+          try {
+            const uploadDate = new Date(doc.uploaded_at);
+            const formattedDate = format(uploadDate, 'MMM dd, yyyy').toLowerCase();
+            const yearOnly = format(uploadDate, 'yyyy');
+            const monthOnly = format(uploadDate, 'MMM').toLowerCase();
+            const dayMonth = format(uploadDate, 'dd MMM').toLowerCase();
+            
+            dateMatch = formattedDate.includes(query) || 
+                       yearOnly.includes(query) || 
+                       monthOnly.includes(query) ||
+                       dayMonth.includes(query);
+          } catch (e) {
+            // Invalid date, skip
+          }
+        }
+
+        return nameMatch || dateMatch;
+      });
+
+      // Include category if it matches or has matching documents
+      if (categoryMatches || matchingDocs.length > 0) {
+        results.push({
+          ...category,
+          documentCount: matchingDocs.length > 0 ? matchingDocs.length : category.documentCount,
+          isSearchResult: true,
+        });
+      }
+    });
+
+    return results;
+  }, [searchQuery, customCategories, allDocuments]);
+
+  const allCategories = filteredResults;
 
   return (
     <div className="min-h-screen bg-[#FCFCF9] pb-20">
@@ -241,17 +327,48 @@ const VaultHome = () => {
         <div className="relative mt-6">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <Input
-            placeholder="Search documents..."
+            placeholder="Search documents, categories, dates..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-12 pr-12 h-12 bg-[#F5F5F5] border-none rounded-xl"
           />
-          <button className="absolute right-4 top-1/2 -translate-y-1/2">
-            <Filter className="w-5 h-5 text-muted-foreground" />
-          </button>
+          {searchQuery && (
+            <button 
+              onClick={() => setSearchQuery("")}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
+        {searchQuery && (
+          <p className="text-sm text-[#626C71] mt-2">
+            {allCategories.length} {allCategories.length === 1 ? 'result' : 'results'} found
+          </p>
+        )}
       </div>
 
-      <div className="px-6 grid grid-cols-2 gap-3">
-        {allCategories.map((category) => {
+      <div className="px-6">
+        {allCategories.length === 0 && searchQuery ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="w-16 h-16 bg-[#F3E8FF] rounded-full flex items-center justify-center mb-4">
+              <FileX className="w-8 h-8 text-[#6D28D9]" />
+            </div>
+            <h3 className="text-lg font-semibold text-[#1F2121] mb-2">No results found</h3>
+            <p className="text-sm text-[#626C71] max-w-xs">
+              Try adjusting your search or browse all categories
+            </p>
+            <Button 
+              onClick={() => setSearchQuery("")}
+              className="mt-4"
+              variant="outline"
+            >
+              Clear Search
+            </Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {allCategories.map((category) => {
           const Icon = category.icon;
           return (
             <div key={category.id} className="relative">
@@ -277,17 +394,21 @@ const VaultHome = () => {
               </div>
             </div>
           );
-        })}
+            })}
 
-        <button
-          onClick={() => setShowAddDialog(true)}
-          className="bg-[#F3E8FF] border-2 border-dashed border-[#6D28D9] rounded-2xl p-5 flex flex-col items-center justify-center hover:opacity-80 transition-opacity"
-        >
-          <div className="w-14 h-14 bg-white/60 rounded-full flex items-center justify-center mb-3">
-            <Plus className="w-7 h-7 text-[#6D28D9]" />
+            {!searchQuery && (
+              <button
+                onClick={() => setShowAddDialog(true)}
+                className="bg-[#F3E8FF] border-2 border-dashed border-[#6D28D9] rounded-2xl p-5 flex flex-col items-center justify-center hover:opacity-80 transition-opacity"
+              >
+                <div className="w-14 h-14 bg-white/60 rounded-full flex items-center justify-center mb-3">
+                  <Plus className="w-7 h-7 text-[#6D28D9]" />
+                </div>
+                <h3 className="font-semibold text-[#1F2121]">Add Category</h3>
+              </button>
+            )}
           </div>
-          <h3 className="font-semibold text-[#1F2121]">Add Category</h3>
-        </button>
+        )}
       </div>
 
       {deleteConfirm.show && deleteConfirm.category && (

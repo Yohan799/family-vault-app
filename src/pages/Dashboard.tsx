@@ -3,10 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { fetchDashboardStats, calculateReadinessScore, updateInactivityTrigger, type DashboardStats } from "@/services/dashboardService";
 import FeatureTour from "@/components/FeatureTour";
+import { toast } from "sonner";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ const Dashboard = () => {
     inactivityTriggerActive: false,
   });
   const [isLoadingStats, setIsLoadingStats] = useState(true);
+  const lastToggleTime = useRef<number>(0);
 
   const readinessScore = calculateReadinessScore(
     stats,
@@ -62,11 +64,29 @@ const Dashboard = () => {
   const handleInactivityToggle = async (checked: boolean) => {
     if (!user) return;
     
+    // Debounce rapid toggling
+    const now = Date.now();
+    if (now - lastToggleTime.current < 500) {
+      return;
+    }
+    lastToggleTime.current = now;
+    
+    // Optimistic update
+    const previousState = stats.inactivityTriggerActive;
+    setStats(prev => ({ ...prev, inactivityTriggerActive: checked }));
+    
+    // Show toast immediately
+    toast.success(checked ? "Trigger is enabled" : "Trigger is disabled", {
+      duration: 2000,
+    });
+    
     try {
       await updateInactivityTrigger(user.id, checked);
-      setStats(prev => ({ ...prev, inactivityTriggerActive: checked }));
     } catch (error) {
       console.error('Error updating inactivity trigger:', error);
+      // Revert on error
+      setStats(prev => ({ ...prev, inactivityTriggerActive: previousState }));
+      toast.error("Failed to update trigger");
     }
   };
 
