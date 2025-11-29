@@ -203,7 +203,7 @@ export const UploadDocumentModal = ({
         <div className="p-6 pt-2 space-y-3">
           <button
             onClick={handleUploadFromDevice}
-            className="w-full flex items-center gap-4 p-4 bg-muted/50 hover:bg-muted rounded-xl transition-colors"
+            className="w-full flex items-center gap-4 p-4 bg-muted/50 hover:bg-muted rounded-xl transition-colors min-h-[56px] active:scale-98"
           >
             <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
               <Upload className="w-5 h-5 text-primary" />
@@ -213,7 +213,7 @@ export const UploadDocumentModal = ({
 
           <button
             onClick={handleGoogleDrive}
-            className="w-full flex items-center gap-4 p-4 bg-muted/50 hover:bg-muted rounded-xl transition-colors"
+            className="w-full flex items-center gap-4 p-4 bg-muted/50 hover:bg-muted rounded-xl transition-colors min-h-[56px] active:scale-98"
           >
             <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
               <svg className="w-5 h-5 text-blue-600" viewBox="0 0 24 24" fill="currentColor">
@@ -225,7 +225,7 @@ export const UploadDocumentModal = ({
 
           <button
             onClick={handleScanDocument}
-            className="w-full flex items-center gap-4 p-4 bg-muted/50 hover:bg-muted rounded-xl transition-colors"
+            className="w-full flex items-center gap-4 p-4 bg-muted/50 hover:bg-muted rounded-xl transition-colors min-h-[56px] active:scale-98"
           >
             <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
               <Camera className="w-5 h-5 text-purple-600" />
@@ -236,7 +236,7 @@ export const UploadDocumentModal = ({
           <Button
             variant="outline"
             onClick={handleClose}
-            className="w-full mt-4 h-12 rounded-xl"
+            className="w-full mt-4 h-12 rounded-xl min-h-[48px]"
           >
             Cancel
           </Button>

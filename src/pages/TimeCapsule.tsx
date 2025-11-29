@@ -161,24 +161,29 @@ const TimeCapsule = () => {
   const handleDelete = async () => {
     if (!deleteDialog.capsule) return;
 
-    setLoading(true);
+    const capsuleToDelete = deleteDialog.capsule;
+    
+    // Optimistic UI: Remove immediately
+    setCapsules(prev => prev.filter(c => c.id !== capsuleToDelete.id));
+    setDeleteDialog({ open: false, capsule: null });
+    
     try {
-      await timeCapsuleService.delete(deleteDialog.capsule.id);
-      await loadCapsules();
+      await timeCapsuleService.delete(capsuleToDelete.id);
       toast({
         title: 'Time Capsule Deleted',
-        description: `"${deleteDialog.capsule.title}" has been deleted.`
+        description: `"${capsuleToDelete.title}" has been deleted.`
       });
-      setDeleteDialog({ open: false, capsule: null });
     } catch (error) {
       console.error("Error deleting capsule:", error);
+      
+      // Rollback on error
+      await loadCapsules();
+      
       toast({
         title: "Error",
-        description: "Failed to delete time capsule",
+        description: error instanceof Error ? error.message : "Failed to delete time capsule",
         variant: "destructive"
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -295,7 +300,7 @@ const TimeCapsule = () => {
                       <Button
                         type="button"
                         variant="outline"
-                        className="gap-2"
+                        className="gap-2 min-h-[44px] flex-1 min-w-[100px]"
                         onClick={handleScanDocument}
                       >
                         <Camera className="w-4 h-4" />
@@ -304,7 +309,7 @@ const TimeCapsule = () => {
                       <Button
                         type="button"
                         variant="outline"
-                        className="gap-2"
+                        className="gap-2 min-h-[44px] flex-1 min-w-[100px]"
                         onClick={() => {
                           const input = document.createElement('input');
                           input.type = 'file';
@@ -336,7 +341,7 @@ const TimeCapsule = () => {
                       <Button
                         type="button"
                         variant="outline"
-                        className="gap-2"
+                        className="gap-2 min-h-[44px] flex-1 min-w-[100px]"
                         onClick={handleGoogleDrivePick}
                       >
                         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
@@ -351,10 +356,10 @@ const TimeCapsule = () => {
               </div>
             </div>
 
-            <div className="flex gap-3 pt-2">
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <Button 
                 onClick={handleCreateCapsule} 
-                className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12 gap-2"
+                className="w-full sm:flex-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12 gap-2 min-h-[48px]"
                 disabled={loading}
               >
                 <Send className="w-4 h-4" />
@@ -367,7 +372,7 @@ const TimeCapsule = () => {
                   setEditingId(null);
                   setFormData({ title: "", message: "", releaseDate: "", recipientEmail: "", phone: "", attachmentFile: null });
                 }}
-                className="flex-1 rounded-xl h-12 border-border"
+                className="w-full sm:flex-1 rounded-xl h-12 border-border min-h-[48px]"
                 disabled={loading}
               >
                 Cancel

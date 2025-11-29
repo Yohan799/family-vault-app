@@ -81,13 +81,13 @@ export const timeCapsuleService = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Not authenticated");
 
-    const { error } = await supabase
-      .from("time_capsules")
-      .update({ deleted_at: new Date().toISOString() })
-      .eq("id", id)
-      .eq("user_id", user.id);
+    const { data, error } = await supabase.rpc('soft_delete_time_capsule', {
+      _capsule_id: id,
+      _user_id: user.id
+    });
 
     if (error) throw error;
+    if (!data) throw new Error("Time capsule not found or already deleted");
   },
 
   async uploadAttachment(file: File, capsuleId: string): Promise<string> {

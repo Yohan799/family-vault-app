@@ -206,19 +206,47 @@ export const openGoogleDrivePicker = async (): Promise<GoogleDriveFile | null> =
   }
 };
 
+// Map Google Docs mime types to export formats
+const GOOGLE_DOCS_MIME_TYPES: Record<string, string> = {
+  'application/vnd.google-apps.document': 'application/pdf',
+  'application/vnd.google-apps.spreadsheet': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.google-apps.presentation': 'application/pdf',
+  'application/vnd.google-apps.drawing': 'application/pdf',
+};
+
 export const downloadFileFromGoogleDrive = async (file: GoogleDriveFile): Promise<Blob> => {
   if (!accessToken) {
     throw new Error('Not authenticated with Google Drive. Please try selecting a file again.');
   }
 
-  console.log('[Google Drive] Downloading file:', file.name);
+  console.log('[Google Drive] Downloading file:', file.name, 'mimeType:', file.mimeType);
 
   try {
-    const response = await fetch(file.downloadUrl!, {
+    let downloadUrl: string;
+    
+    // Check if it's a Google Docs file that needs export
+    if (GOOGLE_DOCS_MIME_TYPES[file.mimeType]) {
+      const exportMimeType = GOOGLE_DOCS_MIME_TYPES[file.mimeType];
+      downloadUrl = `https://www.googleapis.com/drive/v3/files/${file.id}/export?mimeType=${encodeURIComponent(exportMimeType)}`;
+      console.log('[Google Drive] Using export endpoint for Google Docs file');
+    } else {
+      // Use the file's download URL or construct one
+      downloadUrl = file.downloadUrl || `https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`;
+      console.log('[Google Drive] Using direct download for regular file');
+    }
+    
+    // Add timeout to prevent hanging
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+    
+    const response = await fetch(downloadUrl, {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
       },
+      signal: controller.signal,
     });
+    
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       if (response.status === 401) {
@@ -235,6 +263,11 @@ export const downloadFileFromGoogleDrive = async (file: GoogleDriveFile): Promis
     return await response.blob();
   } catch (error) {
     console.error('[Google Drive] Download error:', error);
+    
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('Download timed out. Please try a smaller file or check your connection.');
+    }
+    
     if (error instanceof Error) {
       throw error;
     }
