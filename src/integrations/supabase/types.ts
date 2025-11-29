@@ -519,6 +519,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      soft_delete_time_capsule: {
+        Args: { _capsule_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

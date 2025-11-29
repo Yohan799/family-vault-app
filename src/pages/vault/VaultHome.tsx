@@ -15,7 +15,18 @@ const VaultHome = () => {
   const { toast } = useToast();
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [categoryName, setCategoryName] = useState("");
-  const [customCategories, setCustomCategories] = useState<any[]>([]);
+  // Initialize with hardcoded categories immediately for instant display
+  const [customCategories, setCustomCategories] = useState<any[]>(
+    vaultCategories.map((cat) => ({
+      id: cat.id,
+      name: cat.name,
+      icon: cat.icon,
+      iconBgColor: cat.iconBgColor,
+      documentCount: 0,
+      subcategories: [],
+      isCustom: false,
+    }))
+  );
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; category: any | null }>({
     show: false,
     category: null
