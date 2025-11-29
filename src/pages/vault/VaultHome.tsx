@@ -447,17 +447,15 @@ const VaultHome = () => {
                       </div>
                     </button>
 
-                    {/* Action Menu - Only show in search mode or for custom categories */}
-                    {(searchQuery || category.isCustom) && (
-                      <div className="absolute top-2 right-2 z-10">
-                        <ActionMenu
-                          items={createCategoryActionMenu(
-                            () => setAccessControlCategory(category),
-                            category.isCustom ? () => handleDeleteClick(category, { stopPropagation: () => { } } as any) : undefined
-                          )}
-                        />
-                      </div>
-                    )}
+                    {/* Action Menu - Always show for all categories */}
+                    <div className="absolute top-2 right-2 z-10">
+                      <ActionMenu
+                        items={createCategoryActionMenu(
+                          () => setAccessControlCategory(category),
+                          category.isCustom ? () => handleDeleteClick(category, { stopPropagation: () => { } } as any) : undefined
+                        )}
+                      />
+                    </div>
                   </div>
 
                   {/* Expanded Results: Matching Subcategories */}
