@@ -414,7 +414,7 @@ const VaultHome = () => {
         ) : (
           <div className="space-y-4">
             {filteredResults.map((result) => {
-              const category = searchQuery ? result.category : result;
+              const category = result.category;
               const Icon = category.icon;
               
               return (
