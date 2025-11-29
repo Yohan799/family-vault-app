@@ -10,6 +10,8 @@ declare global {
 let pickerApiLoaded = false;
 let tokenClient: any = null;
 let accessToken: string | null = null;
+let currentResolve: ((token: string) => void) | null = null;
+let currentReject: ((error: Error) => void) | null = null;
 
 // These are public keys that can be stored in code
 const GOOGLE_API_KEY = 'AIzaSyC33PFiW54pUdt_oIUYVLweVX6KOaiHxdw';
@@ -101,6 +103,10 @@ const authenticate = (): Promise<string> => {
     console.log('[Google Drive] Starting authentication...');
 
     try {
+      // Store current promise handlers at module level
+      currentResolve = resolve;
+      currentReject = reject;
+
       // Initialize token client if not already done
       if (!tokenClient) {
         console.log('[Google Drive] Initializing token client...');
@@ -110,13 +116,17 @@ const authenticate = (): Promise<string> => {
           callback: (response: any) => {
             if (response.error) {
               console.error('[Google Drive] Auth error:', response);
-              reject(new Error(response.error_description || 'Authentication failed'));
+              currentReject?.(new Error(response.error_description || 'Authentication failed'));
               return;
             }
 
             console.log('[Google Drive] Authentication successful');
             accessToken = response.access_token;
-            resolve(response.access_token);
+            currentResolve?.(response.access_token);
+          },
+          error_callback: (error: any) => {
+            console.error('[Google Drive] Auth error callback:', error);
+            currentReject?.(new Error('Authentication popup was closed or failed'));
           },
         });
       }
