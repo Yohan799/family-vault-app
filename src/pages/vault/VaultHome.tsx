@@ -412,25 +412,33 @@ const VaultHome = () => {
             </Button>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className={searchQuery ? "space-y-4" : "grid grid-cols-2 gap-3"}>
             {filteredResults.map((result) => {
               const category = result.category;
               const Icon = category.icon;
               
               return (
-                <div key={category.id} className="space-y-2">
+                <div key={category.id} className={searchQuery ? "space-y-2" : ""}>
                   {/* Category Tile */}
                   <div className="relative">
                     <button
                       onClick={() => navigate(`/vault/${category.id}`)}
-                      className="w-full bg-[#F3E8FF] rounded-2xl p-4 flex items-center gap-4 hover:opacity-80 transition-opacity"
+                      className={`w-full bg-[#F3E8FF] rounded-2xl hover:opacity-80 transition-opacity ${
+                        searchQuery 
+                          ? "p-4 flex items-center gap-4" 
+                          : "p-4 flex flex-col items-center text-center"
+                      }`}
                     >
-                      <div className={`w-14 h-14 ${category.iconBgColor} rounded-full flex items-center justify-center flex-shrink-0`}>
-                        <Icon className="w-7 h-7 text-[#6D28D9]" />
+                      <div className={`${category.iconBgColor} rounded-full flex items-center justify-center flex-shrink-0 ${
+                        searchQuery ? "w-14 h-14" : "w-12 h-12"
+                      }`}>
+                        <Icon className={`text-[#6D28D9] ${searchQuery ? "w-7 h-7" : "w-6 h-6"}`} />
                       </div>
-                      <div className="flex-1 text-left">
-                        <h3 className="font-semibold text-[#1F2121] text-lg">{category.name}</h3>
-                        <p className="text-sm text-[#626C71]">
+                      <div className={searchQuery ? "flex-1 text-left" : "w-full mt-2"}>
+                        <h3 className={`font-semibold text-[#1F2121] ${searchQuery ? "text-lg" : "text-base"}`}>
+                          {category.name}
+                        </h3>
+                        <p className="text-sm text-[#626C71] mt-1">
                           {searchQuery && result.totalMatches > 0 
                             ? `${result.totalMatches} ${result.totalMatches === 1 ? 'match' : 'matches'}`
                             : `${category.documentCount} Documents`
@@ -439,15 +447,17 @@ const VaultHome = () => {
                       </div>
                     </button>
 
-                    {/* Action Menu */}
-                    <div className="absolute top-2 right-2 z-10">
-                      <ActionMenu
-                        items={createCategoryActionMenu(
-                          () => setAccessControlCategory(category),
-                          category.isCustom ? () => handleDeleteClick(category, { stopPropagation: () => { } } as any) : undefined
-                        )}
-                      />
-                    </div>
+                    {/* Action Menu - Only show in search mode or for custom categories */}
+                    {(searchQuery || category.isCustom) && (
+                      <div className="absolute top-2 right-2 z-10">
+                        <ActionMenu
+                          items={createCategoryActionMenu(
+                            () => setAccessControlCategory(category),
+                            category.isCustom ? () => handleDeleteClick(category, { stopPropagation: () => { } } as any) : undefined
+                          )}
+                        />
+                      </div>
+                    )}
                   </div>
 
                   {/* Expanded Results: Matching Subcategories */}
