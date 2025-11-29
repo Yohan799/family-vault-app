@@ -10,6 +10,7 @@ declare global {
 let pickerApiLoaded = false;
 let tokenClient: any = null;
 let accessToken: string | null = null;
+let tokenExpiry: number = 0;
 let currentResolve: ((token: string) => void) | null = null;
 let currentReject: ((error: Error) => void) | null = null;
 
@@ -102,6 +103,20 @@ const authenticate = (): Promise<string> => {
   return new Promise((resolve, reject) => {
     console.log('[Google Drive] Starting authentication...');
 
+    // Check if we have a valid cached token
+    if (accessToken && tokenExpiry > Date.now()) {
+      console.log('[Google Drive] Using cached token');
+      resolve(accessToken);
+      return;
+    }
+
+    // Clear expired token
+    if (accessToken && tokenExpiry <= Date.now()) {
+      console.log('[Google Drive] Token expired, clearing cache');
+      accessToken = null;
+      tokenExpiry = 0;
+    }
+
     try {
       // Store current promise handlers at module level
       currentResolve = resolve;
@@ -116,17 +131,29 @@ const authenticate = (): Promise<string> => {
           callback: (response: any) => {
             if (response.error) {
               console.error('[Google Drive] Auth error:', response);
+              accessToken = null;
+              tokenExpiry = 0;
               currentReject?.(new Error(response.error_description || 'Authentication failed'));
               return;
             }
 
             console.log('[Google Drive] Authentication successful');
             accessToken = response.access_token;
+            // Set expiry to 55 minutes from now (tokens typically valid for 1 hour)
+            tokenExpiry = Date.now() + (55 * 60 * 1000);
             currentResolve?.(response.access_token);
           },
           error_callback: (error: any) => {
             console.error('[Google Drive] Auth error callback:', error);
-            currentReject?.(new Error('Authentication popup was closed or failed'));
+            accessToken = null;
+            tokenExpiry = 0;
+            
+            // Detect mobile popup blocking
+            if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+              currentReject?.(new Error('Unable to open sign-in popup. Please enable popups for this site in your mobile browser settings.'));
+            } else {
+              currentReject?.(new Error('Authentication popup was closed or failed. Please try again.'));
+            }
           },
         });
       }
@@ -136,6 +163,9 @@ const authenticate = (): Promise<string> => {
       tokenClient.requestAccessToken({ prompt: '' });
     } catch (error) {
       console.error('[Google Drive] Authentication error:', error);
+      accessToken = null;
+      tokenExpiry = 0;
+      
       if (error instanceof Error) {
         if (error.message.includes('popup')) {
           reject(new Error('Popup blocked by browser. Please allow popups for this site.'));
@@ -166,20 +196,35 @@ export const openGoogleDrivePicker = async (): Promise<GoogleDriveFile | null> =
 
     console.log('[Google Drive] Building picker...');
 
+    // Lock body scroll to prevent interference with picker
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
     return new Promise((resolve, reject) => {
       const view = new window.google.picker.DocsView(window.google.picker.ViewId.DOCS)
         .setIncludeFolders(true)
-        .setSelectFolderEnabled(false);
+        .setSelectFolderEnabled(false)
+        .setParent('root'); // Enable folder navigation
+
+      // Set mobile-optimized dimensions
+      const isMobile = window.innerWidth < 768;
+      const pickerWidth = isMobile ? Math.min(window.innerWidth - 20, 600) : 600;
+      const pickerHeight = isMobile ? window.innerHeight - 100 : 425;
 
       const picker = new window.google.picker.PickerBuilder()
         .addView(view)
         .addView(new window.google.picker.DocsUploadView())
         .setOAuthToken(token)
         .setDeveloperKey(GOOGLE_API_KEY)
+        .setSize(pickerWidth, pickerHeight)
         .setCallback((data: any) => {
           if (data.action === window.google.picker.Action.PICKED) {
             console.log('[Google Drive] File picked:', data.docs[0].name);
             const file = data.docs[0];
+            
+            // Restore body scroll
+            document.body.style.overflow = originalOverflow;
+            
             resolve({
               id: file.id,
               name: file.name,
@@ -189,6 +234,10 @@ export const openGoogleDrivePicker = async (): Promise<GoogleDriveFile | null> =
             });
           } else if (data.action === window.google.picker.Action.CANCEL) {
             console.log('[Google Drive] Picker cancelled');
+            
+            // Restore body scroll
+            document.body.style.overflow = originalOverflow;
+            
             resolve(null);
           }
         })
@@ -199,6 +248,10 @@ export const openGoogleDrivePicker = async (): Promise<GoogleDriveFile | null> =
     });
   } catch (error) {
     console.error('[Google Drive] Error opening picker:', error);
+    
+    // Restore body scroll on error
+    document.body.style.overflow = '';
+    
     if (error instanceof Error) {
       throw error;
     }
