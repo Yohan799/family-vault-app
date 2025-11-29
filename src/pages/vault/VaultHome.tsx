@@ -1,4 +1,4 @@
-import { Search, Filter, Home, Settings, Vault, Plus, Folder, X, AlertTriangle, FileX } from "lucide-react";
+import { Search, Filter, Home, Settings, Vault, Plus, Folder, X, AlertTriangle, FileX, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ const VaultHome = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [allDocuments, setAllDocuments] = useState<any[]>([]);
+  const [allSubcategories, setAllSubcategories] = useState<any[]>([]);
   // Initialize with hardcoded categories immediately for instant display
   const [customCategories, setCustomCategories] = useState<any[]>(
     vaultCategories.map((cat) => ({
@@ -40,6 +41,7 @@ const VaultHome = () => {
   useEffect(() => {
     loadCategories();
     loadAllDocuments();
+    loadAllSubcategories();
   }, []);
 
   // Real-time search with debounce
@@ -67,6 +69,36 @@ const VaultHome = () => {
       setAllDocuments(docs);
     } catch (error) {
       console.error('Error loading documents:', error);
+    }
+  };
+
+  const loadAllSubcategories = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { getAllUserSubcategories } = await import('@/services/vaultService');
+      const subs = await getAllUserSubcategories(user.id);
+      
+      // Merge with hardcoded subcategories from vaultCategories
+      const hardcodedSubs = vaultCategories.flatMap(cat => 
+        cat.subcategories.map(sub => ({
+          id: sub.id,
+          name: sub.name,
+          icon: sub.icon,
+          category_id: cat.id,
+          is_custom: false,
+        }))
+      );
+
+      // Combine database subcategories with hardcoded ones (database takes priority)
+      const subMap = new Map();
+      hardcodedSubs.forEach(sub => subMap.set(sub.id, sub));
+      subs.forEach(sub => subMap.set(sub.id, sub));
+
+      setAllSubcategories(Array.from(subMap.values()));
+    } catch (error) {
+      console.error('Error loading subcategories:', error);
     }
   };
 
@@ -264,10 +296,15 @@ const VaultHome = () => {
 
   const totalDocuments = customCategories.reduce((sum, cat) => sum + cat.documentCount, 0);
 
-  // Perform search and filter results
+  // Perform comprehensive search and filter results
   const filteredResults = useMemo(() => {
     if (!searchQuery.trim()) {
-      return customCategories;
+      return customCategories.map(cat => ({
+        category: cat,
+        matchedSubcategories: [],
+        matchedDocuments: [],
+        totalMatches: 0,
+      }));
     }
 
     const query = searchQuery.toLowerCase().trim();
@@ -275,6 +312,13 @@ const VaultHome = () => {
 
     customCategories.forEach((category) => {
       const categoryMatches = category.name.toLowerCase().includes(query);
+      
+      // Find matching subcategories for this category
+      const matchingSubcategories = allSubcategories.filter(sub => 
+        sub.category_id === category.id && sub.name.toLowerCase().includes(query)
+      );
+
+      // Find matching documents (at category level or subcategory level)
       const matchingDocs = allDocuments.filter((doc) => {
         if (doc.category_id !== category.id) return false;
 
@@ -303,20 +347,21 @@ const VaultHome = () => {
         return nameMatch || dateMatch;
       });
 
-      // Include category if it matches or has matching documents
-      if (categoryMatches || matchingDocs.length > 0) {
+      // Include category if it matches or has matching subcategories or documents
+      if (categoryMatches || matchingSubcategories.length > 0 || matchingDocs.length > 0) {
         results.push({
-          ...category,
-          documentCount: matchingDocs.length > 0 ? matchingDocs.length : category.documentCount,
-          isSearchResult: true,
+          category: category,
+          matchedSubcategories: matchingSubcategories,
+          matchedDocuments: matchingDocs,
+          totalMatches: matchingSubcategories.length + matchingDocs.length,
         });
       }
     });
 
     return results;
-  }, [searchQuery, customCategories, allDocuments]);
+  }, [searchQuery, customCategories, allDocuments, allSubcategories]);
 
-  const allCategories = filteredResults;
+  const allCategories = searchQuery ? filteredResults : filteredResults.map(r => r.category);
 
   return (
     <div className="min-h-screen bg-[#FCFCF9] pb-20">
@@ -343,13 +388,13 @@ const VaultHome = () => {
         </div>
         {searchQuery && (
           <p className="text-sm text-[#626C71] mt-2">
-            {allCategories.length} {allCategories.length === 1 ? 'result' : 'results'} found
+            {filteredResults.length} {filteredResults.length === 1 ? 'result' : 'results'} found
           </p>
         )}
       </div>
 
       <div className="px-6">
-        {allCategories.length === 0 && searchQuery ? (
+        {filteredResults.length === 0 && searchQuery ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <div className="w-16 h-16 bg-[#F3E8FF] rounded-full flex items-center justify-center mb-4">
               <FileX className="w-8 h-8 text-[#6D28D9]" />
@@ -367,39 +412,84 @@ const VaultHome = () => {
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
-            {allCategories.map((category) => {
-          const Icon = category.icon;
-          return (
-            <div key={category.id} className="relative">
-              <button
-                onClick={() => navigate(`/vault/${category.id}`)}
-                className="w-full bg-[#F3E8FF] rounded-2xl p-5 flex flex-col items-center justify-center hover:opacity-80 transition-opacity"
-              >
-                <div className={`w-14 h-14 ${category.iconBgColor} rounded-full flex items-center justify-center mb-3`}>
-                  <Icon className="w-7 h-7 text-[#6D28D9]" />
-                </div>
-                <h3 className="font-semibold text-[#1F2121] text-center mb-1">{category.name}</h3>
-                <p className="text-sm text-[#626C71]">{category.documentCount} Documents</p>
-              </button>
+          <div className="space-y-4">
+            {filteredResults.map((result) => {
+              const category = searchQuery ? result.category : result;
+              const Icon = category.icon;
+              
+              return (
+                <div key={category.id} className="space-y-2">
+                  {/* Category Tile */}
+                  <div className="relative">
+                    <button
+                      onClick={() => navigate(`/vault/${category.id}`)}
+                      className="w-full bg-[#F3E8FF] rounded-2xl p-4 flex items-center gap-4 hover:opacity-80 transition-opacity"
+                    >
+                      <div className={`w-14 h-14 ${category.iconBgColor} rounded-full flex items-center justify-center flex-shrink-0`}>
+                        <Icon className="w-7 h-7 text-[#6D28D9]" />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <h3 className="font-semibold text-[#1F2121] text-lg">{category.name}</h3>
+                        <p className="text-sm text-[#626C71]">
+                          {searchQuery && result.totalMatches > 0 
+                            ? `${result.totalMatches} ${result.totalMatches === 1 ? 'match' : 'matches'}`
+                            : `${category.documentCount} Documents`
+                          }
+                        </p>
+                      </div>
+                    </button>
 
-              {/* Action Menu - Three dots with Manage Access and Delete */}
-              <div className="absolute top-2 right-2 z-10">
-                <ActionMenu
-                  items={createCategoryActionMenu(
-                    () => setAccessControlCategory(category),
-                    category.isCustom ? () => handleDeleteClick(category, { stopPropagation: () => { } } as any) : undefined
+                    {/* Action Menu */}
+                    <div className="absolute top-2 right-2 z-10">
+                      <ActionMenu
+                        items={createCategoryActionMenu(
+                          () => setAccessControlCategory(category),
+                          category.isCustom ? () => handleDeleteClick(category, { stopPropagation: () => { } } as any) : undefined
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Expanded Results: Matching Subcategories */}
+                  {searchQuery && result.matchedSubcategories && result.matchedSubcategories.length > 0 && (
+                    <div className="ml-4 space-y-2">
+                      {result.matchedSubcategories.map((sub: any) => (
+                        <button
+                          key={sub.id}
+                          onClick={() => navigate(`/vault/${category.id}/${sub.id}`)}
+                          className="w-full bg-purple-50 rounded-xl p-3 flex items-center gap-3 hover:bg-purple-100 transition-colors"
+                        >
+                          <Folder className="w-5 h-5 text-[#6D28D9] flex-shrink-0" />
+                          <span className="font-medium text-[#1F2121] text-sm">{sub.name}</span>
+                        </button>
+                      ))}
+                    </div>
                   )}
-                />
-              </div>
-            </div>
-          );
+
+                  {/* Expanded Results: Matching Documents (show first 3) */}
+                  {searchQuery && result.matchedDocuments && result.matchedDocuments.length > 0 && (
+                    <div className="ml-4 space-y-1">
+                      {result.matchedDocuments.slice(0, 3).map((doc: any) => (
+                        <div key={doc.id} className="flex items-center gap-2 text-sm text-[#626C71] py-1">
+                          <FileText className="w-4 h-4 flex-shrink-0" />
+                          <span className="truncate">{doc.file_name}</span>
+                        </div>
+                      ))}
+                      {result.matchedDocuments.length > 3 && (
+                        <p className="text-xs text-[#626C71] pl-6">
+                          +{result.matchedDocuments.length - 3} more
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
             })}
 
             {!searchQuery && (
               <button
                 onClick={() => setShowAddDialog(true)}
-                className="bg-[#F3E8FF] border-2 border-dashed border-[#6D28D9] rounded-2xl p-5 flex flex-col items-center justify-center hover:opacity-80 transition-opacity"
+                className="w-full bg-[#F3E8FF] border-2 border-dashed border-[#6D28D9] rounded-2xl p-5 flex flex-col items-center justify-center hover:opacity-80 transition-opacity"
               >
                 <div className="w-14 h-14 bg-white/60 rounded-full flex items-center justify-center mb-3">
                   <Plus className="w-7 h-7 text-[#6D28D9]" />
