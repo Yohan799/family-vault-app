@@ -1,4 +1,4 @@
-import { X, Upload, Camera } from "lucide-react";
+import { Upload, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -89,6 +89,9 @@ export const UploadDocumentModal = ({
   };
 
   const handleGoogleDrive = async () => {
+    // Close our modal first to prevent z-index conflicts with Google Picker
+    handleClose();
+    
     try {
       const file = await openGoogleDrivePicker();
       if (file) {
@@ -119,8 +122,6 @@ export const UploadDocumentModal = ({
           title: "File imported successfully",
           description: `${file.name} has been added from Google Drive`,
         });
-
-        handleClose();
 
         if (onUploadComplete) {
           onUploadComplete();
@@ -187,17 +188,7 @@ export const UploadDocumentModal = ({
     <Dialog open={open} onOpenChange={onOpenChange || (() => { })}>
       <DialogContent className="sm:max-w-md bg-background border-none rounded-t-3xl p-0">
         <DialogHeader className="p-6 pb-2">
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-xl font-bold">Upload Document</DialogTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleClose}
-              className="h-8 w-8"
-            >
-              <X className="h-5 w-5" />
-            </Button>
-          </div>
+          <DialogTitle className="text-xl font-bold">Upload Document</DialogTitle>
         </DialogHeader>
 
         <div className="p-6 pt-2 space-y-3">

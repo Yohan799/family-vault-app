@@ -179,9 +179,13 @@ const InactivityTriggers = () => {
                             </div>
                             <Switch
                                 checked={settings.isActive}
-                                onCheckedChange={(checked) =>
-                                    setSettings((prev) => ({ ...prev, isActive: checked }))
-                                }
+                                onCheckedChange={(checked) => {
+                                    setSettings((prev) => ({ ...prev, isActive: checked }));
+                                    toast.success(
+                                        checked ? "Inactivity trigger turned on" : "Inactivity trigger turned off",
+                                        { duration: 2000 }
+                                    );
+                                }}
                             />
                         </div>
 
