@@ -10,6 +10,7 @@ import { categoryNameSchema, sanitizeInput } from "@/lib/validation";
 import { AccessControlModal } from "@/components/vault/AccessControlModal";
 import { ActionMenu, createSubcategoryActionMenu } from "@/components/vault/ActionMenu";
 import { supabase } from "@/integrations/supabase/client";
+import { filterItems, debounce } from "@/lib/searchUtils";
 
 const CategoryView = () => {
   const navigate = useNavigate();
@@ -26,6 +27,17 @@ const CategoryView = () => {
     subcategory: null
   });
   const [accessControlSubcategory, setAccessControlSubcategory] = useState<any | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+
+  // Debounce search query
+  useEffect(() => {
+    const debouncedSearch = debounce((query: string) => {
+      setDebouncedQuery(query);
+    }, 300);
+
+    debouncedSearch(searchQuery);
+  }, [searchQuery]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -274,6 +286,11 @@ const CategoryView = () => {
   const CategoryIcon = category?.icon || Folder;
   const allSubcategories = customSubcategories;
 
+  // Filter subcategories based on search
+  const filteredSubcategories = filterItems(allSubcategories, debouncedQuery, {
+    searchKeys: ['name'],
+  });
+
   return (
     <div className="min-h-screen bg-[#FCFCF9] pb-20">
       <div className="bg-[#FCFCF9] p-6">
@@ -293,17 +310,32 @@ const CategoryView = () => {
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <Input
-            placeholder="Search documents..."
+            placeholder="Search subcategories..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-12 pr-12 h-12 bg-[#F5F5F5] border-none rounded-xl"
           />
-          <button className="absolute right-4 top-1/2 -translate-y-1/2">
-            <Filter className="w-5 h-5 text-muted-foreground" />
-          </button>
+          {searchQuery && (
+            <button 
+              onClick={() => setSearchQuery("")}
+              className="absolute right-4 top-1/2 -translate-y-1/2 hover:bg-accent rounded-full p-1"
+            >
+              <X className="w-4 h-4 text-muted-foreground" />
+            </button>
+          )}
         </div>
       </div>
 
-      <div className="px-6 grid grid-cols-2 gap-3">
-        {allSubcategories.map((subcategory) => {
+      <div className="px-6">
+        {filteredSubcategories.length === 0 && debouncedQuery ? (
+          <div className="text-center py-12">
+            <Folder className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
+            <p className="text-muted-foreground text-lg">No matching subcategories found</p>
+            <p className="text-muted-foreground/60 text-sm mt-2">Try a different search term</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {filteredSubcategories.map((subcategory) => {
           const SubIcon = subcategory.icon || Folder;
           return (
             <div key={subcategory.id} className="relative">
@@ -328,18 +360,22 @@ const CategoryView = () => {
                 />
               </div>
             </div>
-          );
-        })}
+            );
+            })}
 
-        <button
-          onClick={() => setShowAddDialog(true)}
-          className="bg-[#F3E8FF] border-2 border-dashed border-[#6D28D9] rounded-2xl p-5 flex flex-col items-center justify-center hover:opacity-80 transition-opacity"
-        >
-          <div className="w-14 h-14 bg-white/60 rounded-full flex items-center justify-center mb-3">
-            <Plus className="w-7 h-7 text-[#6D28D9]" />
+            {!debouncedQuery && (
+              <button
+                onClick={() => setShowAddDialog(true)}
+                className="bg-[#F3E8FF] border-2 border-dashed border-[#6D28D9] rounded-2xl p-5 flex flex-col items-center justify-center hover:opacity-80 transition-opacity"
+              >
+                <div className="w-14 h-14 bg-white/60 rounded-full flex items-center justify-center mb-3">
+                  <Plus className="w-7 h-7 text-[#6D28D9]" />
+                </div>
+                <h3 className="font-semibold text-[#1F2121]">Add Subcategory</h3>
+              </button>
+            )}
           </div>
-          <h3 className="font-semibold text-[#1F2121]">Add Subcategory</h3>
-        </button>
+        )}
       </div>
 
 

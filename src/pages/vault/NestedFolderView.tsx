@@ -9,6 +9,7 @@ import { UploadDocumentModal } from "@/components/vault/UploadDocumentModal";
 import { DocumentOptionsModal } from "@/components/vault/DocumentOptionsModal";
 import { LockDocumentModal } from "@/components/vault/LockDocumentModal";
 import { categoryNameSchema, sanitizeInput } from "@/lib/validation";
+import { filterItems, debounce } from "@/lib/searchUtils";
 
 const NestedFolderView = () => {
   const navigate = useNavigate();
@@ -27,6 +28,17 @@ const NestedFolderView = () => {
     show: false,
     folder: null
   });
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+
+  // Debounce search query
+  useEffect(() => {
+    const debouncedSearch = debounce((query: string) => {
+      setDebouncedQuery(query);
+    }, 300);
+
+    debouncedSearch(searchQuery);
+  }, [searchQuery]);
 
   useEffect(() => {
     setLoading(true);
@@ -158,6 +170,13 @@ const NestedFolderView = () => {
   const canAddMore = (currentFolder?.depth || 0) < 3;
   const documents: Array<{ id: string; name: string; size: string; date: string }> = [];
 
+  // Filter folders based on search
+  const filteredFolders = filterItems(nestedFolders, debouncedQuery, {
+    searchKeys: ['name'],
+  });
+
+  const showNoResults = debouncedQuery && filteredFolders.length === 0;
+
   return (
     <div className="min-h-screen bg-[#FCFCF9] pb-20">
       <div className="bg-[#FCFCF9] p-6">
@@ -177,20 +196,35 @@ const NestedFolderView = () => {
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <Input
-            placeholder="Search documents..."
+            placeholder="Search folders..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-12 pr-12 h-12 bg-[#F5F5F5] border-none rounded-xl"
           />
-          <button className="absolute right-4 top-1/2 -translate-y-1/2">
-            <Filter className="w-5 h-5 text-muted-foreground" />
-          </button>
+          {searchQuery && (
+            <button 
+              onClick={() => setSearchQuery("")}
+              className="absolute right-4 top-1/2 -translate-y-1/2 hover:bg-accent rounded-full p-1"
+            >
+              <X className="w-4 h-4 text-muted-foreground" />
+            </button>
+          )}
         </div>
       </div>
 
-      {nestedFolders.length > 0 && (
+      {showNoResults && (
+        <div className="px-6 text-center py-12">
+          <Folder className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
+          <p className="text-muted-foreground text-lg">No matching folders found</p>
+          <p className="text-muted-foreground/60 text-sm mt-2">Try a different search term</p>
+        </div>
+      )}
+
+      {filteredFolders.length > 0 && !showNoResults && (
         <div className="px-6 mb-6">
           <h2 className="text-lg font-semibold text-[#1F2121] mb-3">Subfolders</h2>
           <div className="grid grid-cols-2 gap-3">
-            {nestedFolders.map((folder) => (
+            {filteredFolders.map((folder) => (
               <div key={folder.id} className="relative">
                 <button
                   onClick={() => navigate(`/vault/${categoryId}/${subcategoryId}/${folder.id}`)}
@@ -215,7 +249,7 @@ const NestedFolderView = () => {
               </div>
             ))}
 
-            {canAddMore && (
+            {canAddMore && !debouncedQuery && (
               <button
                 onClick={() => setShowAddFolderDialog(true)}
                 className="bg-[#F3E8FF] border-2 border-dashed border-[#6D28D9] rounded-2xl p-5 flex flex-col items-center justify-center hover:opacity-80 transition-opacity"
@@ -230,7 +264,7 @@ const NestedFolderView = () => {
         </div>
       )}
 
-      {nestedFolders.length === 0 && canAddMore && (
+      {nestedFolders.length === 0 && canAddMore && !debouncedQuery && !showNoResults && (
         <div className="px-6 mb-6">
           <button
             onClick={() => setShowAddFolderDialog(true)}
@@ -245,30 +279,35 @@ const NestedFolderView = () => {
         </div>
       )}
 
-      <div className="px-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-[#1F2121]">Documents</h2>
-          <Button
-            onClick={() => setUploadOpen(true)}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground"
-          >
-            <Upload className="w-4 h-4 mr-2" />
-            Upload
-          </Button>
-        </div>
-
-        {documents.length === 0 ? (
-          <div className="bg-card rounded-2xl p-8 text-center">
-            <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-            <p className="text-muted-foreground mb-4">No documents yet</p>
-            <Button onClick={() => setUploadOpen(true)} variant="outline">
+      {!showNoResults && (
+        <div className="px-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-[#1F2121]">Documents</h2>
+            <Button
+              onClick={() => setUploadOpen(true)}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground min-h-[44px]"
+            >
               <Upload className="w-4 h-4 mr-2" />
-              Upload Document
+              Upload
             </Button>
           </div>
-        ) : (
-          <div className="space-y-2">
-            {documents.map((doc) => (
+
+          {documents.length === 0 ? (
+            <div className="bg-card rounded-2xl p-8 text-center">
+              <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+              <p className="text-muted-foreground mb-4">No documents yet</p>
+              <Button 
+                onClick={() => setUploadOpen(true)} 
+                variant="outline"
+                className="min-h-[44px]"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Upload Document
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {documents.map((doc) => (
               <div
                 key={doc.id}
                 className="bg-card rounded-xl p-4 flex items-center justify-between hover:bg-accent/50 transition-colors"
@@ -295,6 +334,7 @@ const NestedFolderView = () => {
           </div>
         )}
       </div>
+      )}
 
       {deleteConfirm.show && deleteConfirm.folder && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
