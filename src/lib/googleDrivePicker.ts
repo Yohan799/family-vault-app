@@ -1,5 +1,4 @@
-// Google Drive Picker Integration
-// This allows users to select files from their Google Drive
+// Google Drive Picker Integration using Google Identity Services (GIS)
 
 declare global {
   interface Window {
@@ -9,16 +8,40 @@ declare global {
 }
 
 let pickerApiLoaded = false;
-let oauthToken: string | null = null;
+let tokenClient: any = null;
+let accessToken: string | null = null;
 
 // These are public keys that can be stored in code
 const GOOGLE_API_KEY = 'AIzaSyC33PFiW54pUdt_oIUYVLweVX6KOaiHxdw';
 const CLIENT_ID = '714753417430-hlpl9cahk8p6ainp2bpr43703sdkc14u.apps.googleusercontent.com';
 const SCOPES = 'https://www.googleapis.com/auth/drive.readonly';
 
-export const loadGoogleDrivePicker = (): Promise<void> => {
+// Load Google Identity Services (GIS) script
+const loadGISScript = (): Promise<void> => {
   return new Promise((resolve, reject) => {
-    if (window.gapi && pickerApiLoaded) {
+    if (window.google?.accounts?.oauth2) {
+      resolve();
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.onload = () => {
+      console.log('[Google Drive] GIS script loaded');
+      resolve();
+    };
+    script.onerror = () => {
+      console.error('[Google Drive] Failed to load GIS script');
+      reject(new Error('Failed to load Google Identity Services'));
+    };
+    document.body.appendChild(script);
+  });
+};
+
+// Load Google API (GAPI) script
+const loadGAPIScript = (): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    if (window.gapi) {
       resolve();
       return;
     }
@@ -26,46 +49,92 @@ export const loadGoogleDrivePicker = (): Promise<void> => {
     const script = document.createElement('script');
     script.src = 'https://apis.google.com/js/api.js';
     script.onload = () => {
-      window.gapi.load('client:picker:auth2', () => {
-        window.gapi.client.init({
-          apiKey: GOOGLE_API_KEY,
-          clientId: CLIENT_ID,
-          scope: SCOPES,
-        }).then(() => {
-          pickerApiLoaded = true;
-          resolve();
-        }).catch(reject);
-      });
+      console.log('[Google Drive] GAPI script loaded');
+      resolve();
     };
-    script.onerror = reject;
+    script.onerror = () => {
+      console.error('[Google Drive] Failed to load GAPI script');
+      reject(new Error('Failed to load Google API'));
+    };
     document.body.appendChild(script);
   });
 };
 
+// Initialize Google Picker API
+export const loadGoogleDrivePicker = async (): Promise<void> => {
+  if (pickerApiLoaded) {
+    console.log('[Google Drive] Picker already loaded');
+    return;
+  }
+
+  try {
+    console.log('[Google Drive] Loading scripts...');
+    
+    // Load both GIS and GAPI scripts
+    await Promise.all([loadGISScript(), loadGAPIScript()]);
+    
+    // Load the Picker API
+    await new Promise<void>((resolve, reject) => {
+      window.gapi.load('picker', {
+        callback: () => {
+          console.log('[Google Drive] Picker API loaded');
+          pickerApiLoaded = true;
+          resolve();
+        },
+        onerror: () => {
+          console.error('[Google Drive] Failed to load Picker API');
+          reject(new Error('Failed to load Google Picker API'));
+        },
+      });
+    });
+
+    console.log('[Google Drive] All scripts loaded successfully');
+  } catch (error) {
+    console.error('[Google Drive] Error loading scripts:', error);
+    throw error;
+  }
+};
+
+// Authenticate using Google Identity Services (GIS)
 const authenticate = (): Promise<string> => {
   return new Promise((resolve, reject) => {
-    const authInstance = window.gapi.auth2.getAuthInstance();
-    
-    if (authInstance.isSignedIn.get()) {
-      const user = authInstance.currentUser.get();
-      const token = user.getAuthResponse().access_token;
-      oauthToken = token;
-      resolve(token);
-    } else {
-      authInstance.signIn().then(() => {
-        const user = authInstance.currentUser.get();
-        const token = user.getAuthResponse().access_token;
-        oauthToken = token;
-        resolve(token);
-      }).catch((error) => {
-        if (error.error === 'popup_closed_by_user') {
-          reject(new Error('Google sign-in cancelled'));
-        } else if (error.error === 'popup_blocked_by_browser') {
+    console.log('[Google Drive] Starting authentication...');
+
+    try {
+      // Initialize token client if not already done
+      if (!tokenClient) {
+        console.log('[Google Drive] Initializing token client...');
+        tokenClient = window.google.accounts.oauth2.initTokenClient({
+          client_id: CLIENT_ID,
+          scope: SCOPES,
+          callback: (response: any) => {
+            if (response.error) {
+              console.error('[Google Drive] Auth error:', response);
+              reject(new Error(response.error_description || 'Authentication failed'));
+              return;
+            }
+
+            console.log('[Google Drive] Authentication successful');
+            accessToken = response.access_token;
+            resolve(response.access_token);
+          },
+        });
+      }
+
+      // Request access token
+      console.log('[Google Drive] Requesting access token...');
+      tokenClient.requestAccessToken({ prompt: '' });
+    } catch (error) {
+      console.error('[Google Drive] Authentication error:', error);
+      if (error instanceof Error) {
+        if (error.message.includes('popup')) {
           reject(new Error('Popup blocked by browser. Please allow popups for this site.'));
         } else {
           reject(error);
         }
-      });
+      } else {
+        reject(new Error('Authentication failed. Please try again.'));
+      }
     }
   });
 };
@@ -80,8 +149,12 @@ export interface GoogleDriveFile {
 
 export const openGoogleDrivePicker = async (): Promise<GoogleDriveFile | null> => {
   try {
+    console.log('[Google Drive] Opening picker...');
+    
     await loadGoogleDrivePicker();
     const token = await authenticate();
+
+    console.log('[Google Drive] Building picker...');
 
     return new Promise((resolve, reject) => {
       const view = new window.google.picker.DocsView(window.google.picker.ViewId.DOCS)
@@ -95,6 +168,7 @@ export const openGoogleDrivePicker = async (): Promise<GoogleDriveFile | null> =
         .setDeveloperKey(GOOGLE_API_KEY)
         .setCallback((data: any) => {
           if (data.action === window.google.picker.Action.PICKED) {
+            console.log('[Google Drive] File picked:', data.docs[0].name);
             const file = data.docs[0];
             resolve({
               id: file.id,
@@ -104,15 +178,17 @@ export const openGoogleDrivePicker = async (): Promise<GoogleDriveFile | null> =
               downloadUrl: `https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`,
             });
           } else if (data.action === window.google.picker.Action.CANCEL) {
+            console.log('[Google Drive] Picker cancelled');
             resolve(null);
           }
         })
         .build();
 
+      console.log('[Google Drive] Showing picker...');
       picker.setVisible(true);
     });
   } catch (error) {
-    console.error('Error opening Google Drive picker:', error);
+    console.error('[Google Drive] Error opening picker:', error);
     if (error instanceof Error) {
       throw error;
     }
@@ -121,14 +197,16 @@ export const openGoogleDrivePicker = async (): Promise<GoogleDriveFile | null> =
 };
 
 export const downloadFileFromGoogleDrive = async (file: GoogleDriveFile): Promise<Blob> => {
-  if (!oauthToken) {
+  if (!accessToken) {
     throw new Error('Not authenticated with Google Drive. Please try selecting a file again.');
   }
+
+  console.log('[Google Drive] Downloading file:', file.name);
 
   try {
     const response = await fetch(file.downloadUrl!, {
       headers: {
-        'Authorization': `Bearer ${oauthToken}`,
+        'Authorization': `Bearer ${accessToken}`,
       },
     });
 
@@ -143,8 +221,10 @@ export const downloadFileFromGoogleDrive = async (file: GoogleDriveFile): Promis
       throw new Error(`Failed to download file: ${response.statusText}`);
     }
 
+    console.log('[Google Drive] File downloaded successfully');
     return await response.blob();
   } catch (error) {
+    console.error('[Google Drive] Download error:', error);
     if (error instanceof Error) {
       throw error;
     }

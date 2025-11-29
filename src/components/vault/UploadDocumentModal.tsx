@@ -128,9 +128,10 @@ export const UploadDocumentModal = ({
       }
     } catch (error) {
       console.error('Error importing from Google Drive:', error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to import file from Google Drive";
       toast({
         title: "Google Drive Error",
-        description: "Failed to import file. Make sure you've configured the API keys.",
+        description: errorMessage,
         variant: "destructive",
       });
     }

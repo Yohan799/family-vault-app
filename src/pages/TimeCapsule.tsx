@@ -82,9 +82,10 @@ const TimeCapsule = () => {
       }
     } catch (error) {
       console.error('Error picking file from Google Drive:', error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to access Google Drive";
       toast({
         title: "Google Drive Error",
-        description: "Failed to access Google Drive. Make sure you've configured the API keys.",
+        description: errorMessage,
         variant: "destructive",
       });
     }
