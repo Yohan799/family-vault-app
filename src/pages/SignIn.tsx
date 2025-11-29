@@ -136,6 +136,7 @@ const SignIn = () => {
             <div className="text-right">
               <button
                 type="button"
+                onClick={() => navigate("/forgot-password")}
                 className="text-sm text-primary hover:underline font-medium"
               >
                 Forgot Password?
