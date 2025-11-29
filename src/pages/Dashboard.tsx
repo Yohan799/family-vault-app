@@ -7,11 +7,12 @@ import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { fetchDashboardStats, calculateReadinessScore, updateInactivityTrigger, type DashboardStats } from "@/services/dashboardService";
 import FeatureTour from "@/components/FeatureTour";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { profile, user } = useAuth();
+  const { toast } = useToast();
   const [showTour, setShowTour] = useState(false);
   const [stats, setStats] = useState<DashboardStats>({
     documents: 0,
@@ -76,7 +77,8 @@ const Dashboard = () => {
     setStats(prev => ({ ...prev, inactivityTriggerActive: checked }));
     
     // Show toast immediately
-    toast.success(checked ? "Trigger is enabled" : "Trigger is disabled", {
+    toast({
+      title: checked ? "Trigger is enabled" : "Trigger is disabled",
       duration: 2000,
     });
     
@@ -86,7 +88,10 @@ const Dashboard = () => {
       console.error('Error updating inactivity trigger:', error);
       // Revert on error
       setStats(prev => ({ ...prev, inactivityTriggerActive: previousState }));
-      toast.error("Failed to update trigger");
+      toast({
+        title: "Failed to update trigger",
+        variant: "destructive",
+      });
     }
   };
 

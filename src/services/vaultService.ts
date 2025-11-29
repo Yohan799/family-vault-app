@@ -191,3 +191,23 @@ export const getAllUserDocuments = async (userId: string): Promise<any[]> => {
     return [];
   }
 };
+
+/**
+ * Gets all subcategories for a user (for search functionality)
+ */
+export const getAllUserSubcategories = async (userId: string): Promise<any[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('subcategories')
+      .select('*')
+      .eq('user_id', userId)
+      .is('deleted_at', null)
+      .order('name', { ascending: true });
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error getting all user subcategories:', error);
+    return [];
+  }
+};
