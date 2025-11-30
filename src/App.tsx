@@ -21,7 +21,6 @@ import CreateCategory from "./pages/vault/CreateCategory";
 import ManageAccess from "./pages/vault/ManageAccess";
 import SettingsPage from "./pages/SettingsPage";
 import NomineeCenter from "./pages/NomineeCenter";
-import NomineeVerification from "./pages/NomineeVerification";
 import VerifyNominee from "./pages/VerifyNominee";
 import EmergencyAccess from "./pages/EmergencyAccess";
 import InactivityTriggers from "./pages/InactivityTriggers";
@@ -66,7 +65,6 @@ const App = () => (
             <Route path="/vault/manage-access/:documentId" element={<ProtectedRoute><ManageAccess /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
             <Route path="/nominee-center" element={<ProtectedRoute><NomineeCenter /></ProtectedRoute>} />
-            <Route path="/nominee-verification" element={<ProtectedRoute><NomineeVerification /></ProtectedRoute>} />
             <Route path="/verify-nominee" element={<VerifyNominee />} />
             <Route path="/emergency-access" element={<EmergencyAccess />} />
             <Route path="/inactivity-triggers" element={<ProtectedRoute><InactivityTriggers /></ProtectedRoute>} />
