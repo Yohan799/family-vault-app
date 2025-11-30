@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { updateActivityTimestamp } from '@/lib/activityTracking';
+import { createSession } from '@/services/sessionService';
+import { logActivity } from '@/services/activityLogService';
 
 interface Profile {
   id: string;
@@ -12,6 +14,7 @@ interface Profile {
   profile_image_url: string | null;
   two_factor_enabled: boolean;
   biometric_enabled: boolean;
+  backup_frequency: string;
 }
 
 interface AuthContextType {
@@ -64,6 +67,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         // Fetch profile when user signs in
         if (session?.user) {
+          // Create session on login
+          if (event === 'SIGNED_IN') {
+            setTimeout(() => {
+              createSession(session.user.id);
+              logActivity(session.user.id, 'auth.login', 'user', session.user.id);
+            }, 0);
+          }
+
           // Use setTimeout to defer Supabase calls
           setTimeout(() => {
             fetchProfile(session.user.id);
@@ -93,7 +104,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signUp = async (email: string, password: string, fullName: string) => {
     const redirectUrl = `${window.location.origin}/dashboard`;
     
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -105,25 +116,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     if (error) throw error;
+
+    if (data.user) {
+      await logActivity(data.user.id, 'auth.signup', 'user', data.user.id);
+    }
     
     // Mark as first login for feature tour
     localStorage.setItem('isFirstLogin', 'true');
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     if (error) throw error;
 
-    // Update last_login
-    if (user) {
+    if (data.user) {
+      await createSession(data.user.id);
+      await logActivity(data.user.id, 'auth.login', 'user', data.user.id);
+
+      // Update last_login
       await supabase
         .from('profiles')
         .update({ last_login: new Date().toISOString() })
-        .eq('id', user.id);
+        .eq('id', data.user.id);
     }
   };
 
@@ -143,6 +161,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
+    if (user) {
+      await logActivity(user.id, 'auth.logout', 'user', user.id);
+    }
+
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
     
@@ -187,6 +209,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     if (error) throw error;
+
+    if (user) {
+      await logActivity(user.id, 'auth.password_change', 'user', user.id);
+    }
   };
 
   return (

@@ -1,13 +1,21 @@
 import { ArrowLeft, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const BackupFrequency = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { profile, updateProfile } = useAuth();
   const [selected, setSelected] = useState("weekly");
+
+  useEffect(() => {
+    if (profile?.backup_frequency) {
+      setSelected(profile.backup_frequency);
+    }
+  }, [profile]);
 
   const options = [
     { value: "regularly", label: "Regularly", subtitle: "Backup every day" },
@@ -17,14 +25,24 @@ const BackupFrequency = () => {
     { value: "automatic", label: "Automatic", subtitle: "Smart automatic backups" },
   ];
 
-  const handleSave = () => {
-    const selectedOption = options.find(o => o.value === selected);
-    localStorage.setItem("backupFrequency", selectedOption?.label || "Weekly");
-    toast({
-      title: "Backup frequency updated!",
-      description: `Backups will be performed ${selectedOption?.label.toLowerCase()}`,
-    });
-    navigate("/settings");
+  const handleSave = async () => {
+    try {
+      await updateProfile({ backup_frequency: selected });
+      
+      const selectedOption = options.find(o => o.value === selected);
+      toast({
+        title: "Backup frequency updated!",
+        description: `Backups will be performed ${selectedOption?.label.toLowerCase()}`,
+      });
+      navigate("/settings");
+    } catch (error) {
+      console.error('Error updating backup frequency:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update backup frequency",
+      });
+    }
   };
 
   return (

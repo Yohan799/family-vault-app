@@ -1,16 +1,17 @@
 import { Lock, Mail, Shield, Fingerprint, Bell, ShieldAlert, HelpCircle, MessageSquare, LogOut, Trash2, LockKeyhole, Home, ChevronRight, User, Vault, Settings } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
+import { logActivity } from "@/services/activityLogService";
 
 const SettingsPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { profile } = useAuth();
+  const { profile, user, updateProfile } = useAuth();
   const [toggleStates, setToggleStates] = useState({
     twoFactorAuth: false,
     biometric: false,
@@ -23,35 +24,81 @@ const SettingsPage = () => {
   );
 
   useEffect(() => {
-    const loadSettings = () => {
-      // Load toggle states from userSettings
+    // Load settings from profile (for 2FA and biometric) and localStorage (for others)
+    if (profile) {
       const savedUserSettings = localStorage.getItem("userSettings");
+      let localSettings: any = {};
+      
       if (savedUserSettings) {
-        const settings = JSON.parse(savedUserSettings);
-        setToggleStates({
-          twoFactorAuth: settings.twoFactorAuth || false,
-          biometric: settings.biometric || false,
-          pushNotifications: settings.pushNotifications || false,
-          securityAlerts: settings.securityAlerts || false,
-        });
+        try {
+          localSettings = JSON.parse(savedUserSettings);
+        } catch (error) {
+          console.error("Error parsing saved settings:", error);
+        }
       }
 
-      setAutoLockTimeout(localStorage.getItem("autoLockTimeout") || "5 minutes");
-    };
-    loadSettings();
-  }, []);
+      setToggleStates({
+        twoFactorAuth: profile.two_factor_enabled || false,
+        biometric: profile.biometric_enabled || false,
+        pushNotifications: localSettings.pushNotifications ?? true,
+        securityAlerts: localSettings.securityAlerts ?? true,
+      });
+    }
+  }, [profile]);
 
-  const handleToggle = (key: string) => {
-    const newState = !toggleStates[key as keyof typeof toggleStates];
-    setToggleStates(prev => ({ ...prev, [key]: newState }));
+  const handleToggle = async (key: keyof typeof toggleStates) => {
+    const newValue = !toggleStates[key];
+    
+    setToggleStates((prev) => ({ ...prev, [key]: newValue }));
 
-    // Save to localStorage
-    const userSettings = JSON.parse(localStorage.getItem("userSettings") || "{}");
-    userSettings[key] = newState;
-    localStorage.setItem("userSettings", JSON.stringify(userSettings));
+    // Update database for 2FA and biometric
+    if (key === 'twoFactorAuth' || key === 'biometric') {
+      try {
+        const updateData = key === 'twoFactorAuth' 
+          ? { two_factor_enabled: newValue }
+          : { biometric_enabled: newValue };
 
-    // Trigger dashboard update
-    window.dispatchEvent(new Event("countsUpdated"));
+        await updateProfile(updateData);
+
+        // Log activity
+        if (user) {
+          await logActivity(
+            user.id,
+            `settings.${key === 'twoFactorAuth' ? '2fa' : 'biometric'}_${newValue ? 'enable' : 'disable'}`,
+            'profile',
+            user.id
+          );
+        }
+
+        // Dispatch event to update dashboard readiness score
+        window.dispatchEvent(new CustomEvent('countsUpdated'));
+      } catch (error) {
+        console.error(`Error updating ${key}:`, error);
+        // Rollback on error
+        setToggleStates((prev) => ({ ...prev, [key]: !newValue }));
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: `Failed to update ${key === 'twoFactorAuth' ? 'Two-Factor Auth' : 'Biometric Login'}`,
+        });
+        return;
+      }
+    } else {
+      // Store other settings in localStorage
+      const savedUserSettings = localStorage.getItem("userSettings");
+      let localSettings: any = {};
+      
+      if (savedUserSettings) {
+        try {
+          localSettings = JSON.parse(savedUserSettings);
+        } catch (error) {
+          console.error("Error parsing saved settings:", error);
+        }
+      }
+
+      localSettings = { ...localSettings, [key]: newValue };
+      localStorage.setItem("userSettings", JSON.stringify(localSettings));
+    }
 
     const messages: { [key: string]: { enabled: string; disabled: string } } = {
       twoFactorAuth: { enabled: "Two-Factor Auth Enabled", disabled: "Two-Factor Auth Disabled" },
@@ -62,7 +109,7 @@ const SettingsPage = () => {
 
     const message = messages[key];
     toast({
-      title: newState ? message.enabled : message.disabled,
+      title: newValue ? message.enabled : message.disabled,
       duration: 2000,
     });
   };
@@ -155,7 +202,7 @@ const SettingsPage = () => {
                 {setting.toggle ? (
                   <Switch
                     checked={toggleStates[setting.toggle as keyof typeof toggleStates]}
-                    onCheckedChange={() => handleToggle(setting.toggle as string)}
+                    onCheckedChange={() => handleToggle(setting.toggle as keyof typeof toggleStates)}
                     className="scale-90"
                   />
                 ) : (
