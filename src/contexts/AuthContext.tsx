@@ -70,8 +70,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Create session on login
           if (event === 'SIGNED_IN') {
             setTimeout(() => {
-              createSession(session.user.id);
-              logActivity(session.user.id, 'auth.login', 'user', session.user.id);
+              createSession(session.user.id).catch(err => 
+                console.error('Failed to create session:', err)
+              );
+              logActivity(session.user.id, 'auth.login', 'user', session.user.id).catch(err =>
+                console.error('Failed to log activity:', err)
+              );
             }, 0);
           }
 
@@ -134,14 +138,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (error) throw error;
 
     if (data.user) {
-      await createSession(data.user.id);
-      await logActivity(data.user.id, 'auth.login', 'user', data.user.id);
+      try {
+        await createSession(data.user.id);
+        await logActivity(data.user.id, 'auth.login', 'user', data.user.id);
 
-      // Update last_login
-      await supabase
-        .from('profiles')
-        .update({ last_login: new Date().toISOString() })
-        .eq('id', data.user.id);
+        // Update last_login
+        await supabase
+          .from('profiles')
+          .update({ last_login: new Date().toISOString() })
+          .eq('id', data.user.id);
+      } catch (err) {
+        console.error('Error in post-signin operations:', err);
+        // Don't throw - allow signin to succeed even if logging fails
+      }
     }
   };
 
@@ -162,7 +171,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     if (user) {
-      await logActivity(user.id, 'auth.logout', 'user', user.id);
+      try {
+        await logActivity(user.id, 'auth.logout', 'user', user.id);
+      } catch (err) {
+        console.error('Error logging signout:', err);
+      }
     }
 
     const { error } = await supabase.auth.signOut();
