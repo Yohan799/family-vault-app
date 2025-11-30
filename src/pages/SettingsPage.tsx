@@ -25,7 +25,6 @@ const SettingsPage = () => {
 
   const getAutoLockLabel = (minutes: number | null | undefined): string => {
     if (!minutes) return "5 minutes";
-    if (minutes === 0.5) return "30 seconds";
     if (minutes === 1) return "1 minute";
     return `${minutes} minutes`;
   };

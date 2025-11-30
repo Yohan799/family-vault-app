@@ -13,7 +13,6 @@ const AutoLockTimeout = () => {
   const [isSaving, setIsSaving] = useState(false);
 
   const options = [
-    { value: "0.5", label: "30 seconds" },
     { value: "1", label: "1 minute" },
     { value: "5", label: "5 minutes" },
     { value: "10", label: "10 minutes" },
