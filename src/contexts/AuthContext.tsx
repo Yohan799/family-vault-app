@@ -15,6 +15,7 @@ interface Profile {
   two_factor_enabled: boolean;
   biometric_enabled: boolean;
   backup_frequency: string;
+  auto_lock_minutes: number | null;
 }
 
 interface AuthContextType {
