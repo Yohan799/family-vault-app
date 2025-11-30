@@ -77,15 +77,6 @@ const EmailPreferences = () => {
   const handleDeleteEmail = async (index: number) => {
     const emailToDelete = emails[index];
     
-    if (emailToDelete === primaryEmail) {
-      toast({
-        title: "Cannot delete primary email",
-        description: "Set another email as primary before deleting this one",
-        variant: "destructive",
-      });
-      return;
-    }
-
     if (emails.length === 1) {
       toast({
         title: "Cannot delete",
@@ -95,6 +86,40 @@ const EmailPreferences = () => {
       return;
     }
 
+    // If deleting primary email, promote the first secondary email to primary
+    if (emailToDelete === primaryEmail) {
+      const newEmails = emails.filter((_, i) => i !== index);
+      const newPrimaryEmail = newEmails[0]; // First remaining email becomes primary
+      const newAdditionalEmails = newEmails.slice(1); // Rest become additional
+      
+      const { error } = await supabase
+        .from("profiles")
+        .update({ 
+          email: newPrimaryEmail,
+          additional_emails: newAdditionalEmails
+        })
+        .eq("id", profile?.id);
+
+      if (error) {
+        toast({
+          title: "Error deleting email",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setPrimaryEmail(newPrimaryEmail);
+      setEmails(newEmails);
+      await updateProfile({ email: newPrimaryEmail, additional_emails: newAdditionalEmails });
+      toast({
+        title: "Primary email changed",
+        description: `${newPrimaryEmail} is now your primary email`,
+      });
+      return;
+    }
+
+    // Delete secondary email
     const newEmails = emails.filter((_, i) => i !== index);
     const additionalEmails = newEmails.filter(e => e !== primaryEmail);
     
@@ -121,7 +146,13 @@ const EmailPreferences = () => {
   };
 
   const handleSetPrimary = async (email: string) => {
-    if (email === primaryEmail) return;
+    if (email === primaryEmail) {
+      toast({
+        title: "Already primary",
+        description: "This email is already set as your primary email",
+      });
+      return;
+    }
 
     const newAdditionalEmails = emails.filter(e => e !== email && e !== primaryEmail);
     newAdditionalEmails.push(primaryEmail);
@@ -194,16 +225,17 @@ const EmailPreferences = () => {
 
       <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
         <p className="text-sm sm:text-base text-muted-foreground px-1">
-          Manage your email addresses for account notifications and recovery. Tap the star to set as primary.
+          Manage your email addresses for account notifications and recovery. <span className="font-medium text-foreground">Tap the star</span> to set an email as primary.
         </p>
 
         {/* Mobile-optimized email list */}
         <div className="bg-card rounded-2xl overflow-hidden divide-y divide-border">
           {emails.map((email, index) => (
-            <div key={index} className="p-4 sm:p-5 flex items-center gap-3 sm:gap-4 min-h-[72px]">
+            <div key={index} className="p-4 sm:p-5 flex items-center gap-3 min-h-[72px]">
               <button
                 onClick={() => handleSetPrimary(email)}
                 className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-full flex items-center justify-center shrink-0 hover:bg-primary/20 transition-colors active:scale-95"
+                title={email === primaryEmail ? "Primary email" : "Set as primary email"}
               >
                 {email === primaryEmail ? (
                   <Star className="w-5 h-5 sm:w-6 sm:h-6 text-primary fill-primary" />
@@ -214,7 +246,7 @@ const EmailPreferences = () => {
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-foreground text-sm sm:text-base truncate">{email}</p>
                 <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-                  {email === primaryEmail ? "Primary" : "Secondary"}
+                  {email === primaryEmail ? "Primary - Used for login & notifications" : "Secondary - Available for notifications"}
                 </p>
               </div>
               <Button
@@ -222,6 +254,7 @@ const EmailPreferences = () => {
                 size="sm"
                 onClick={() => handleDeleteEmail(index)}
                 className="text-destructive hover:text-destructive hover:bg-destructive/10 min-h-[44px] px-3 sm:px-4 shrink-0"
+                title={email === primaryEmail && emails.length > 1 ? "Delete (next email will become primary)" : "Delete email"}
               >
                 Delete
               </Button>
