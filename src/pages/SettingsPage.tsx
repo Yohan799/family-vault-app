@@ -23,9 +23,12 @@ const SettingsPage = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  const [autoLockTimeout, setAutoLockTimeout] = useState(
-    localStorage.getItem("autoLockTimeout") || "5 minutes"
-  );
+  const getAutoLockLabel = (minutes: number | null | undefined): string => {
+    if (!minutes) return "5 minutes";
+    if (minutes === 0.5) return "30 seconds";
+    if (minutes === 1) return "1 minute";
+    return `${minutes} minutes`;
+  };
 
   useEffect(() => {
     // Load settings from profile (for 2FA and biometric) and localStorage (for others)
@@ -179,7 +182,7 @@ const SettingsPage = () => {
     { icon: Shield, title: "Security Alerts", subtitle: "Critical updates", toggle: "securityAlerts", color: "bg-orange-100" },
 
     // Vault
-    { icon: LockKeyhole, title: "Auto Lock Timeout", subtitle: autoLockTimeout, path: "/auto-lock-timeout", color: "bg-emerald-100" },
+    { icon: LockKeyhole, title: "Auto Lock Timeout", subtitle: getAutoLockLabel(profile?.auto_lock_minutes), path: "/auto-lock-timeout", color: "bg-emerald-100" },
 
     // Support
     { icon: HelpCircle, title: "Help & Support", subtitle: "FAQs, guides & contact", path: "/help-center", color: "bg-cyan-100" },
