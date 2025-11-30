@@ -44,6 +44,69 @@ export type Database = {
         }
         Relationships: []
       }
+      activity_logs: {
+        Row: {
+          action_type: string
+          created_at: string
+          details: Json | null
+          id: string
+          ip_address: string | null
+          resource_id: string | null
+          resource_type: string | null
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          resource_id?: string | null
+          resource_type?: string | null
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          resource_id?: string | null
+          resource_type?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      backups: {
+        Row: {
+          backup_type: string
+          created_at: string
+          file_path: string
+          file_size: number | null
+          id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          backup_type: string
+          created_at?: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          backup_type?: string
+          created_at?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           created_at: string
@@ -451,6 +514,42 @@ export type Database = {
           status?: string | null
           title?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_sessions: {
+        Row: {
+          created_at: string
+          device_name: string
+          device_type: string
+          id: string
+          ip_address: string | null
+          is_current: boolean | null
+          last_active_at: string
+          location: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_name: string
+          device_type: string
+          id?: string
+          ip_address?: string | null
+          is_current?: boolean | null
+          last_active_at?: string
+          location?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_name?: string
+          device_type?: string
+          id?: string
+          ip_address?: string | null
+          is_current?: boolean | null
+          last_active_at?: string
+          location?: string | null
           user_id?: string
         }
         Relationships: []
