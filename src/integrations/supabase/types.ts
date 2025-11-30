@@ -431,6 +431,51 @@ export type Database = {
         }
         Relationships: []
       }
+      quick_actions: {
+        Row: {
+          action_key: string
+          created_at: string | null
+          display_order: number | null
+          icon: string | null
+          id: string
+          is_custom: boolean | null
+          is_enabled: boolean | null
+          route: string | null
+          subtitle: string | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          action_key: string
+          created_at?: string | null
+          display_order?: number | null
+          icon?: string | null
+          id?: string
+          is_custom?: boolean | null
+          is_enabled?: boolean | null
+          route?: string | null
+          subtitle?: string | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          action_key?: string
+          created_at?: string | null
+          display_order?: number | null
+          icon?: string | null
+          id?: string
+          is_custom?: boolean | null
+          is_enabled?: boolean | null
+          route?: string | null
+          subtitle?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       subcategories: {
         Row: {
           category_id: string
