@@ -385,6 +385,8 @@ export type Database = {
       }
       profiles: {
         Row: {
+          app_lock_type: string | null
+          app_pin_hash: string | null
           auto_lock_minutes: number | null
           backup_frequency: string | null
           biometric_enabled: boolean | null
@@ -400,6 +402,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          app_lock_type?: string | null
+          app_pin_hash?: string | null
           auto_lock_minutes?: number | null
           backup_frequency?: string | null
           biometric_enabled?: boolean | null
@@ -415,6 +419,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          app_lock_type?: string | null
+          app_pin_hash?: string | null
           auto_lock_minutes?: number | null
           backup_frequency?: string | null
           biometric_enabled?: boolean | null
@@ -560,6 +566,36 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      two_fa_verifications: {
+        Row: {
+          created_at: string | null
+          email: string
+          expires_at: string
+          id: string
+          otp_code: string
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          expires_at: string
+          id?: string
+          otp_code: string
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          expires_at?: string
+          id?: string
+          otp_code?: string
+          user_id?: string
+          verified_at?: string | null
         }
         Relationships: []
       }

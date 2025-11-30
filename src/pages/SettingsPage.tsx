@@ -1,4 +1,4 @@
-import { Lock, Mail, Shield, Fingerprint, Bell, ShieldAlert, HelpCircle, MessageSquare, LogOut, Trash2, LockKeyhole, Home, ChevronRight, User, Vault, Settings } from "lucide-react";
+import { Lock, Mail, Shield, Fingerprint, Bell, ShieldAlert, HelpCircle, LogOut, Trash2, LockKeyhole, Home, ChevronRight, Vault, Settings, Smartphone } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -7,17 +7,21 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { logActivity } from "@/services/activityLogService";
+import { supabase } from "@/integrations/supabase/client";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 const SettingsPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { profile, user, updateProfile } = useAuth();
+  const { profile, user, updateProfile, signOut } = useAuth();
   const [toggleStates, setToggleStates] = useState({
     twoFactorAuth: false,
     biometric: false,
     pushNotifications: false,
     securityAlerts: false,
   });
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const [autoLockTimeout, setAutoLockTimeout] = useState(
     localStorage.getItem("autoLockTimeout") || "5 minutes"
@@ -47,24 +51,25 @@ const SettingsPage = () => {
   }, [profile]);
 
   const handleToggle = async (key: keyof typeof toggleStates) => {
+    // For 2FA, navigate to setup page instead of toggle
+    if (key === 'twoFactorAuth') {
+      navigate("/two-factor-setup");
+      return;
+    }
+
     const newValue = !toggleStates[key];
-    
     setToggleStates((prev) => ({ ...prev, [key]: newValue }));
 
-    // Update database for 2FA and biometric
-    if (key === 'twoFactorAuth' || key === 'biometric') {
+    // Update database for biometric
+    if (key === 'biometric') {
       try {
-        const updateData = key === 'twoFactorAuth' 
-          ? { two_factor_enabled: newValue }
-          : { biometric_enabled: newValue };
-
-        await updateProfile(updateData);
+        await updateProfile({ biometric_enabled: newValue });
 
         // Log activity
         if (user) {
           await logActivity(
             user.id,
-            `settings.${key === 'twoFactorAuth' ? '2fa' : 'biometric'}_${newValue ? 'enable' : 'disable'}`,
+            `settings.biometric_${newValue ? 'enable' : 'disable'}`,
             'profile',
             user.id
           );
@@ -79,7 +84,7 @@ const SettingsPage = () => {
         toast({
           variant: "destructive",
           title: "Error",
-          description: `Failed to update ${key === 'twoFactorAuth' ? 'Two-Factor Auth' : 'Biometric Login'}`,
+          description: "Failed to update Biometric Login",
         });
         return;
       }
@@ -114,14 +119,59 @@ const SettingsPage = () => {
     });
   };
 
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast({ title: "Signed out", description: "See you soon!" });
+      navigate("/signin");
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to sign out",
+      });
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+    
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase.functions.invoke("delete-user-account", {
+        headers: {
+          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Account Deleted",
+        description: "Your account has been permanently deleted",
+      });
+      navigate("/welcome");
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Delete Failed",
+        description: error.message || "Failed to delete account",
+      });
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
+    }
+  };
+
   // Flattened list of settings for "Quick Action" style
   const settings = [
     // Account
     { icon: Lock, title: "Change Password", subtitle: "Update your password", path: "/change-password", color: "bg-blue-100" },
     { icon: Mail, title: "Email Preferences", subtitle: "Manage email settings", path: "/email-preferences", color: "bg-indigo-100" },
 
-    // Security (Toggles)
-    { icon: ShieldAlert, title: "Two-Factor Auth", subtitle: "Extra security layer", toggle: "twoFactorAuth", color: "bg-purple-100" },
+    // Security
+    { icon: ShieldAlert, title: "Two-Factor Auth", subtitle: profile?.two_factor_enabled ? "Enabled" : "Extra security layer", path: "/two-factor-setup", color: "bg-purple-100" },
+    { icon: Smartphone, title: "App Lock", subtitle: profile?.app_lock_type ? `Active (${profile.app_lock_type})` : "PIN, Biometric, Password", path: "/app-lock-setup", color: "bg-violet-100" },
     { icon: Fingerprint, title: "Biometric Login", subtitle: "FaceID / Fingerprint", toggle: "biometric", color: "bg-pink-100" },
 
     // Notifications (Toggles)
@@ -132,8 +182,7 @@ const SettingsPage = () => {
     { icon: LockKeyhole, title: "Auto Lock Timeout", subtitle: autoLockTimeout, path: "/auto-lock-timeout", color: "bg-emerald-100" },
 
     // Support
-    { icon: HelpCircle, title: "Help Center", subtitle: "FAQs and guides", path: "/help-center", color: "bg-cyan-100" },
-    { icon: MessageSquare, title: "Contact Support", subtitle: "Get help", path: "/contact-support", color: "bg-teal-100" },
+    { icon: HelpCircle, title: "Help & Support", subtitle: "FAQs, guides & contact", path: "/help-center", color: "bg-cyan-100" },
   ];
 
   if (!profile) {
@@ -216,10 +265,7 @@ const SettingsPage = () => {
         {/* Danger Zone */}
         <div className="pt-4 space-y-2">
           <button
-            onClick={() => {
-              toast({ title: "Signed out", description: "See you soon!" });
-              navigate("/signin");
-            }}
+            onClick={handleSignOut}
             className="w-full bg-card rounded-xl p-3 flex items-center gap-3 hover:bg-accent transition-colors text-foreground"
           >
             <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -229,20 +275,29 @@ const SettingsPage = () => {
           </button>
 
           <button
-            onClick={() => {
-              if (confirm("Delete account? This cannot be undone.")) {
-                toast({ title: "Account Deleted", variant: "destructive" });
-                navigate("/welcome");
-              }
-            }}
-            className="w-full bg-card rounded-xl p-3 flex items-center gap-3 hover:bg-red-50 transition-colors text-destructive"
+            onClick={() => setShowDeleteDialog(true)}
+            disabled={isDeleting}
+            className="w-full bg-card rounded-xl p-3 flex items-center gap-3 hover:bg-red-50 transition-colors text-destructive disabled:opacity-50"
           >
             <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
               <Trash2 className="w-5 h-5 text-destructive" />
             </div>
-            <span className="font-semibold text-sm">Delete Account</span>
+            <span className="font-semibold text-sm">
+              {isDeleting ? "Deleting..." : "Delete Account"}
+            </span>
           </button>
         </div>
+
+        {/* Delete Confirmation Dialog */}
+        <ConfirmDialog
+          open={showDeleteDialog}
+          onOpenChange={setShowDeleteDialog}
+          onConfirm={handleDeleteAccount}
+          title="Delete Account"
+          description="Are you sure you want to delete your account? This action cannot be undone. All your data, documents, and settings will be permanently deleted."
+          confirmText="Delete Account"
+          variant="destructive"
+        />
 
         <div className="text-center text-xs text-muted-foreground pt-4 pb-2">
           App Version 2.0.0
