@@ -385,6 +385,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          additional_emails: Json | null
           app_lock_type: string | null
           app_pin_hash: string | null
           auto_lock_minutes: number | null
@@ -402,6 +403,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          additional_emails?: Json | null
           app_lock_type?: string | null
           app_pin_hash?: string | null
           auto_lock_minutes?: number | null
@@ -419,6 +421,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          additional_emails?: Json | null
           app_lock_type?: string | null
           app_pin_hash?: string | null
           auto_lock_minutes?: number | null
