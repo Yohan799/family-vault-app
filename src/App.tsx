@@ -36,7 +36,10 @@ import Notifications from "./pages/Notifications";
 import EmailPreferences from "./pages/EmailPreferences";
 import ActiveSessions from "./pages/ActiveSessions";
 import HelpCenter from "./pages/HelpCenter";
-import ContactSupport from "./pages/ContactSupport";
+import TwoFactorSetup from "./pages/TwoFactorSetup";
+import TwoFactorVerify from "./pages/TwoFactorVerify";
+import AppLockSetup from "./pages/AppLockSetup";
+import SetupPIN from "./pages/SetupPIN";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -80,7 +83,10 @@ const App = () => (
             <Route path="/email-preferences" element={<ProtectedRoute><EmailPreferences /></ProtectedRoute>} />
             <Route path="/active-sessions" element={<ProtectedRoute><ActiveSessions /></ProtectedRoute>} />
             <Route path="/help-center" element={<ProtectedRoute><HelpCenter /></ProtectedRoute>} />
-            <Route path="/contact-support" element={<ProtectedRoute><ContactSupport /></ProtectedRoute>} />
+            <Route path="/two-factor-setup" element={<ProtectedRoute><TwoFactorSetup /></ProtectedRoute>} />
+            <Route path="/two-factor-verify" element={<ProtectedRoute><TwoFactorVerify /></ProtectedRoute>} />
+            <Route path="/app-lock-setup" element={<ProtectedRoute><AppLockSetup /></ProtectedRoute>} />
+            <Route path="/setup-pin" element={<ProtectedRoute><SetupPIN /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

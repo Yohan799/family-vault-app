@@ -1,98 +1,152 @@
-import { ArrowLeft, Search, Book, Shield, FileText, HelpCircle, Video, MessageCircle } from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft, Phone, Mail, MessageCircle, ChevronDown, ChevronRight, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const HelpCenter = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { profile } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    subject: "",
+    message: "",
+  });
 
-  const topics = [
+  const faqs = [
     {
-      icon: Book,
-      title: "Getting Started",
-      description: "Learn the basics of Family Vault",
+      question: "How do I upload documents?",
+      answer: "Go to Vault, select a category, and tap the + button. You can upload from your device, scan documents with your camera, or import from Google Drive."
     },
     {
-      icon: Shield,
-      title: "Security & Privacy",
-      description: "Keep your data safe and secure",
+      question: "What is Two-Factor Authentication?",
+      answer: "2FA adds an extra security layer. When enabled, you'll receive a code via email each time you sign in, in addition to your password."
     },
     {
-      icon: FileText,
-      title: "Managing Documents",
-      description: "Upload, organize, and share files",
+      question: "How do Time Capsules work?",
+      answer: "Time Capsules let you schedule messages to be sent on a specific date. Create one from your dashboard, set a release date, and we'll automatically email it to your recipient."
     },
     {
-      icon: HelpCircle,
-      title: "FAQs",
-      description: "Frequently asked questions",
-    },
-    {
-      icon: Video,
-      title: "Video Tutorials",
-      description: "Watch step-by-step guides",
-    },
-    {
-      icon: MessageCircle,
-      title: "Contact Support",
-      description: "Get help from our team",
+      question: "What happens if I'm inactive?",
+      answer: "If enabled, the Inactivity Trigger monitors your activity. After prolonged inactivity, it sends alerts to you, then your nominees, and can grant emergency access to your vault."
     },
   ];
 
-  const handleTopicClick = (title: string) => {
-    if (title === "Contact Support") {
-      navigate("/contact-support");
-    } else {
-      toast({
-        title: `Opening ${title}`,
-        description: "Help content will be displayed here",
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!profile?.email) return;
+
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase.functions.invoke("send-support-message", {
+        body: {
+          name: profile.full_name || "User",
+          email: profile.email,
+          subject: formData.subject,
+          message: formData.message,
+        },
       });
+
+      if (error) throw error;
+
+      toast({
+        title: "Message Sent",
+        description: "We'll get back to you soon!",
+      });
+      setFormData({ subject: "", message: "" });
+    } catch (error: any) {
+      toast({
+        title: "Failed to Send",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20">
       <div className="bg-primary/20 text-foreground p-6 rounded-b-3xl">
-        <div className="flex items-center gap-4 mb-6">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="text-primary-foreground">
+        <div className="flex items-center gap-4">
+          <button onClick={() => navigate("/settings")} className="p-2 hover:bg-accent rounded-full">
             <ArrowLeft className="w-6 h-6" />
-          </Button>
-          <h1 className="text-2xl font-bold">Help Center</h1>
-        </div>
-
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-primary-foreground/60" />
-          <Input
-            placeholder="Search for help..."
-            className="pl-10 bg-primary-foreground/10 border-0 text-primary-foreground placeholder:text-primary-foreground/60"
-          />
+          </button>
+          <h1 className="text-2xl font-bold">Help & Support</h1>
         </div>
       </div>
 
-      <div className="p-6 space-y-4">
-        <h2 className="text-lg font-semibold text-foreground mb-4">Browse Topics</h2>
+      <div className="p-4 space-y-6">
+        {/* Quick Contact Buttons */}
+        <div className="grid grid-cols-3 gap-3">
+          <a href="tel:+1234567890" className="bg-card rounded-2xl p-4 flex flex-col items-center gap-2 hover:bg-accent transition-colors">
+            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+              <Phone className="w-6 h-6 text-green-600" />
+            </div>
+            <span className="text-xs font-medium text-foreground">Call</span>
+          </a>
+          
+          <a href="mailto:support@familyvault.com" className="bg-card rounded-2xl p-4 flex flex-col items-center gap-2 hover:bg-accent transition-colors">
+            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+              <Mail className="w-6 h-6 text-blue-600" />
+            </div>
+            <span className="text-xs font-medium text-foreground">Email</span>
+          </a>
+          
+          <a href="https://wa.me/1234567890" target="_blank" rel="noopener noreferrer" className="bg-card rounded-2xl p-4 flex flex-col items-center gap-2 hover:bg-accent transition-colors">
+            <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
+              <MessageCircle className="w-6 h-6 text-emerald-600" />
+            </div>
+            <span className="text-xs font-medium text-foreground">WhatsApp</span>
+          </a>
+        </div>
 
-        <div className="grid gap-4">
-          {topics.map((topic, index) => {
-            const Icon = topic.icon;
-            return (
-              <button
-                key={index}
-                onClick={() => handleTopicClick(topic.title)}
-                className="bg-card rounded-2xl p-4 flex items-center gap-4 hover:bg-accent transition-colors text-left"
-              >
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Icon className="w-6 h-6 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-foreground mb-1">{topic.title}</h3>
-                  <p className="text-sm text-muted-foreground">{topic.description}</p>
-                </div>
-              </button>
-            );
-          })}
+        {/* FAQs */}
+        <div className="space-y-3">
+          <h2 className="text-lg font-semibold text-foreground">Frequently Asked Questions</h2>
+          <Accordion type="single" collapsible className="space-y-2">
+            {faqs.map((faq, idx) => (
+              <AccordionItem key={idx} value={`faq-${idx}`} className="bg-card rounded-2xl px-4 border-0">
+                <AccordionTrigger className="text-left hover:no-underline py-4">
+                  <span className="font-medium text-foreground pr-2">{faq.question}</span>
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground pb-4">
+                  {faq.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+
+        {/* Contact Form */}
+        <div className="bg-card rounded-2xl p-5 space-y-4">
+          <h2 className="text-lg font-semibold text-foreground">Send us a message</h2>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input
+              placeholder="Subject"
+              value={formData.subject}
+              onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+              required
+              className="h-12 rounded-xl"
+            />
+            <Textarea
+              placeholder="Describe your issue or question..."
+              value={formData.message}
+              onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+              required
+              className="min-h-32 rounded-xl resize-none"
+            />
+            <Button type="submit" disabled={isSubmitting} className="w-full h-12 rounded-xl">
+              <Send className="w-4 h-4 mr-2" />
+              {isSubmitting ? "Sending..." : "Send Message"}
+            </Button>
+          </form>
         </div>
       </div>
     </div>

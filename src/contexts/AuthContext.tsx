@@ -16,6 +16,8 @@ interface Profile {
   biometric_enabled: boolean;
   backup_frequency: string;
   auto_lock_minutes: number | null;
+  app_lock_type: string | null;
+  app_pin_hash: string | null;
 }
 
 interface AuthContextType {
@@ -138,6 +140,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (error) throw error;
 
+    // Note: 2FA check happens in SignIn component via navigation
     if (data.user) {
       try {
         await createSession(data.user.id);
@@ -150,7 +153,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .eq('id', data.user.id);
       } catch (err) {
         console.error('Error in post-signin operations:', err);
-        // Don't throw - allow signin to succeed even if logging fails
       }
     }
   };

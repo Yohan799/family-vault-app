@@ -48,11 +48,24 @@ const SignIn = () => {
     setIsLoading(true);
     try {
       await signIn(formData.email.toLowerCase(), formData.password);
-      toast({
-        title: "Welcome back!",
-        description: "Successfully signed in",
-      });
-      navigate("/dashboard");
+      
+      // Check if 2FA is enabled (profile will be loaded by AuthContext)
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('two_factor_enabled')
+        .eq('email', formData.email.toLowerCase())
+        .single();
+
+      if (profileData?.two_factor_enabled) {
+        // Redirect to 2FA verification
+        navigate("/two-factor-verify");
+      } else {
+        toast({
+          title: "Welcome back!",
+          description: "Successfully signed in",
+        });
+        navigate("/dashboard");
+      }
     } catch (error: any) {
       const errorMessage = error.message || "Invalid email or password";
       toast({
