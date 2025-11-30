@@ -1,4 +1,4 @@
-import { ArrowLeft, CalendarIcon } from "lucide-react";
+import { ArrowLeft, CalendarIcon, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -201,13 +201,17 @@ const EditProfile = () => {
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">Email</label>
-            <Input
-              type="email"
-              value={profile.email}
-              disabled
-              className="bg-card border-border opacity-60"
-            />
-            <p className="text-xs text-muted-foreground">Email cannot be changed</p>
+            <Button
+              variant="outline"
+              onClick={() => navigate("/email-preferences")}
+              className="w-full justify-between bg-card border-border h-auto py-3 hover:bg-accent"
+            >
+              <div className="text-left">
+                <p className="text-sm font-medium text-foreground">{profile.email}</p>
+                <p className="text-xs text-muted-foreground">Tap to manage emails</p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+            </Button>
           </div>
 
           <div className="space-y-2">

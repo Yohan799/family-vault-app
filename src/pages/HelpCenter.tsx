@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Phone, Mail, MessageCircle, ChevronDown, ChevronRight, Send } from "lucide-react";
+import { ArrowLeft, Phone, Mail, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -84,7 +84,7 @@ const HelpCenter = () => {
 
       <div className="p-4 space-y-6">
         {/* Quick Contact Buttons */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <a href="tel:+1234567890" className="bg-card rounded-2xl p-4 flex flex-col items-center gap-2 hover:bg-accent transition-colors">
             <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
               <Phone className="w-6 h-6 text-green-600" />
@@ -97,13 +97,6 @@ const HelpCenter = () => {
               <Mail className="w-6 h-6 text-blue-600" />
             </div>
             <span className="text-xs font-medium text-foreground">Email</span>
-          </a>
-          
-          <a href="https://wa.me/1234567890" target="_blank" rel="noopener noreferrer" className="bg-card rounded-2xl p-4 flex flex-col items-center gap-2 hover:bg-accent transition-colors">
-            <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
-              <MessageCircle className="w-6 h-6 text-emerald-600" />
-            </div>
-            <span className="text-xs font-medium text-foreground">WhatsApp</span>
           </a>
         </div>
 
