@@ -1,54 +1,135 @@
-import { ArrowLeft, Home, Lock as LockIcon, Settings, Plus, GripVertical, Trash2, Shield, Users, Bell, Clock } from "lucide-react";
+import { ArrowLeft, Home, Lock as LockIcon, Settings, Plus, GripVertical, Trash2, Shield, Users, Bell, Clock, Timer, UserPlus, Vault as VaultIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { 
+  getQuickActions, 
+  initializeDefaultActions, 
+  updateQuickAction, 
+  createQuickAction, 
+  deleteQuickAction,
+  type QuickAction 
+} from "@/services/quickActionsService";
 
-interface QuickAction {
-  id: string;
-  title: string;
-  subtitle: string;
-  icon: any;
-  isDefault: boolean;
-  isEnabled: boolean;
+interface DisplayQuickAction extends QuickAction {
+  iconComponent: any;
 }
 
 const CustomizeQuickActions = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newActionTitle, setNewActionTitle] = useState("");
   const [newActionSubtitle, setNewActionSubtitle] = useState("");
-  
-  const [actions, setActions] = useState<QuickAction[]>([
-    { id: "1", title: "Digital Vault", subtitle: "Manage your secure documents", icon: Shield, isDefault: true, isEnabled: true },
-    { id: "2", title: "Nominee Center", subtitle: "Manage trusted contacts", icon: Users, isDefault: true, isEnabled: true },
-    { id: "3", title: "Inactivity Triggers", subtitle: "Set up activity monitoring", icon: Bell, isDefault: true, isEnabled: true },
-    { id: "4", title: "Time Capsule", subtitle: "Create legacy messages", icon: Clock, isDefault: true, isEnabled: true },
-  ]);
+  const [actions, setActions] = useState<DisplayQuickAction[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleToggle = (id: string) => {
-    setActions(actions.map(action => 
-      action.id === id ? { ...action, isEnabled: !action.isEnabled } : action
+  // Icon mapping
+  const iconMap: Record<string, any> = {
+    Vault: VaultIcon,
+    UserPlus,
+    Shield,
+    Timer,
+    Plus,
+    Users,
+    Bell,
+    Clock,
+  };
+
+  useEffect(() => {
+    if (user) {
+      loadActions();
+    }
+  }, [user]);
+
+  const loadActions = async () => {
+    if (!user) return;
+
+    setIsLoading(true);
+    try {
+      await initializeDefaultActions(user.id);
+      const fetchedActions = await getQuickActions(user.id);
+      
+      const displayActions: DisplayQuickAction[] = fetchedActions.map(action => ({
+        ...action,
+        iconComponent: iconMap[action.icon || 'Plus'] || Plus,
+      }));
+      
+      setActions(displayActions);
+    } catch (error) {
+      console.error('Error loading actions:', error);
+      toast({
+        title: "Failed to load actions",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleToggle = async (id: string) => {
+    const action = actions.find(a => a.id === id);
+    if (!action) return;
+
+    const newEnabled = !action.is_enabled;
+    
+    // Optimistic update
+    setActions(actions.map(a => 
+      a.id === id ? { ...a, is_enabled: newEnabled } : a
     ));
-    toast({
-      title: "Quick action updated",
-      description: "Your changes have been applied",
-    });
+
+    try {
+      await updateQuickAction(id, { is_enabled: newEnabled });
+      toast({
+        title: "Quick action updated",
+        description: `${action.title} ${newEnabled ? 'enabled' : 'disabled'}`,
+      });
+    } catch (error) {
+      console.error('Error updating action:', error);
+      // Revert on error
+      setActions(actions.map(a => 
+        a.id === id ? { ...a, is_enabled: !newEnabled } : a
+      ));
+      toast({
+        title: "Failed to update",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDelete = (id: string) => {
-    setActions(actions.filter(action => action.id !== id));
-    toast({
-      title: "Action removed",
-      description: "Quick action has been deleted",
-    });
+  const handleDelete = async (id: string) => {
+    const action = actions.find(a => a.id === id);
+    if (!action) return;
+
+    // Optimistic delete
+    setActions(actions.filter(a => a.id !== id));
+
+    try {
+      await deleteQuickAction(id);
+      toast({
+        title: "Action removed",
+        description: `${action.title} has been deleted`,
+      });
+    } catch (error) {
+      console.error('Error deleting action:', error);
+      // Revert on error
+      await loadActions();
+      toast({
+        title: "Failed to delete",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleAddNew = () => {
+  const handleAddNew = async () => {
+    if (!user) return;
+    
     if (!newActionTitle.trim()) {
       toast({
         title: "Title required",
@@ -58,23 +139,34 @@ const CustomizeQuickActions = () => {
       return;
     }
     
-    const newAction: QuickAction = {
-      id: Date.now().toString(),
-      title: newActionTitle,
-      subtitle: newActionSubtitle || "Custom action",
-      icon: Plus,
-      isDefault: false,
-      isEnabled: true
-    };
-    
-    setActions([...actions, newAction]);
-    setNewActionTitle("");
-    setNewActionSubtitle("");
-    setShowAddDialog(false);
-    toast({
-      title: "Action added!",
-      description: "New quick action has been created",
-    });
+    try {
+      const newAction = await createQuickAction(user.id, {
+        title: newActionTitle,
+        subtitle: newActionSubtitle || "Custom action",
+        icon: 'Plus',
+      });
+
+      const displayAction: DisplayQuickAction = {
+        ...newAction,
+        iconComponent: Plus,
+      };
+      
+      setActions([...actions, displayAction]);
+      setNewActionTitle("");
+      setNewActionSubtitle("");
+      setShowAddDialog(false);
+      
+      toast({
+        title: "Action added!",
+        description: "New quick action has been created",
+      });
+    } catch (error) {
+      console.error('Error adding action:', error);
+      toast({
+        title: "Failed to add action",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSave = () => {
@@ -101,39 +193,43 @@ const CustomizeQuickActions = () => {
         <p className="text-muted-foreground">Drag to reorder, toggle to enable/disable. Add custom shortcuts to personalize your dashboard.</p>
 
         {/* Current Actions */}
-        <div className="space-y-3">
-          {actions.map((action) => {
-            const Icon = action.icon;
-            return (
-              <div key={action.id} className="bg-card rounded-xl p-4 flex items-center gap-4">
-                <GripVertical className="w-5 h-5 text-muted-foreground" />
-                <div className="w-10 h-10 bg-accent rounded-full flex items-center justify-center flex-shrink-0">
-                  <Icon className="w-5 h-5 text-primary" />
+        {isLoading ? (
+          <p className="text-center text-muted-foreground py-4">Loading actions...</p>
+        ) : (
+          <div className="space-y-3">
+            {actions.map((action) => {
+              const Icon = action.iconComponent;
+              return (
+                <div key={action.id} className="bg-card rounded-xl p-4 flex items-center gap-4">
+                  <GripVertical className="w-5 h-5 text-muted-foreground" />
+                  <div className="w-10 h-10 bg-accent rounded-full flex items-center justify-center flex-shrink-0">
+                    <Icon className="w-5 h-5 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-foreground">{action.title}</h3>
+                    <p className="text-sm text-muted-foreground">{action.subtitle}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch 
+                      checked={action.is_enabled}
+                      onCheckedChange={() => handleToggle(action.id)}
+                    />
+                    {action.is_custom && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => handleDelete(action.id)}
+                        className="text-destructive"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-foreground">{action.title}</h3>
-                  <p className="text-sm text-muted-foreground">{action.subtitle}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Switch 
-                    checked={action.isEnabled}
-                    onCheckedChange={() => handleToggle(action.id)}
-                  />
-                  {!action.isDefault && (
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={() => handleDelete(action.id)}
-                      className="text-destructive"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </Button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Add Action Dialog */}
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>

@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { fetchDashboardStats, calculateReadinessScore, updateInactivityTrigger, type DashboardStats } from "@/services/dashboardService";
 import FeatureTour from "@/components/FeatureTour";
 import { useToast } from "@/hooks/use-toast";
+import { getQuickActions, initializeDefaultActions, type QuickAction } from "@/services/quickActionsService";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -21,7 +22,17 @@ const Dashboard = () => {
     inactivityTriggerActive: false,
   });
   const [isLoadingStats, setIsLoadingStats] = useState(true);
+  const [quickActions, setQuickActions] = useState<QuickAction[]>([]);
   const lastToggleTime = useRef<number>(0);
+
+  // Icon mapping for quick actions
+  const iconMap: Record<string, any> = {
+    Vault,
+    UserPlus,
+    Shield,
+    Timer,
+    Plus,
+  };
 
   const readinessScore = calculateReadinessScore(
     stats,
@@ -40,6 +51,7 @@ const Dashboard = () => {
   useEffect(() => {
     if (user) {
       loadDashboardStats();
+      loadQuickActions();
     }
   }, [user]);
 
@@ -54,6 +66,23 @@ const Dashboard = () => {
       console.error('Error loading dashboard stats:', error);
     } finally {
       setIsLoadingStats(false);
+    }
+  };
+
+  const loadQuickActions = async () => {
+    if (!user) return;
+
+    try {
+      // Initialize defaults if needed
+      await initializeDefaultActions(user.id);
+      
+      // Fetch actions
+      const actions = await getQuickActions(user.id);
+      setQuickActions(actions.filter(a => a.is_enabled));
+    } catch (error) {
+      console.error('Error loading quick actions:', error);
+      // Fallback to empty array if error
+      setQuickActions([]);
     }
   };
 
@@ -95,12 +124,6 @@ const Dashboard = () => {
     }
   };
 
-  const quickActions = [
-    { icon: Vault, title: "Digital Vault", subtitle: "Manage your secure documents", color: "bg-accent", onClick: () => navigate("/vault") },
-    { icon: UserPlus, title: "Nominee Center", subtitle: "Manage trusted contacts", color: "bg-accent", onClick: () => navigate("/nominee-center") },
-    { icon: Shield, title: "Inactivity Triggers", subtitle: "Set up activity monitoring", color: "bg-accent", onClick: () => navigate("/inactivity-triggers") },
-    { icon: Timer, title: "Time Capsule", subtitle: "Create legacy messages", color: "bg-accent", onClick: () => navigate("/time-capsule") },
-  ];
 
   if (!profile) {
     return (
@@ -188,22 +211,32 @@ const Dashboard = () => {
         <div>
           <h2 className="text-base font-bold text-foreground mb-2">Quick Actions</h2>
           <div className="space-y-1.5">
-            {quickActions.map((action, index) => {
-              const Icon = action.icon;
-              return (
-                <button key={index} onClick={action.onClick}
-                  className="w-full bg-card rounded-lg p-2.5 flex items-center gap-2.5 hover:bg-accent transition-colors">
-                  <div className={`w-9 h-9 ${action.color} rounded-full flex items-center justify-center flex-shrink-0`}>
-                    <Icon className="w-4 h-4 text-primary" />
-                  </div>
-                  <div className="flex-1 text-left min-w-0">
-                    <h3 className="font-semibold text-foreground text-xs truncate">{action.title}</h3>
-                    <p className="text-[10px] text-muted-foreground truncate">{action.subtitle}</p>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                </button>
-              );
-            })}
+            {quickActions.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">No quick actions enabled</p>
+            ) : (
+              quickActions.map((action) => {
+                const Icon = iconMap[action.icon || 'Plus'] || Plus;
+                const handleClick = () => {
+                  if (action.route) {
+                    navigate(action.route);
+                  }
+                };
+                
+                return (
+                  <button key={action.id} onClick={handleClick}
+                    className="w-full bg-card rounded-lg p-2.5 flex items-center gap-2.5 hover:bg-accent transition-colors">
+                    <div className="w-9 h-9 bg-accent rounded-full flex items-center justify-center flex-shrink-0">
+                      <Icon className="w-4 h-4 text-primary" />
+                    </div>
+                    <div className="flex-1 text-left min-w-0">
+                      <h3 className="font-semibold text-foreground text-xs truncate">{action.title}</h3>
+                      <p className="text-[10px] text-muted-foreground truncate">{action.subtitle}</p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  </button>
+                );
+              })
+            )}
           </div>
         </div>
 
