@@ -1,4 +1,4 @@
-import { ArrowLeft, Users, Home, Vault, Settings, Mail, Phone, CheckCircle, Clock, Edit2, Trash2 } from "lucide-react";
+import { ArrowLeft, Users, Home, Vault, Settings, Mail, Phone, CheckCircle, Clock, Edit2, Trash2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -31,6 +31,7 @@ const NomineeCenter = () => {
   const [nominees, setNominees] = useState<Nominee[]>([]);
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; nominee: Nominee | null }>({ open: false, nominee: null });
   const [isLoading, setIsLoading] = useState(false);
+  const [resendingId, setResendingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     fullName: "",
     relation: "",
@@ -221,6 +222,36 @@ const NomineeCenter = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResendVerification = async (nominee: Nominee) => {
+    setResendingId(nominee.id);
+
+    try {
+      const { error } = await supabase.functions.invoke('send-nominee-verification', {
+        body: {
+          nomineeId: nominee.id,
+          nomineeEmail: nominee.email,
+          nomineeName: nominee.full_name
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Verification link sent",
+        description: `A new verification link has been sent to ${nominee.email}`,
+      });
+    } catch (error: any) {
+      console.error("Error resending verification:", error);
+      toast({
+        title: "Failed to send verification",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setResendingId(null);
     }
   };
 
@@ -432,6 +463,24 @@ const NomineeCenter = () => {
 
                   {/* Action Buttons */}
                   <div className="flex flex-col sm:flex-row gap-1 sm:gap-2 flex-shrink-0">
+                    {nominee.status === 'pending' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleResendVerification(nominee)}
+                        disabled={resendingId === nominee.id}
+                        className="text-xs sm:text-sm h-8 px-2 sm:px-3 border-primary/30 text-primary hover:bg-primary/10"
+                      >
+                        {resendingId === nominee.id ? (
+                          <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
+                        ) : (
+                          <>
+                            <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
+                            <span className="hidden sm:inline">Resend Link</span>
+                          </>
+                        )}
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"
