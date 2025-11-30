@@ -68,6 +68,7 @@ const App = () => (
             <Route path="/nominee-center" element={<ProtectedRoute><NomineeCenter /></ProtectedRoute>} />
             <Route path="/nominee-verification" element={<ProtectedRoute><NomineeVerification /></ProtectedRoute>} />
             <Route path="/verify-nominee" element={<VerifyNominee />} />
+            <Route path="/emergency-access" element={<EmergencyAccess />} />
             <Route path="/inactivity-triggers" element={<ProtectedRoute><InactivityTriggers /></ProtectedRoute>} />
             <Route path="/time-capsule" element={<ProtectedRoute><TimeCapsule /></ProtectedRoute>} />
             <Route path="/customize-quick-actions" element={<ProtectedRoute><CustomizeQuickActions /></ProtectedRoute>} />
