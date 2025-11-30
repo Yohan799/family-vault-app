@@ -18,6 +18,7 @@ interface Profile {
   auto_lock_minutes: number | null;
   app_lock_type: string | null;
   app_pin_hash: string | null;
+  additional_emails: string[] | null;
 }
 
 interface AuthContextType {
@@ -54,7 +55,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .single();
 
       if (error) throw error;
-      setProfile(data);
+      
+      // Cast additional_emails from Json to string[]
+      setProfile({
+        ...data,
+        additional_emails: (data.additional_emails as string[]) || []
+      });
     } catch (error) {
       console.error('Error fetching profile:', error);
     }

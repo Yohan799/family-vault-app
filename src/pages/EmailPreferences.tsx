@@ -1,30 +1,91 @@
-import { ArrowLeft, Mail, Plus } from "lucide-react";
+import { ArrowLeft, Mail, Plus, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const EmailPreferences = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [emails, setEmails] = useState(["raj@example.com"]);
+  const { profile, updateProfile } = useAuth();
+  const [emails, setEmails] = useState<string[]>([]);
+  const [primaryEmail, setPrimaryEmail] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [isAdding, setIsAdding] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleAddEmail = () => {
-    if (newEmail && newEmail.includes("@")) {
-      setEmails([...emails, newEmail]);
-      setNewEmail("");
-      setIsAdding(false);
-      toast({
-        title: "Email added",
-        description: `${newEmail} has been added to your account`,
-      });
+  // Load emails on mount
+  useEffect(() => {
+    if (profile) {
+      const primary = profile.email || "";
+      const additional = (profile.additional_emails as string[]) || [];
+      setPrimaryEmail(primary);
+      setEmails([primary, ...additional]);
+      setIsLoading(false);
     }
+  }, [profile]);
+
+  const handleAddEmail = async () => {
+    if (!newEmail || !newEmail.includes("@")) {
+      toast({
+        title: "Invalid email",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (emails.includes(newEmail)) {
+      toast({
+        title: "Email already exists",
+        description: "This email is already added to your account",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const newEmails = [...emails, newEmail];
+    const additionalEmails = newEmails.filter(e => e !== primaryEmail);
+    
+    const { error } = await supabase
+      .from("profiles")
+      .update({ additional_emails: additionalEmails })
+      .eq("id", profile?.id);
+
+    if (error) {
+      toast({
+        title: "Error adding email",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setEmails(newEmails);
+    setNewEmail("");
+    setIsAdding(false);
+    await updateProfile({ additional_emails: additionalEmails });
+    toast({
+      title: "Email added",
+      description: `${newEmail} has been added to your account`,
+    });
   };
 
-  const handleDeleteEmail = (index: number) => {
+  const handleDeleteEmail = async (index: number) => {
+    const emailToDelete = emails[index];
+    
+    if (emailToDelete === primaryEmail) {
+      toast({
+        title: "Cannot delete primary email",
+        description: "Set another email as primary before deleting this one",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (emails.length === 1) {
       toast({
         title: "Cannot delete",
@@ -34,15 +95,85 @@ const EmailPreferences = () => {
       return;
     }
 
-    if (confirm("Are you sure you want to delete this email?")) {
-      const deletedEmail = emails[index];
-      setEmails(emails.filter((_, i) => i !== index));
+    const newEmails = emails.filter((_, i) => i !== index);
+    const additionalEmails = newEmails.filter(e => e !== primaryEmail);
+    
+    const { error } = await supabase
+      .from("profiles")
+      .update({ additional_emails: additionalEmails })
+      .eq("id", profile?.id);
+
+    if (error) {
       toast({
-        title: "Email deleted",
-        description: `${deletedEmail} has been removed from your account`,
+        title: "Error deleting email",
+        description: error.message,
+        variant: "destructive",
       });
+      return;
     }
+
+    setEmails(newEmails);
+    await updateProfile({ additional_emails: additionalEmails });
+    toast({
+      title: "Email deleted",
+      description: `${emailToDelete} has been removed from your account`,
+    });
   };
+
+  const handleSetPrimary = async (email: string) => {
+    if (email === primaryEmail) return;
+
+    const newAdditionalEmails = emails.filter(e => e !== email && e !== primaryEmail);
+    newAdditionalEmails.push(primaryEmail);
+    
+    const { error } = await supabase
+      .from("profiles")
+      .update({ 
+        email: email,
+        additional_emails: newAdditionalEmails
+      })
+      .eq("id", profile?.id);
+
+    if (error) {
+      toast({
+        title: "Error setting primary email",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setPrimaryEmail(email);
+    setEmails([email, ...newAdditionalEmails]);
+    await updateProfile({ email, additional_emails: newAdditionalEmails });
+    toast({
+      title: "Primary email updated",
+      description: `${email} is now your primary email`,
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background pb-safe">
+        <div className="bg-primary/20 text-foreground p-4 sm:p-6 rounded-b-3xl">
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => navigate("/settings")} 
+              className="text-primary-foreground min-h-[44px] min-w-[44px]"
+            >
+              <ArrowLeft className="w-6 h-6" />
+            </Button>
+            <h1 className="text-xl sm:text-2xl font-bold">Email Preferences</h1>
+          </div>
+        </div>
+        <div className="p-4 sm:p-6 flex items-center justify-center">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pb-safe">
@@ -63,20 +194,27 @@ const EmailPreferences = () => {
 
       <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
         <p className="text-sm sm:text-base text-muted-foreground px-1">
-          Manage your email addresses for account notifications and recovery.
+          Manage your email addresses for account notifications and recovery. Tap the star to set as primary.
         </p>
 
         {/* Mobile-optimized email list */}
         <div className="bg-card rounded-2xl overflow-hidden divide-y divide-border">
           {emails.map((email, index) => (
             <div key={index} className="p-4 sm:p-5 flex items-center gap-3 sm:gap-4 min-h-[72px]">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
-                <Mail className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-              </div>
+              <button
+                onClick={() => handleSetPrimary(email)}
+                className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-full flex items-center justify-center shrink-0 hover:bg-primary/20 transition-colors active:scale-95"
+              >
+                {email === primaryEmail ? (
+                  <Star className="w-5 h-5 sm:w-6 sm:h-6 text-primary fill-primary" />
+                ) : (
+                  <Star className="w-5 h-5 sm:w-6 sm:h-6 text-muted-foreground" />
+                )}
+              </button>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-foreground text-sm sm:text-base truncate">{email}</p>
                 <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-                  {index === 0 ? "Primary" : "Secondary"}
+                  {email === primaryEmail ? "Primary" : "Secondary"}
                 </p>
               </div>
               <Button
