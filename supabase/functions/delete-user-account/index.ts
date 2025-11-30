@@ -33,6 +33,14 @@ const handler = async (req: Request): Promise<Response> => {
 
     const now = new Date().toISOString();
 
+    // First, get all nominee IDs for this user
+    const { data: nominees } = await supabase
+      .from("nominees")
+      .select("id")
+      .eq("user_id", user.id);
+
+    const nomineeIds = nominees?.map(n => n.id) || [];
+
     // Soft delete all user data
     await supabase.from("documents").update({ deleted_at: now }).eq("user_id", user.id);
     await supabase.from("folders").update({ deleted_at: now }).eq("user_id", user.id);
@@ -43,9 +51,12 @@ const handler = async (req: Request): Promise<Response> => {
     
     // Hard delete some tables
     await supabase.from("access_controls").delete().eq("user_id", user.id);
-    await supabase.from("verification_tokens").delete().in("nominee_id", 
-      supabase.from("nominees").select("id").eq("user_id", user.id)
-    );
+    
+    // Delete verification tokens for user's nominees
+    if (nomineeIds.length > 0) {
+      await supabase.from("verification_tokens").delete().in("nominee_id", nomineeIds);
+    }
+    
     await supabase.from("quick_actions").delete().eq("user_id", user.id);
     await supabase.from("user_sessions").delete().eq("user_id", user.id);
     await supabase.from("activity_logs").delete().eq("user_id", user.id);
