@@ -176,7 +176,7 @@ const Dashboard = () => {
             </svg>
             <span className="absolute text-lg font-bold text-blue-500">{readinessScore}</span>
           </div>
-          <p className="text-foreground font-medium text-xs">Family Readiness Index</p>
+          <p className="text-foreground font-medium text-xs">Security Score</p>
         </div>
       </div>
 

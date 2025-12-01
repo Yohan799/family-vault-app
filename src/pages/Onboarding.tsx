@@ -64,18 +64,9 @@ const Onboarding = () => {
             <p className="text-muted-foreground leading-relaxed">{step.description}</p>
           </div>
 
-          <div className="space-y-4">
-            <Button onClick={handleNext} className="w-full" size="lg">
-              {currentStep < onboardingSteps.length - 1 ? "Next" : "Get Started"}
-            </Button>
-
-            <button
-              onClick={() => navigate("/signin")}
-              className="w-full text-sm text-primary hover:underline"
-            >
-              Learn More
-            </button>
-          </div>
+          <Button onClick={handleNext} className="w-full" size="lg">
+            {currentStep < onboardingSteps.length - 1 ? "Next" : "Get Started"}
+          </Button>
 
           <div className="flex justify-center gap-2">
             {onboardingSteps.map((_, index) => (
