@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
+import { Capacitor } from '@capacitor/core';
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { updateActivityTimestamp } from '@/lib/activityTracking';
 import { createSession } from '@/services/sessionService';
 import { logActivity } from '@/services/activityLogService';
@@ -164,18 +166,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signInWithGoogle = async () => {
-    const redirectUrl = `${window.location.origin}/dashboard`;
+    const isNative = Capacitor.isNativePlatform();
     
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: redirectUrl,
+    if (isNative) {
+      // Native Android/iOS flow using GoogleAuth plugin
+      try {
+        const googleUser = await GoogleAuth.signIn();
+        
+        // Use the ID token to sign in with Supabase
+        const { data, error } = await supabase.auth.signInWithIdToken({
+          provider: 'google',
+          token: googleUser.authentication.idToken,
+        });
+        
+        if (error) throw error;
+        
+        if (data.user) {
+          await createSession(data.user.id);
+          await logActivity(data.user.id, 'auth.login', 'user', data.user.id);
+        }
+        
+        localStorage.setItem('isFirstLogin', 'true');
+      } catch (error) {
+        console.error('Native Google Sign-In error:', error);
+        throw error;
       }
-    });
+    } else {
+      // Web flow using OAuth redirect
+      const redirectUrl = `${window.location.origin}/dashboard`;
+      
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectUrl,
+        }
+      });
 
-    if (error) throw error;
-    
-    localStorage.setItem('isFirstLogin', 'true');
+      if (error) throw error;
+      
+      localStorage.setItem('isFirstLogin', 'true');
+    }
   };
 
   const signOut = async () => {
