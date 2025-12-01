@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { Capacitor } from '@capacitor/core';
-import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+import { SocialLogin } from '@capgo/capacitor-social-login';
 import { updateActivityTimestamp } from '@/lib/activityTracking';
 import { createSession } from '@/services/sessionService';
 import { logActivity } from '@/services/activityLogService';
@@ -169,24 +169,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const isNative = Capacitor.isNativePlatform();
     
     if (isNative) {
-      // Native Android/iOS flow using GoogleAuth plugin
+      // Native Android/iOS flow using SocialLogin plugin
       try {
-        const googleUser = await GoogleAuth.signIn();
-        
-        // Use the ID token to sign in with Supabase
-        const { data, error } = await supabase.auth.signInWithIdToken({
+        const response = await SocialLogin.login({
           provider: 'google',
-          token: googleUser.authentication.idToken,
+          options: {
+            scopes: ['profile', 'email'],
+          }
         });
         
-        if (error) throw error;
-        
-        if (data.user) {
-          await createSession(data.user.id);
-          await logActivity(data.user.id, 'auth.login', 'user', data.user.id);
+        if (response.provider === 'google' && response.result) {
+          // Extract token from response (structure varies by platform)
+          const result = response.result as any;
+          const token = result.idToken || result.authentication?.idToken || result.accessToken;
+          
+          if (!token) {
+            throw new Error('No authentication token received from Google');
+          }
+          
+          // Use the ID token to sign in with Supabase
+          const { data, error } = await supabase.auth.signInWithIdToken({
+            provider: 'google',
+            token: token,
+          });
+          
+          if (error) throw error;
+          
+          if (data.user) {
+            await createSession(data.user.id);
+            await logActivity(data.user.id, 'auth.login', 'user', data.user.id);
+          }
+          
+          localStorage.setItem('isFirstLogin', 'true');
         }
-        
-        localStorage.setItem('isFirstLogin', 'true');
       } catch (error) {
         console.error('Native Google Sign-In error:', error);
         throw error;
