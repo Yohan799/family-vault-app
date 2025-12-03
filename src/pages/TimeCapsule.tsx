@@ -9,6 +9,7 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { timeCapsuleService, TimeCapsule as TimeCapsuleType } from "@/services/timeCapsuleService";
 import { openGoogleDrivePicker, downloadFileFromGoogleDrive } from "@/lib/googleDrivePicker";
 import { scanDocument } from "@/lib/documentScanner";
+import { TimeCapsuleSkeleton } from "@/components/skeletons";
 
 const TimeCapsule = () => {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ const TimeCapsule = () => {
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; capsule: TimeCapsuleType | null }>({ open: false, capsule: null });
   const [capsules, setCapsules] = useState<TimeCapsuleType[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isPageLoading, setIsPageLoading] = useState(true);
   const [formData, setFormData] = useState({
     title: "",
     message: "",
@@ -32,6 +34,7 @@ const TimeCapsule = () => {
   }, []);
 
   const loadCapsules = async () => {
+    setIsPageLoading(true);
     try {
       const data = await timeCapsuleService.getAll();
       setCapsules(data);
@@ -42,8 +45,14 @@ const TimeCapsule = () => {
         description: "Failed to load time capsules",
         variant: "destructive"
       });
+    } finally {
+      setIsPageLoading(false);
     }
   };
+
+  if (isPageLoading) {
+    return <TimeCapsuleSkeleton />;
+  }
 
   const handleScanDocument = async () => {
     try {

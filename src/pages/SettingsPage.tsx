@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { logActivity } from "@/services/activityLogService";
 import { supabase } from "@/integrations/supabase/client";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { SettingsSkeleton } from "@/components/skeletons";
 
 const SettingsPage = () => {
   const navigate = useNavigate();
@@ -138,11 +139,7 @@ const SettingsPage = () => {
   ];
 
   if (!profile) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
-    );
+    return <SettingsSkeleton />;
   }
 
   const displayName = profile.full_name || "User";

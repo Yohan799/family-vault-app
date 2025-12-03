@@ -4,17 +4,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
+import { ProfileSkeleton } from "@/components/skeletons";
 
 const Profile = () => {
   const navigate = useNavigate();
   const { profile, user } = useAuth();
 
   if (!profile || !user) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">Loading profile...</p>
-      </div>
-    );
+    return <ProfileSkeleton />;
   }
 
   const displayName = profile.full_name || "User";
