@@ -4,7 +4,7 @@ import { Switch } from "@/components/ui/switch";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { updateLockType } from "@/services/appLockService";
+import { updateLockType, saveLocalLockPreference, clearLocalLockPreferences } from "@/services/appLockService";
 import { Capacitor } from "@capacitor/core";
 
 const AppLockSetup = () => {
@@ -31,6 +31,7 @@ const AppLockSetup = () => {
         setIsLoading(true);
         try {
           await updateLockType(user.id, "biometric");
+          await saveLocalLockPreference("biometric"); // Save locally for pre-login lock
           setBiometricEnabled(true);
           setPinEnabled(false);
           await refreshProfile?.();
@@ -58,6 +59,7 @@ const AppLockSetup = () => {
       setIsLoading(true);
       try {
         await updateLockType(user.id, null);
+        await clearLocalLockPreferences(); // Clear local preferences
         setBiometricEnabled(false);
         await refreshProfile?.();
         toast({
@@ -86,6 +88,7 @@ const AppLockSetup = () => {
       setIsLoading(true);
       try {
         await updateLockType(user.id, null);
+        await clearLocalLockPreferences(); // Clear local preferences
         setPinEnabled(false);
         await refreshProfile?.();
         toast({

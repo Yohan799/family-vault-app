@@ -5,15 +5,16 @@ import { Input } from "@/components/ui/input";
 import { PinPad } from "@/components/PinPad";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { unlockApp, verifyPin, type AppLockType } from "@/services/appLockService";
+import { unlockApp, verifyPin, verifyPinLocally, type AppLockType } from "@/services/appLockService";
 import { Capacitor } from "@capacitor/core";
 
 interface LockScreenProps {
   lockType: AppLockType;
   onUnlock: () => void;
+  isPreLogin?: boolean; // New prop to handle pre-login lock
 }
 
-export const LockScreen = ({ lockType, onUnlock }: LockScreenProps) => {
+export const LockScreen = ({ lockType, onUnlock, isPreLogin = false }: LockScreenProps) => {
   const [pin, setPin] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -31,18 +32,57 @@ export const LockScreen = ({ lockType, onUnlock }: LockScreenProps) => {
   };
 
   useEffect(() => {
-    if (pin.length === 6 && user) {
-      verifyPinAndUnlock();
+    // For pre-login, verify locally; for post-login, verify with database
+    if (pin.length === 6) {
+      if (isPreLogin) {
+        verifyPinLocallyAndUnlock();
+      } else if (user) {
+        verifyPinAndUnlock();
+      }
     }
   }, [pin]);
 
   // Auto-trigger biometric on mount for biometric lock type
   useEffect(() => {
-    if (lockType === "biometric" && Capacitor.isNativePlatform()) {
+    if (lockType === "biometric") {
       handleBiometricUnlock();
     }
   }, [lockType]);
 
+  // Verify PIN locally (pre-login)
+  const verifyPinLocallyAndUnlock = async () => {
+    setIsLoading(true);
+    try {
+      const isValid = await verifyPinLocally(pin);
+      if (isValid) {
+        unlockApp();
+        onUnlock();
+        toast({
+          title: "App Unlocked",
+          description: "Welcome back!",
+        });
+      } else {
+        toast({
+          title: "Invalid PIN",
+          description: "Please try again",
+          variant: "destructive",
+        });
+        setPin("");
+      }
+    } catch (error) {
+      console.error("PIN verification error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to verify PIN",
+        variant: "destructive",
+      });
+      setPin("");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Verify PIN with database (post-login)
   const verifyPinAndUnlock = async () => {
     if (!user) return;
     

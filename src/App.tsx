@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { AppLockGate } from "@/components/AppLockGate";
 import Welcome from "./pages/Welcome";
 import Onboarding from "./pages/Onboarding";
 import SignUp from "./pages/SignUp";
@@ -72,11 +73,12 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <BackButtonHandler />
-          <Routes>
+        <AppLockGate>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <BackButtonHandler />
+            <Routes>
           <Route path="/" element={<Welcome />} />
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/signup" element={<SignUp />} />
@@ -114,8 +116,9 @@ const App = () => (
             <Route path="/setup-pin" element={<ProtectedRoute><SetupPIN /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+            </Routes>
+          </BrowserRouter>
+        </AppLockGate>
       </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>

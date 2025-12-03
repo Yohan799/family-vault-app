@@ -5,7 +5,7 @@ import { PinPad } from "@/components/PinPad";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { savePin } from "@/services/appLockService";
+import { savePin, saveLocalLockPreference, saveLocalPinHash, hashPin } from "@/services/appLockService";
 
 const SetupPIN = () => {
   const navigate = useNavigate();
@@ -49,7 +49,14 @@ const SetupPIN = () => {
       if (pin === confirmPin) {
         setIsLoading(true);
         try {
+          // Save PIN to database
           await savePin(user.id, pin);
+          
+          // Save lock preference and PIN hash locally for pre-login lock
+          await saveLocalLockPreference("pin");
+          const pinHash = await hashPin(pin);
+          await saveLocalPinHash(pinHash);
+          
           toast({
             title: "PIN Lock Enabled",
             description: "Your app will lock after inactivity",
