@@ -137,6 +137,26 @@ export const passwordSchema = z
     .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character");
 
 // Document File Validation
+// Allowed MIME types for explicit matching
+const ALLOWED_MIME_TYPES = [
+    "application/pdf",
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image/webp",
+    "image/gif",
+    "image/bmp",
+    "image/heic",
+    "image/heif",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+];
+
+// Image extensions for fallback validation when MIME type is empty/generic
+const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.heic', '.heif'];
+
 export const documentFileSchema = z.object({
     name: z.string().min(1, "File name is required"),
     size: z
@@ -145,21 +165,26 @@ export const documentFileSchema = z.object({
     type: z
         .string()
         .refine(
-            (type) =>
-                [
-                    "application/pdf",
-                    "image/jpeg",
-                    "image/jpg",
-                    "image/png",
-                    "image/webp",
-                    "application/msword",
-                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                    "application/vnd.ms-excel",
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                ].includes(type),
-            "Invalid file type. Allowed: PDF, JPG, PNG, WEBP, DOC, DOCX, XLS, XLSX"
+            (type) => {
+                // Accept if MIME type is in allowed list
+                if (ALLOWED_MIME_TYPES.includes(type)) return true;
+                // Accept any image/* type (camera captures may have various formats)
+                if (type.startsWith('image/')) return true;
+                // Accept empty/generic types (will validate by extension in validateFile)
+                if (!type || type === 'application/octet-stream') return true;
+                return false;
+            },
+            "Invalid file type. Allowed: PDF, Images, DOC, DOCX, XLS, XLSX"
         ),
 });
+
+/**
+ * Check if filename has an image extension
+ */
+export const hasImageExtension = (filename: string): boolean => {
+    const lowerName = filename.toLowerCase();
+    return IMAGE_EXTENSIONS.some(ext => lowerName.endsWith(ext));
+};
 
 // ============================================
 // VALIDATION HELPERS
@@ -203,20 +228,45 @@ export const sanitizeInput = (input: string): string => {
 export const validateFile = (
     file: File
 ): { valid: boolean; error?: string } => {
-    const result = documentFileSchema.safeParse({
-        name: file.name,
-        size: file.size,
-        type: file.type,
-    });
-
-    if (!result.success) {
-        return {
-            valid: false,
-            error: result.error.errors[0]?.message || "Invalid file",
-        };
+    // First check size
+    if (file.size > 100 * 1024 * 1024) {
+        return { valid: false, error: "File size must be less than 100MB" };
     }
 
-    return { valid: true };
+    // Check if file has valid name
+    if (!file.name || file.name.trim() === '') {
+        return { valid: false, error: "File name is required" };
+    }
+
+    const mimeType = file.type || '';
+    
+    // Accept known MIME types
+    if (ALLOWED_MIME_TYPES.includes(mimeType)) {
+        return { valid: true };
+    }
+    
+    // Accept any image/* type (camera/scanner captures)
+    if (mimeType.startsWith('image/')) {
+        return { valid: true };
+    }
+    
+    // For empty or generic MIME types, check file extension
+    if (!mimeType || mimeType === 'application/octet-stream') {
+        if (hasImageExtension(file.name)) {
+            return { valid: true };
+        }
+        // Allow files with common document extensions
+        const docExtensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx'];
+        const lowerName = file.name.toLowerCase();
+        if (docExtensions.some(ext => lowerName.endsWith(ext))) {
+            return { valid: true };
+        }
+    }
+
+    return {
+        valid: false,
+        error: "Invalid file type. Allowed: PDF, Images, DOC, DOCX, XLS, XLSX",
+    };
 };
 
 /**

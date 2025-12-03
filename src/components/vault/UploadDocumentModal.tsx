@@ -58,25 +58,41 @@ export const UploadDocumentModal = ({
     setIsUploading(true);
     
     try {
+      console.log("[Scanner] Starting document scan...");
       const result = await scanDocument();
       
-      if (result) {
-        const validation = validateFile(result.file);
-        if (!validation.valid) {
-          toast({
-            title: "Scan Failed",
-            description: validation.error,
-            variant: "destructive",
-          });
-          return;
-        }
-
-        const { storeDocument } = await import('@/lib/documentStorage');
-        await storeDocument(result.file, categoryId, subcategoryId, folderId);
-        handleUploadSuccess(result.file.name);
+      if (!result) {
+        console.log("[Scanner] Scan cancelled or returned null");
+        toast({
+          title: "Scan Cancelled",
+          description: "No document was captured",
+        });
+        return;
       }
+
+      console.log("[Scanner] Scan result:", {
+        fileName: result.file.name,
+        fileSize: result.file.size,
+        fileType: result.file.type,
+      });
+
+      const validation = validateFile(result.file);
+      if (!validation.valid) {
+        console.error("[Scanner] Validation failed:", validation.error);
+        toast({
+          title: "Scan Failed",
+          description: validation.error || "Invalid file format",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log("[Scanner] Validation passed, storing document...");
+      const { storeDocument } = await import('@/lib/documentStorage');
+      await storeDocument(result.file, categoryId, subcategoryId, folderId);
+      handleUploadSuccess(result.file.name);
     } catch (error) {
-      console.error("Error scanning document:", error);
+      console.error("[Scanner] Error scanning document:", error);
       toast({
         title: "Scan Failed",
         description: error instanceof Error ? error.message : "Failed to scan document",

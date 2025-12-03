@@ -10,6 +10,8 @@ export interface ScannedDocument {
  * Falls back to camera capture on web
  */
 export const scanDocument = async (): Promise<ScannedDocument | null> => {
+  console.log("[DocumentScanner] Platform:", Capacitor.getPlatform(), "isNative:", Capacitor.isNativePlatform());
+  
   if (Capacitor.isNativePlatform()) {
     return scanWithMLKit();
   } else {
@@ -22,8 +24,10 @@ export const scanDocument = async (): Promise<ScannedDocument | null> => {
  */
 const scanWithMLKit = async (): Promise<ScannedDocument | null> => {
   try {
+    console.log("[DocumentScanner] Loading ML Kit Document Scanner plugin...");
     const { DocumentScanner } = await import('@capacitor-mlkit/document-scanner');
     
+    console.log("[DocumentScanner] Starting ML Kit scan...");
     // Use type assertion for flexibility with different plugin versions
     const result = await DocumentScanner.scanDocument({
       pageLimit: 1,
@@ -31,25 +35,49 @@ const scanWithMLKit = async (): Promise<ScannedDocument | null> => {
       resultFormats: 'JPEG'
     }) as { pages?: string[]; scannedDocuments?: Array<{ jpeg?: string }> };
 
+    console.log("[DocumentScanner] ML Kit result:", JSON.stringify(result, null, 2));
+
     // Handle different response formats
     const imagePath = result.pages?.[0] || result.scannedDocuments?.[0]?.jpeg;
 
-    if (imagePath) {
-      // Convert the file path to a File object
-      const response = await fetch(imagePath);
-      const blob = await response.blob();
-      const file = new File([blob], `scan_${Date.now()}.jpg`, { type: 'image/jpeg' });
-      
-      // Create data URL for preview
-      const dataUrl = await blobToDataUrl(blob);
-      
-      return { file, dataUrl };
+    if (!imagePath) {
+      console.log("[DocumentScanner] No image path in result - user likely cancelled");
+      return null;
+    }
+
+    console.log("[DocumentScanner] Image path:", imagePath);
+
+    // Convert the file path to a File object
+    const response = await fetch(imagePath);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch scanned image: ${response.status}`);
     }
     
-    return null;
+    const blob = await response.blob();
+    console.log("[DocumentScanner] Blob created:", { size: blob.size, type: blob.type });
+    
+    // Ensure we have a valid MIME type
+    const mimeType = blob.type || 'image/jpeg';
+    const fileName = `scan_${Date.now()}.jpg`;
+    
+    const file = new File([blob], fileName, { type: mimeType });
+    console.log("[DocumentScanner] File created:", { name: file.name, size: file.size, type: file.type });
+    
+    // Create data URL for preview
+    const dataUrl = await blobToDataUrl(blob);
+    
+    return { file, dataUrl };
   } catch (error) {
-    console.error('ML Kit scanner error:', error);
+    console.error('[DocumentScanner] ML Kit scanner error:', error);
+    
+    // Check if user cancelled
+    if (error instanceof Error && error.message.includes('cancel')) {
+      console.log("[DocumentScanner] User cancelled ML Kit scan");
+      return null;
+    }
+    
     // Fall back to camera if ML Kit fails
+    console.log("[DocumentScanner] Falling back to camera capture...");
     return scanWithCamera();
   }
 };
@@ -59,25 +87,79 @@ const scanWithMLKit = async (): Promise<ScannedDocument | null> => {
  */
 const scanWithCamera = (): Promise<ScannedDocument | null> => {
   return new Promise((resolve) => {
+    console.log("[DocumentScanner] Using camera/file input fallback");
+    
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
     input.capture = 'environment';
     
+    let resolved = false;
+    
+    const cleanup = () => {
+      input.remove();
+    };
+    
     input.onchange = async (e: Event) => {
+      if (resolved) return;
+      resolved = true;
+      
       const target = e.target as HTMLInputElement;
       const file = target.files?.[0];
       
+      console.log("[DocumentScanner] File selected:", file ? { name: file.name, size: file.size, type: file.type } : 'none');
+      
       if (file) {
-        const dataUrl = await blobToDataUrl(file);
-        resolve({ file, dataUrl });
+        try {
+          // Ensure file has a valid type
+          let processedFile = file;
+          if (!file.type || file.type === '') {
+            // Create new file with explicit MIME type based on extension
+            const ext = file.name.split('.').pop()?.toLowerCase();
+            const mimeMap: Record<string, string> = {
+              'jpg': 'image/jpeg',
+              'jpeg': 'image/jpeg',
+              'png': 'image/png',
+              'gif': 'image/gif',
+              'webp': 'image/webp',
+              'heic': 'image/heic',
+              'heif': 'image/heif',
+            };
+            const mimeType = mimeMap[ext || ''] || 'image/jpeg';
+            processedFile = new File([file], file.name, { type: mimeType });
+            console.log("[DocumentScanner] Reprocessed file with MIME type:", processedFile.type);
+          }
+          
+          const dataUrl = await blobToDataUrl(processedFile);
+          cleanup();
+          resolve({ file: processedFile, dataUrl });
+        } catch (error) {
+          console.error("[DocumentScanner] Error processing file:", error);
+          cleanup();
+          resolve(null);
+        }
       } else {
+        cleanup();
         resolve(null);
       }
     };
     
-    // Handle cancel
-    input.addEventListener('cancel', () => resolve(null));
+    // Handle cancel - use blur event as backup
+    input.addEventListener('cancel', () => {
+      if (resolved) return;
+      resolved = true;
+      console.log("[DocumentScanner] Camera input cancelled");
+      cleanup();
+      resolve(null);
+    });
+    
+    // Timeout fallback for browsers that don't fire cancel event
+    setTimeout(() => {
+      if (!resolved && !input.files?.length) {
+        // Don't resolve here - user might still be selecting
+        console.log("[DocumentScanner] Timeout check - input still active");
+      }
+    }, 60000); // 60 second timeout
     
     input.click();
   });
@@ -90,7 +172,7 @@ const blobToDataUrl = (blob: Blob): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
+    reader.onerror = () => reject(new Error('Failed to read file'));
     reader.readAsDataURL(blob);
   });
 };
