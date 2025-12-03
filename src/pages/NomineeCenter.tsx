@@ -10,6 +10,7 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { AvatarSelector, getAvatarById } from "@/components/AvatarSelector";
+import { NomineeSkeleton } from "@/components/skeletons";
 
 interface Nominee {
   id: string;
@@ -31,6 +32,7 @@ const NomineeCenter = () => {
   const [nominees, setNominees] = useState<Nominee[]>([]);
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; nominee: Nominee | null }>({ open: false, nominee: null });
   const [isLoading, setIsLoading] = useState(false);
+  const [isPageLoading, setIsPageLoading] = useState(true);
   const [resendingId, setResendingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     fullName: "",
@@ -45,6 +47,7 @@ const NomineeCenter = () => {
     if (!user) return;
 
     const loadNominees = async () => {
+      setIsPageLoading(true);
       const { data, error } = await supabase
         .from("nominees")
         .select("*")
@@ -59,10 +62,12 @@ const NomineeCenter = () => {
           description: error.message,
           variant: "destructive"
         });
+        setIsPageLoading(false);
         return;
       }
 
       setNominees(data || []);
+      setIsPageLoading(false);
     };
 
     loadNominees();
@@ -88,6 +93,10 @@ const NomineeCenter = () => {
       supabase.removeChannel(channel);
     };
   }, [user]);
+
+  if (isPageLoading) {
+    return <NomineeSkeleton />;
+  }
 
   // Calculate stats
   const totalNominees = nominees.length;

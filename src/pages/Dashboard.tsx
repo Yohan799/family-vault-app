@@ -9,6 +9,7 @@ import { fetchDashboardStats, calculateReadinessScore, updateInactivityTrigger, 
 import FeatureTour from "@/components/FeatureTour";
 import { useToast } from "@/hooks/use-toast";
 import { getQuickActions, initializeDefaultActions, type QuickAction } from "@/services/quickActionsService";
+import { DashboardSkeleton } from "@/components/skeletons";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -126,11 +127,7 @@ const Dashboard = () => {
 
 
   if (!profile) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   const displayName = profile.full_name || "User";
