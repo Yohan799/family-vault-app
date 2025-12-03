@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, ChevronRight, ChevronLeft, Vault, Users, Shield, Clock, Settings, Sparkles, Check } from "lucide-react";
+import { X, ChevronRight, ChevronLeft, Vault, Users, Shield, Clock, Sparkles, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface FeatureTourProps {
@@ -25,7 +25,7 @@ const tourSteps: TourStep[] = [
     },
     {
         title: "Digital Vault",
-        description: "Store all your important documents securely. From legal papers to cherished memories, everything stays encrypted and organized in one place.",
+        description: "Store documents securely. Everything encrypted and organized in one place.",
         icon: Vault,
         iconColor: "text-blue-500",
         iconBg: "bg-blue-500/10",
@@ -50,13 +50,6 @@ const tourSteps: TourStep[] = [
         icon: Clock,
         iconColor: "text-purple-500",
         iconBg: "bg-purple-500/10",
-    },
-    {
-        title: "Settings & Security",
-        description: "Customize your experience with advanced security options. Enable two-factor authentication, biometric locks, and manage your privacy preferences.",
-        icon: Settings,
-        iconColor: "text-orange-500",
-        iconBg: "bg-orange-500/10",
     },
     {
         title: "You're All Set!",

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Shield, FileText, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -25,15 +25,27 @@ const Onboarding = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const navigate = useNavigate();
 
+  // Check if onboarding was already completed
+  useEffect(() => {
+    const onboardingComplete = localStorage.getItem('onboardingComplete');
+    if (onboardingComplete === 'true') {
+      navigate("/signup");
+    }
+  }, [navigate]);
+
   const handleNext = () => {
     if (currentStep < onboardingSteps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
+      // Mark onboarding as complete
+      localStorage.setItem('onboardingComplete', 'true');
       navigate("/signup");
     }
   };
 
   const handleSkip = () => {
+    // Mark onboarding as complete
+    localStorage.setItem('onboardingComplete', 'true');
     navigate("/signup");
   };
 

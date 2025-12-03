@@ -483,12 +483,12 @@ const SubcategoryView = () => {
                 key={doc.id}
                 className="bg-card rounded-xl p-4 flex items-center justify-between hover:bg-accent/50 transition-colors"
               >
-                <div className="flex items-center gap-3 flex-1">
-                  <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
                     <FileText className="w-5 h-5 text-primary" />
                   </div>
-                  <div>
-                    <h3 className="font-medium text-foreground">{doc.name}</h3>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-medium text-foreground truncate">{doc.name}</h3>
                     <p className="text-xs text-muted-foreground">
                       {doc.size} • {doc.date}
                     </p>
