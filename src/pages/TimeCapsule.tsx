@@ -187,7 +187,6 @@ const TimeCapsule = () => {
       });
     }
   };
-  };
 
   const handleCreateCapsule = async () => {
     if (!formData.title || !formData.releaseDate || !formData.recipientEmail) {
