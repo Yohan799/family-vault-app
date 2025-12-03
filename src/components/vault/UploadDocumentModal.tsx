@@ -1,4 +1,5 @@
-import { Upload, Camera } from "lucide-react";
+import { useState } from "react";
+import { Upload, Camera, Cloud, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,6 +10,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { validateFile } from "@/lib/validation";
 import { openGoogleDrivePicker, downloadFileFromGoogleDrive } from "@/lib/googleDrivePicker";
+import { scanDocument } from "@/lib/documentScanner";
 
 interface UploadDocumentModalProps {
   open: boolean;
@@ -25,27 +27,75 @@ export const UploadDocumentModal = ({
   open,
   onClose,
   onOpenChange,
-  subcategoryName,
   categoryId,
   subcategoryId,
   folderId,
   onUploadComplete,
 }: UploadDocumentModalProps) => {
   const { toast } = useToast();
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadingSource, setUploadingSource] = useState<string | null>(null);
 
   const handleClose = () => {
+    if (isUploading) return;
     if (onClose) onClose();
     if (onOpenChange) onOpenChange(false);
+  };
+
+  const handleUploadSuccess = (fileName: string) => {
+    toast({
+      title: "Upload successful",
+      description: `${fileName} has been added to your vault`,
+    });
+    handleClose();
+    if (onUploadComplete) {
+      onUploadComplete();
+    }
+  };
+
+  const handleScanDocument = async () => {
+    setUploadingSource("scan");
+    setIsUploading(true);
+    
+    try {
+      const result = await scanDocument();
+      
+      if (result) {
+        const validation = validateFile(result.file);
+        if (!validation.valid) {
+          toast({
+            title: "Scan Failed",
+            description: validation.error,
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const { storeDocument } = await import('@/lib/documentStorage');
+        await storeDocument(result.file, categoryId, subcategoryId, folderId);
+        handleUploadSuccess(result.file.name);
+      }
+    } catch (error) {
+      console.error("Error scanning document:", error);
+      toast({
+        title: "Scan Failed",
+        description: error instanceof Error ? error.message : "Failed to scan document",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+      setUploadingSource(null);
+    }
   };
 
   const handleUploadFromDevice = async () => {
     const input = document.createElement("input");
     input.type = "file";
     input.accept = "*/*";
-    input.onchange = async (e: any) => {
-      const file = e.target.files[0];
+    input.onchange = async (e: Event) => {
+      const target = e.target as HTMLInputElement;
+      const file = target.files?.[0];
       if (file) {
-        // Use the centralized validation function
         const validation = validateFile(file);
 
         if (!validation.valid) {
@@ -57,31 +107,23 @@ export const UploadDocumentModal = ({
           return;
         }
 
+        setUploadingSource("device");
+        setIsUploading(true);
+
         try {
-          // Import storeDocument function dynamically
           const { storeDocument } = await import('@/lib/documentStorage');
-
-          // Store the document
           await storeDocument(file, categoryId, subcategoryId, folderId);
-
-          toast({
-            title: "File uploaded successfully",
-            description: `${file.name} has been added to your vault`,
-          });
-
-          handleClose();
-
-          // Trigger refresh in parent component
-          if (onUploadComplete) {
-            onUploadComplete();
-          }
+          handleUploadSuccess(file.name);
         } catch (error) {
           console.error("Error storing document:", error);
           toast({
             title: "Upload Failed",
-            description: error instanceof Error ? error.message : "Failed to store document. Please try again.",
+            description: error instanceof Error ? error.message : "Failed to store document",
             variant: "destructive",
           });
+        } finally {
+          setIsUploading(false);
+          setUploadingSource(null);
         }
       }
     };
@@ -89,7 +131,6 @@ export const UploadDocumentModal = ({
   };
 
   const handleGoogleDrive = async () => {
-    // Close our modal first to prevent z-index conflicts with Google Picker
     handleClose();
     
     try {
@@ -103,7 +144,6 @@ export const UploadDocumentModal = ({
         const blob = await downloadFileFromGoogleDrive(file);
         const driveFile = new File([blob], file.name, { type: file.mimeType });
         
-        // Validate the file
         const validation = validateFile(driveFile);
         if (!validation.valid) {
           toast({
@@ -114,12 +154,11 @@ export const UploadDocumentModal = ({
           return;
         }
 
-        // Store the document
         const { storeDocument } = await import('@/lib/documentStorage');
         await storeDocument(driveFile, categoryId, subcategoryId, folderId, 'google_drive');
 
         toast({
-          title: "File imported successfully",
+          title: "Upload successful",
           description: `${file.name} has been added from Google Drive`,
         });
 
@@ -129,105 +168,112 @@ export const UploadDocumentModal = ({
       }
     } catch (error) {
       console.error('Error importing from Google Drive:', error);
-      const errorMessage = error instanceof Error ? error.message : "Failed to import file from Google Drive";
       toast({
         title: "Google Drive Error",
-        description: errorMessage,
+        description: error instanceof Error ? error.message : "Failed to import file",
         variant: "destructive",
       });
     }
   };
 
-  const handleScanDocument = () => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "image/*";
-    input.capture = "environment";
-    input.onchange = async (e: any) => {
-      const file = e.target.files[0];
-      if (file) {
-        const validation = validateFile(file);
-
-        if (!validation.valid) {
-          toast({
-            title: "Scan Failed",
-            description: validation.error,
-            variant: "destructive",
-          });
-          return;
-        }
-
-        try {
-          const { storeDocument } = await import('@/lib/documentStorage');
-          await storeDocument(file, categoryId, subcategoryId, folderId);
-
-          toast({
-            title: "Document scanned successfully",
-            description: `${file.name} has been added to your vault`,
-          });
-
-          handleClose();
-
-          if (onUploadComplete) {
-            onUploadComplete();
-          }
-        } catch (error) {
-          console.error("Error storing scanned document:", error);
-          toast({
-            title: "Scan Failed",
-            description: error instanceof Error ? error.message : "Failed to store document. Please try again.",
-            variant: "destructive",
-          });
-        }
-      }
-    };
-    input.click();
-  };
+  const uploadOptions = [
+    {
+      id: "scan",
+      icon: Camera,
+      title: "Scan Document",
+      subtitle: "Use camera with auto edge detection",
+      iconBg: "bg-purple-100 dark:bg-purple-900/30",
+      iconColor: "text-purple-600 dark:text-purple-400",
+      onClick: handleScanDocument,
+    },
+    {
+      id: "device",
+      icon: Upload,
+      title: "Upload from Device",
+      subtitle: "Choose from your files",
+      iconBg: "bg-blue-100 dark:bg-blue-900/30",
+      iconColor: "text-blue-600 dark:text-blue-400",
+      onClick: handleUploadFromDevice,
+    },
+    {
+      id: "cloud",
+      icon: Cloud,
+      title: "Import from Cloud",
+      subtitle: "Google Drive & more",
+      iconBg: "bg-green-100 dark:bg-green-900/30",
+      iconColor: "text-green-600 dark:text-green-400",
+      onClick: handleGoogleDrive,
+    },
+  ];
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange || (() => { })}>
-      <DialogContent className="sm:max-w-md bg-background border-none rounded-t-3xl p-0">
-        <DialogHeader className="p-6 pb-2">
-          <DialogTitle className="text-xl font-bold">Upload Document</DialogTitle>
+    <Dialog open={open} onOpenChange={isUploading ? undefined : onOpenChange}>
+      <DialogContent className="sm:max-w-md bg-card border-border rounded-2xl p-0 gap-0">
+        <DialogHeader className="p-6 pb-4 border-b border-border/50">
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-xl font-bold text-foreground">
+              Upload Document
+            </DialogTitle>
+            {!isUploading && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleClose}
+                className="h-8 w-8 rounded-full hover:bg-muted"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </DialogHeader>
 
-        <div className="p-6 pt-2 space-y-3">
-          <button
-            onClick={handleUploadFromDevice}
-            className="w-full flex items-center gap-4 p-4 bg-muted/50 hover:bg-muted rounded-xl transition-colors min-h-[56px] active:scale-98"
-          >
-            <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-              <Upload className="w-5 h-5 text-primary" />
-            </div>
-            <span className="flex-1 text-left font-medium">Upload from Device</span>
-          </button>
+        <div className="p-6 space-y-3">
+          {uploadOptions.map((option) => {
+            const Icon = option.icon;
+            const isLoading = isUploading && uploadingSource === option.id;
+            const isDisabled = isUploading && uploadingSource !== option.id;
 
-          <button
-            onClick={handleGoogleDrive}
-            className="w-full flex items-center gap-4 p-4 bg-muted/50 hover:bg-muted rounded-xl transition-colors min-h-[56px] active:scale-98"
-          >
-            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-              <svg className="w-5 h-5 text-blue-600" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12.545 10.239v3.821h5.445c-.712 2.315-2.647 3.972-5.445 3.972a6.033 6.033 0 110-12.064c1.498 0 2.866.549 3.921 1.453l2.814-2.814A9.969 9.969 0 0012.545 2C7.021 2 2.543 6.477 2.543 12s4.478 10 10.002 10c8.396 0 10.249-7.85 9.426-11.748l-9.426-.013z" />
-              </svg>
-            </div>
-            <span className="flex-1 text-left font-medium">Import from Google Drive</span>
-          </button>
+            return (
+              <button
+                key={option.id}
+                onClick={option.onClick}
+                disabled={isUploading}
+                className={`w-full flex items-center gap-4 p-4 rounded-xl transition-all duration-200 min-h-[72px] ${
+                  isDisabled
+                    ? "opacity-50 cursor-not-allowed bg-muted/30"
+                    : isLoading
+                    ? "bg-primary/10 border-2 border-primary"
+                    : "bg-muted/50 hover:bg-muted hover:scale-[1.02] active:scale-[0.98]"
+                }`}
+              >
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${option.iconBg}`}>
+                  {isLoading ? (
+                    <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                  ) : (
+                    <Icon className={`w-6 h-6 ${option.iconColor}`} />
+                  )}
+                </div>
+                <div className="flex-1 text-left">
+                  <span className="font-semibold text-foreground block">
+                    {isLoading ? "Uploading..." : option.title}
+                  </span>
+                  <span className="text-sm text-muted-foreground">
+                    {option.subtitle}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
 
-          <button
-            onClick={handleScanDocument}
-            className="w-full flex items-center gap-4 p-4 bg-muted/50 hover:bg-muted rounded-xl transition-colors min-h-[56px] active:scale-98"
-          >
-            <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-              <Camera className="w-5 h-5 text-purple-600" />
-            </div>
-            <span className="flex-1 text-left font-medium">Scan Document</span>
-          </button>
+          <p className="text-xs text-muted-foreground text-center pt-2">
+            Maximum file size: 20MB
+          </p>
 
           <Button
             variant="outline"
             onClick={handleClose}
-            className="w-full mt-4 h-12 rounded-xl min-h-[48px]"
+            disabled={isUploading}
+            className="w-full h-12 rounded-xl mt-2"
           >
             Cancel
           </Button>

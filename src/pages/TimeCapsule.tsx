@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { timeCapsuleService, TimeCapsule as TimeCapsuleType } from "@/services/timeCapsuleService";
 import { openGoogleDrivePicker, downloadFileFromGoogleDrive } from "@/lib/googleDrivePicker";
+import { scanDocument } from "@/lib/documentScanner";
 
 const TimeCapsule = () => {
   const navigate = useNavigate();
@@ -44,22 +45,33 @@ const TimeCapsule = () => {
     }
   };
 
-  const handleScanDocument = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.capture = 'environment';
-    input.onchange = (e: any) => {
-      const file = e.target.files[0];
-      if (file) {
-        setFormData({ ...formData, attachmentFile: file });
+  const handleScanDocument = async () => {
+    try {
+      const result = await scanDocument();
+      if (result) {
+        const maxSize = 20 * 1024 * 1024;
+        if (result.file.size > maxSize) {
+          toast({
+            title: "File too large",
+            description: "Maximum file size is 20MB",
+            variant: "destructive"
+          });
+          return;
+        }
+        setFormData({ ...formData, attachmentFile: result.file });
         toast({
           title: "Document scanned",
-          description: `${file.name} has been attached`,
+          description: `${result.file.name} has been attached`,
         });
       }
-    };
-    input.click();
+    } catch (error) {
+      console.error('Error scanning document:', error);
+      toast({
+        title: "Scan Failed",
+        description: error instanceof Error ? error.message : "Failed to scan document",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleGoogleDrivePick = async () => {
