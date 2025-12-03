@@ -140,6 +140,36 @@ export type Database = {
         }
         Relationships: []
       }
+      device_tokens: {
+        Row: {
+          created_at: string | null
+          device_name: string | null
+          id: string
+          platform: string
+          token: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          device_name?: string | null
+          id?: string
+          platform?: string
+          token: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          device_name?: string | null
+          id?: string
+          platform?: string
+          token?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           category_id: string | null
@@ -399,6 +429,7 @@ export type Database = {
           last_login: string | null
           phone: string | null
           profile_image_url: string | null
+          push_notifications_enabled: boolean | null
           two_factor_enabled: boolean | null
           updated_at: string
         }
@@ -417,6 +448,7 @@ export type Database = {
           last_login?: string | null
           phone?: string | null
           profile_image_url?: string | null
+          push_notifications_enabled?: boolean | null
           two_factor_enabled?: boolean | null
           updated_at?: string
         }
@@ -435,6 +467,7 @@ export type Database = {
           last_login?: string | null
           phone?: string | null
           profile_image_url?: string | null
+          push_notifications_enabled?: boolean | null
           two_factor_enabled?: boolean | null
           updated_at?: string
         }

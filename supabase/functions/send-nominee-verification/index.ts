@@ -16,6 +16,29 @@ interface VerificationRequest {
   nomineeId: string;
   nomineeEmail: string;
   nomineeName: string;
+  userId: string;
+}
+
+// Helper function to send push notification
+async function sendPushNotification(userId: string, title: string, body: string) {
+  try {
+    const response = await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${supabaseServiceKey}`,
+      },
+      body: JSON.stringify({ user_id: userId, title, body }),
+    });
+    
+    if (!response.ok) {
+      console.error("Push notification failed:", await response.text());
+    } else {
+      console.log(`Push notification sent to user ${userId}`);
+    }
+  } catch (error) {
+    console.error("Error sending push notification:", error);
+  }
 }
 
 serve(async (req) => {
@@ -26,7 +49,7 @@ serve(async (req) => {
 
   try {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    const { nomineeId, nomineeEmail, nomineeName }: VerificationRequest = await req.json();
+    const { nomineeId, nomineeEmail, nomineeName, userId }: VerificationRequest = await req.json();
 
     console.log("Sending verification email to:", nomineeEmail, "for nominee:", nomineeName);
 
@@ -93,6 +116,23 @@ serve(async (req) => {
     });
 
     console.log("Verification email sent successfully:", emailResponse);
+
+    // Get user's push notification preference and send push if enabled
+    if (userId) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("push_notifications_enabled")
+        .eq("id", userId)
+        .single();
+
+      if (profile?.push_notifications_enabled) {
+        await sendPushNotification(
+          userId,
+          "Verification Sent ✉️",
+          `Verification email sent to ${nomineeName}. They have 24 hours to verify.`
+        );
+      }
+    }
 
     return new Response(
       JSON.stringify({ 

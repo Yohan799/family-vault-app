@@ -21,6 +21,7 @@ interface Profile {
   app_lock_type: string | null;
   app_pin_hash: string | null;
   additional_emails: string[] | null;
+  push_notifications_enabled: boolean | null;
 }
 
 interface AuthContextType {

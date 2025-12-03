@@ -221,11 +221,14 @@ const NomineeCenter = () => {
     setResendingId(nominee.id);
 
     try {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      
       const { error } = await supabase.functions.invoke('send-nominee-verification', {
         body: {
           nomineeId: nominee.id,
           nomineeEmail: nominee.email,
-          nomineeName: nominee.full_name
+          nomineeName: nominee.full_name,
+          userId: currentUser?.id
         }
       });
 

@@ -26,6 +26,29 @@ interface TimeCapsule {
 interface Profile {
   full_name: string | null;
   email: string;
+  push_notifications_enabled: boolean | null;
+}
+
+// Helper function to send push notification
+async function sendPushNotification(userId: string, title: string, body: string) {
+  try {
+    const response = await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${supabaseServiceKey}`,
+      },
+      body: JSON.stringify({ user_id: userId, title, body }),
+    });
+    
+    if (!response.ok) {
+      console.error("Push notification failed:", await response.text());
+    } else {
+      console.log(`Push notification sent to user ${userId}`);
+    }
+  } catch (error) {
+    console.error("Error sending push notification:", error);
+  }
 }
 
 serve(async (req) => {
@@ -70,7 +93,7 @@ serve(async (req) => {
         // Get sender's profile
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
-          .select("full_name, email")
+          .select("full_name, email, push_notifications_enabled")
           .eq("id", capsule.user_id)
           .single();
 
@@ -133,6 +156,15 @@ serve(async (req) => {
           console.error(`Error updating capsule ${capsule.id}:`, updateError);
           results.push({ id: capsule.id, status: "update_failed", error: updateError });
           continue;
+        }
+
+        // Send push notification to sender if enabled
+        if (profile.push_notifications_enabled) {
+          await sendPushNotification(
+            capsule.user_id,
+            "Time Capsule Delivered! 🎁",
+            `Your time capsule "${capsule.title}" has been delivered to ${capsule.recipient_email}.`
+          );
         }
 
         console.log(`Successfully released capsule ${capsule.id} to ${capsule.recipient_email}`);

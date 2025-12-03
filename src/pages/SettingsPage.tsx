@@ -9,16 +9,18 @@ import { logActivity } from "@/services/activityLogService";
 import { supabase } from "@/integrations/supabase/client";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { SettingsSkeleton } from "@/components/skeletons";
+import { registerDevice, unregisterDevice, isPushAvailable } from "@/services/pushNotificationService";
 
 const SettingsPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { profile, user, signOut } = useAuth();
+  const { profile, user, signOut, updateProfile } = useAuth();
   const [toggleStates, setToggleStates] = useState({
     pushNotifications: false,
   });
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isTogglingPush, setIsTogglingPush] = useState(false);
 
   const getAutoLockLabel = (minutes: number | null | undefined): string => {
     if (!minutes) return "5 minutes";
@@ -27,55 +29,84 @@ const SettingsPage = () => {
   };
 
   useEffect(() => {
-    // Load settings from localStorage
-    const savedUserSettings = localStorage.getItem("userSettings");
-    let localSettings: any = {};
-    
-    if (savedUserSettings) {
-      try {
-        localSettings = JSON.parse(savedUserSettings);
-      } catch (error) {
-        console.error("Error parsing saved settings:", error);
-      }
+    // Load push notification state from profile
+    if (profile) {
+      setToggleStates({
+        pushNotifications: profile.push_notifications_enabled ?? false,
+      });
     }
-
-    setToggleStates({
-      pushNotifications: localSettings.pushNotifications ?? true,
-    });
   }, [profile]);
 
-  const handleToggle = async (key: keyof typeof toggleStates) => {
-    const newValue = !toggleStates[key];
-    setToggleStates((prev) => ({ ...prev, [key]: newValue }));
-
-    // Store settings in localStorage
-    const savedUserSettings = localStorage.getItem("userSettings");
-    let localSettings: any = {};
+  const handlePushToggle = async () => {
+    if (!user || isTogglingPush) return;
     
-    if (savedUserSettings) {
-      try {
-        localSettings = JSON.parse(savedUserSettings);
-      } catch (error) {
-        console.error("Error parsing saved settings:", error);
+    setIsTogglingPush(true);
+    const newValue = !toggleStates.pushNotifications;
+    
+    // Optimistic update
+    setToggleStates((prev) => ({ ...prev, pushNotifications: newValue }));
+
+    try {
+      if (newValue) {
+        // Enable push notifications
+        if (isPushAvailable()) {
+          const registered = await registerDevice(user.id);
+          if (!registered) {
+            // Rollback on failure
+            setToggleStates((prev) => ({ ...prev, pushNotifications: false }));
+            toast({
+              variant: "destructive",
+              title: "Permission Denied",
+              description: "Please enable notifications in your device settings",
+              duration: 3000,
+            });
+            setIsTogglingPush(false);
+            return;
+          }
+        }
+        
+        // Update profile
+        await updateProfile({ push_notifications_enabled: true });
+        toast({
+          title: "Push Notifications Enabled",
+          description: "You'll receive alerts on this device",
+          duration: 2000,
+        });
+      } else {
+        // Disable push notifications
+        if (isPushAvailable()) {
+          await unregisterDevice(user.id);
+        }
+        
+        // Update profile
+        await updateProfile({ push_notifications_enabled: false });
+        toast({
+          title: "Push Notifications Disabled",
+          duration: 2000,
+        });
       }
+
+      // Log activity
+      await logActivity(user.id, "settings_updated", "profile", user.id);
+    } catch (error: any) {
+      // Rollback on error
+      setToggleStates((prev) => ({ ...prev, pushNotifications: !newValue }));
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to update push notification settings",
+      });
+    } finally {
+      setIsTogglingPush(false);
     }
-
-    localSettings = { ...localSettings, [key]: newValue };
-    localStorage.setItem("userSettings", JSON.stringify(localSettings));
-
-    const messages: { [key: string]: { enabled: string; disabled: string } } = {
-      pushNotifications: { enabled: "Push Notifications Enabled", disabled: "Push Notifications Disabled" },
-    };
-
-    const message = messages[key];
-    toast({
-      title: newValue ? message.enabled : message.disabled,
-      duration: 2000,
-    });
   };
 
   const handleSignOut = async () => {
     try {
+      // Unregister device token before signing out
+      if (user && isPushAvailable()) {
+        await unregisterDevice(user.id);
+      }
       await signOut();
       toast({ title: "Signed out", description: "See you soon!" });
       navigate("/signin");
@@ -129,7 +160,7 @@ const SettingsPage = () => {
     { icon: Smartphone, title: "App Lock", subtitle: profile?.app_lock_type ? `Active (${profile.app_lock_type})` : "PIN or Biometric", path: "/app-lock-setup", color: "bg-violet-100" },
 
     // Notifications
-    { icon: Bell, title: "Push Notifications", subtitle: "Get mobile alerts", toggle: "pushNotifications", color: "bg-amber-100" },
+    { icon: Bell, title: "Push Notifications", subtitle: isPushAvailable() ? "Get mobile alerts" : "Only available on mobile app", toggle: "pushNotifications", color: "bg-amber-100" },
 
     // Vault
     { icon: LockKeyhole, title: "Auto Lock Timeout", subtitle: getAutoLockLabel(profile?.auto_lock_minutes), path: "/auto-lock-timeout", color: "bg-emerald-100" },
@@ -183,6 +214,7 @@ const SettingsPage = () => {
         <div className="space-y-2">
           {settings.map((setting, index) => {
             const Icon = setting.icon;
+            const isPushToggle = setting.toggle === "pushNotifications";
             return (
               <div
                 key={index}
@@ -197,15 +229,16 @@ const SettingsPage = () => {
                   <p className="text-xs text-muted-foreground truncate">{setting.subtitle}</p>
                 </div>
 
-                {setting.toggle ? (
+                {isPushToggle ? (
                   <Switch
-                    checked={toggleStates[setting.toggle as keyof typeof toggleStates]}
-                    onCheckedChange={() => handleToggle(setting.toggle as keyof typeof toggleStates)}
+                    checked={toggleStates.pushNotifications}
+                    onCheckedChange={handlePushToggle}
+                    disabled={isTogglingPush || !isPushAvailable()}
                     className="scale-90"
                   />
-                ) : (
+                ) : setting.path ? (
                   <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                )}
+                ) : null}
               </div>
             );
           })}
