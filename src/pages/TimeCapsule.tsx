@@ -94,58 +94,28 @@ const TimeCapsule = () => {
   const handleGoogleDrivePick = async () => {
     const isNative = Capacitor.isNativePlatform();
 
-    // On native, always use native file picker
-    if (isNative) {
-      try {
-        const file = await openGoogleDrivePicker();
-        if (file) {
-          toast({
-            title: "Downloading file",
-            description: "Please wait...",
-          });
-
-          const blob = await downloadFileFromGoogleDrive(file);
-          const driveFile = new File([blob], file.name, { type: file.mimeType });
-          
-          const maxSize = 20 * 1024 * 1024;
-          if (driveFile.size > maxSize) {
-            toast({
-              title: "File too large",
-              description: "Maximum file size is 20MB",
-              variant: "destructive"
-            });
-            return;
-          }
-
-          setFormData({ ...formData, attachmentFile: driveFile });
-          toast({
-            title: "File attached",
-            description: `${file.name} has been attached`,
-          });
-        }
-      } catch (error) {
-        console.error('Error picking file:', error);
-        toast({
-          title: "Import Error",
-          description: error instanceof Error ? error.message : "Failed to import file",
-          variant: "destructive",
-        });
-      }
-      return;
-    }
-
-    // On web: Check if user has Google identity linked
-    if (hasGoogleIdentity) {
+    // Check if user has Google access token (works for both platforms)
+    if (hasGoogleIdentity || isNative) {
       const token = await getGoogleAccessToken();
       if (token) {
+        console.log('[TimeCapsule] Got access token, opening Drive browser');
         setDriveAccessToken(token);
         setShowDriveBrowser(true);
-      } else {
-        setShowConnectModal(true);
+        return;
       }
-    } else {
-      setShowConnectModal(true);
     }
+
+    // No token available - show connect modal
+    console.log('[TimeCapsule] No token, showing connect modal');
+    setShowConnectModal(true);
+  };
+
+  // Handle successful Google authentication from ConnectGoogleDriveModal (native)
+  const handleNativeGoogleAuthSuccess = (token: string) => {
+    console.log('[TimeCapsule] Native Google auth success, opening Drive browser');
+    setDriveAccessToken(token);
+    setShowConnectModal(false);
+    setShowDriveBrowser(true);
   };
 
   const handleDriveFileSelect = (file: File) => {
@@ -638,6 +608,7 @@ const TimeCapsule = () => {
         open={showConnectModal}
         onClose={() => setShowConnectModal(false)}
         onUseNativePicker={handleUseNativePicker}
+        onGoogleAuthSuccess={handleNativeGoogleAuthSuccess}
       />
     </div>
   );

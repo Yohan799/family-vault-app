@@ -157,71 +157,30 @@ export const UploadDocumentModal = ({
   const handleGoogleDrive = async () => {
     const isNative = Capacitor.isNativePlatform();
 
-    // On native, always use native file picker (can access Google Drive if app installed)
-    if (isNative) {
-      handleClose();
-      try {
-        const file = await openGoogleDrivePicker();
-        if (file) {
-          toast({
-            title: "Downloading file",
-            description: "Please wait...",
-          });
-
-          const blob = await downloadFileFromGoogleDrive(file);
-          const driveFile = new File([blob], file.name, { type: file.mimeType });
-          
-          const validation = validateFile(driveFile);
-          if (!validation.valid) {
-            toast({
-              title: "Upload Failed",
-              description: validation.error,
-              variant: "destructive",
-            });
-            return;
-          }
-
-          const { storeDocument } = await import('@/lib/documentStorage');
-          await storeDocument(driveFile, categoryId, subcategoryId, folderId, 'google_drive');
-
-          toast({
-            title: "Upload successful",
-            description: `${file.name} has been added from Google Drive`,
-          });
-
-          if (onUploadComplete) {
-            onUploadComplete();
-          }
-        }
-      } catch (error) {
-        console.error('Error importing from Google Drive:', error);
-        toast({
-          title: "Import Error",
-          description: error instanceof Error ? error.message : "Failed to import file",
-          variant: "destructive",
-        });
-      }
-      return;
-    }
-
-    // On web: Check if user has Google identity linked
-    if (hasGoogleIdentity) {
-      // Get access token and open browser
+    // Check if user has Google access token (works for both platforms)
+    if (hasGoogleIdentity || isNative) {
       const token = await getGoogleAccessToken();
       if (token) {
+        console.log('[UploadModal] Got access token, opening Drive browser');
         setDriveAccessToken(token);
         handleClose();
         setShowDriveBrowser(true);
-      } else {
-        // Token not available, show connect modal
-        handleClose();
-        setShowConnectModal(true);
+        return;
       }
-    } else {
-      // No Google identity, show connect modal
-      handleClose();
-      setShowConnectModal(true);
     }
+
+    // No token available - show connect modal
+    console.log('[UploadModal] No token, showing connect modal');
+    handleClose();
+    setShowConnectModal(true);
+  };
+
+  // Handle successful Google authentication from ConnectGoogleDriveModal (native)
+  const handleNativeGoogleAuthSuccess = (token: string) => {
+    console.log('[UploadModal] Native Google auth success, opening Drive browser');
+    setDriveAccessToken(token);
+    setShowConnectModal(false);
+    setShowDriveBrowser(true);
   };
 
   const handleDriveFileSelect = async (file: File) => {
@@ -395,6 +354,7 @@ export const UploadDocumentModal = ({
         open={showConnectModal}
         onClose={() => setShowConnectModal(false)}
         onUseNativePicker={handleUseNativePicker}
+        onGoogleAuthSuccess={handleNativeGoogleAuthSuccess}
       />
     </>
   );
