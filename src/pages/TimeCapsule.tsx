@@ -10,16 +10,24 @@ import { timeCapsuleService, TimeCapsule as TimeCapsuleType } from "@/services/t
 import { openGoogleDrivePicker, downloadFileFromGoogleDrive } from "@/lib/googleDrivePicker";
 import { scanDocument } from "@/lib/documentScanner";
 import { TimeCapsuleSkeleton } from "@/components/skeletons";
+import { useAuth } from "@/contexts/AuthContext";
+import { GoogleDriveBrowser } from "@/components/GoogleDriveBrowser";
+import { ConnectGoogleDriveModal } from "@/components/ConnectGoogleDriveModal";
+import { Capacitor } from "@capacitor/core";
 
 const TimeCapsule = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { hasGoogleIdentity, getGoogleAccessToken } = useAuth();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; capsule: TimeCapsuleType | null }>({ open: false, capsule: null });
   const [capsules, setCapsules] = useState<TimeCapsuleType[]>([]);
   const [loading, setLoading] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
+  const [showDriveBrowser, setShowDriveBrowser] = useState(false);
+  const [showConnectModal, setShowConnectModal] = useState(false);
+  const [driveAccessToken, setDriveAccessToken] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: "",
     message: "",
@@ -84,32 +92,101 @@ const TimeCapsule = () => {
   };
 
   const handleGoogleDrivePick = async () => {
+    const isNative = Capacitor.isNativePlatform();
+
+    // On native, always use native file picker
+    if (isNative) {
+      try {
+        const file = await openGoogleDrivePicker();
+        if (file) {
+          toast({
+            title: "Downloading file",
+            description: "Please wait...",
+          });
+
+          const blob = await downloadFileFromGoogleDrive(file);
+          const driveFile = new File([blob], file.name, { type: file.mimeType });
+          
+          const maxSize = 20 * 1024 * 1024;
+          if (driveFile.size > maxSize) {
+            toast({
+              title: "File too large",
+              description: "Maximum file size is 20MB",
+              variant: "destructive"
+            });
+            return;
+          }
+
+          setFormData({ ...formData, attachmentFile: driveFile });
+          toast({
+            title: "File attached",
+            description: `${file.name} has been attached`,
+          });
+        }
+      } catch (error) {
+        console.error('Error picking file:', error);
+        toast({
+          title: "Import Error",
+          description: error instanceof Error ? error.message : "Failed to import file",
+          variant: "destructive",
+        });
+      }
+      return;
+    }
+
+    // On web: Check if user has Google identity linked
+    if (hasGoogleIdentity) {
+      const token = await getGoogleAccessToken();
+      if (token) {
+        setDriveAccessToken(token);
+        setShowDriveBrowser(true);
+      } else {
+        setShowConnectModal(true);
+      }
+    } else {
+      setShowConnectModal(true);
+    }
+  };
+
+  const handleDriveFileSelect = (file: File) => {
+    const maxSize = 20 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast({
+        title: "File too large",
+        description: "Maximum file size is 20MB",
+        variant: "destructive"
+      });
+      return;
+    }
+    setFormData({ ...formData, attachmentFile: file });
+    toast({
+      title: "File attached",
+      description: `${file.name} has been attached`,
+    });
+  };
+
+  const handleUseNativePicker = async () => {
     try {
       const file = await openGoogleDrivePicker();
       if (file) {
         toast({
-          title: "Downloading from Google Drive",
+          title: "Downloading file",
           description: "Please wait...",
         });
 
         const blob = await downloadFileFromGoogleDrive(file);
         const driveFile = new File([blob], file.name, { type: file.mimeType });
-        
-        setFormData({ ...formData, attachmentFile: driveFile });
-        toast({
-          title: "File attached from Google Drive",
-          description: `${file.name} has been attached`,
-        });
+        handleDriveFileSelect(driveFile);
       }
     } catch (error) {
-      console.error('Error picking file from Google Drive:', error);
-      const errorMessage = error instanceof Error ? error.message : "Failed to access Google Drive";
+      console.error('Error with native picker:', error);
       toast({
-        title: "Google Drive Error",
-        description: errorMessage,
+        title: "Import Error",
+        description: error instanceof Error ? error.message : "Failed to import file",
         variant: "destructive",
       });
     }
+  };
   };
 
   const handleCreateCapsule = async () => {
@@ -542,6 +619,26 @@ const TimeCapsule = () => {
         cancelText="Cancel"
         variant="destructive"
         onConfirm={handleDelete}
+      />
+
+      {/* Google Drive Browser */}
+      {driveAccessToken && (
+        <GoogleDriveBrowser
+          open={showDriveBrowser}
+          onClose={() => {
+            setShowDriveBrowser(false);
+            setDriveAccessToken(null);
+          }}
+          accessToken={driveAccessToken}
+          onFileSelect={handleDriveFileSelect}
+        />
+      )}
+
+      {/* Connect Google Drive Modal */}
+      <ConnectGoogleDriveModal
+        open={showConnectModal}
+        onClose={() => setShowConnectModal(false)}
+        onUseNativePicker={handleUseNativePicker}
       />
     </div>
   );
