@@ -1,66 +1,71 @@
-import { useState } from "react";
-import { ArrowLeft, Lock, Fingerprint, KeyRound } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
+import { ArrowLeft, Fingerprint, KeyRound } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { updateLockType } from "@/services/appLockService";
+import { Capacitor } from "@capacitor/core";
 
 const AppLockSetup = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, profile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [biometricEnabled, setBiometricEnabled] = useState(false);
+  const [pinEnabled, setPinEnabled] = useState(false);
 
-  const lockOptions = [
-    {
-      type: "biometric" as const,
-      icon: Fingerprint,
-      title: "Biometric Lock",
-      description: "Use fingerprint or Face ID (requires mobile app)",
-    },
-    {
-      type: "pin" as const,
-      icon: KeyRound,
-      title: "PIN Lock",
-      description: "Set a 6-digit PIN code",
-    },
-    {
-      type: "password" as const,
-      icon: Lock,
-      title: "Password Lock",
-      description: "Use your account password",
-    },
-  ];
+  useEffect(() => {
+    if (profile?.app_lock_type) {
+      setBiometricEnabled(profile.app_lock_type === "biometric");
+      setPinEnabled(profile.app_lock_type === "pin");
+    }
+  }, [profile]);
 
-  const handleSelectLockType = async (type: "biometric" | "pin" | "password") => {
+  const handleBiometricToggle = async (enabled: boolean) => {
     if (!user) return;
 
-    if (type === "biometric") {
-      toast({
-        title: "Biometric Authentication",
-        description: "This feature requires the native mobile app with Capacitor",
-      });
-      return;
-    }
-
-    if (type === "pin") {
-      navigate("/setup-pin");
-      return;
-    }
-
-    if (type === "password") {
+    if (enabled) {
+      // Check if biometric is available on native platform
+      if (Capacitor.isNativePlatform()) {
+        setIsLoading(true);
+        try {
+          await updateLockType(user.id, "biometric");
+          setBiometricEnabled(true);
+          setPinEnabled(false);
+          await refreshProfile?.();
+          toast({
+            title: "Biometric Lock Enabled",
+            description: "App will lock with biometric authentication",
+          });
+        } catch (error: any) {
+          toast({
+            title: "Failed to Enable Biometric",
+            description: error.message,
+            variant: "destructive",
+          });
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        toast({
+          title: "Biometric Not Available",
+          description: "Biometric authentication requires the mobile app",
+        });
+      }
+    } else {
+      // Disable biometric
       setIsLoading(true);
       try {
-        await updateLockType(user.id, "password");
+        await updateLockType(user.id, null);
+        setBiometricEnabled(false);
+        await refreshProfile?.();
         toast({
-          title: "Password Lock Enabled",
-          description: "Your app will lock after inactivity",
+          title: "Biometric Lock Disabled",
         });
-        navigate("/settings");
       } catch (error: any) {
         toast({
-          title: "Failed to Enable Lock",
+          title: "Error",
           description: error.message,
           variant: "destructive",
         });
@@ -70,25 +75,31 @@ const AppLockSetup = () => {
     }
   };
 
-  const handleDisableLock = async () => {
+  const handlePinToggle = async (enabled: boolean) => {
     if (!user) return;
 
-    setIsLoading(true);
-    try {
-      await updateLockType(user.id, null);
-      toast({
-        title: "App Lock Disabled",
-        description: "Your app will no longer lock automatically",
-      });
-      navigate("/settings");
-    } catch (error: any) {
-      toast({
-        title: "Failed to Disable Lock",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+    if (enabled) {
+      // Navigate to PIN setup
+      navigate("/setup-pin");
+    } else {
+      // Disable PIN
+      setIsLoading(true);
+      try {
+        await updateLockType(user.id, null);
+        setPinEnabled(false);
+        await refreshProfile?.();
+        toast({
+          title: "PIN Lock Disabled",
+        });
+      } catch (error: any) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -109,54 +120,56 @@ const AppLockSetup = () => {
         {/* Description */}
         <div className="bg-accent/50 rounded-xl p-4">
           <p className="text-sm text-muted-foreground">
-            Add an extra layer of security by requiring authentication when opening the app after inactivity
+            Add an extra layer of security by requiring authentication when opening the app
           </p>
         </div>
 
         {/* Lock Options */}
         <div className="space-y-3">
-          {lockOptions.map((option) => {
-            const Icon = option.icon;
-            const isActive = profile?.app_lock_type === option.type;
-
-            return (
-              <button
-                key={option.type}
-                onClick={() => handleSelectLockType(option.type)}
+          {/* Biometric Lock Toggle */}
+          <div className="bg-card rounded-2xl p-5">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                <Fingerprint className="w-6 h-6 text-primary" />
+              </div>
+              <div className="flex-1 space-y-1">
+                <h3 className="font-semibold text-foreground">Biometric Lock</h3>
+                <p className="text-sm text-muted-foreground">Use fingerprint or Face ID</p>
+              </div>
+              <Switch
+                checked={biometricEnabled}
+                onCheckedChange={handleBiometricToggle}
                 disabled={isLoading}
-                className={`w-full bg-card rounded-2xl p-5 text-left transition-all hover:shadow-md active:scale-98 ${
-                  isActive ? "ring-2 ring-primary" : ""
-                }`}
-              >
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Icon className="w-6 h-6 text-primary" />
-                  </div>
-                  <div className="flex-1 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-semibold text-foreground">{option.title}</h3>
-                      {isActive && (
-                        <span className="text-xs font-medium text-primary">Active</span>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground">{option.description}</p>
-                  </div>
-                </div>
-              </button>
-            );
-          })}
+              />
+            </div>
+          </div>
+
+          {/* PIN Lock Toggle */}
+          <div className="bg-card rounded-2xl p-5">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                <KeyRound className="w-6 h-6 text-primary" />
+              </div>
+              <div className="flex-1 space-y-1">
+                <h3 className="font-semibold text-foreground">PIN Lock</h3>
+                <p className="text-sm text-muted-foreground">Set a 6-digit PIN code</p>
+              </div>
+              <Switch
+                checked={pinEnabled}
+                onCheckedChange={handlePinToggle}
+                disabled={isLoading}
+              />
+            </div>
+          </div>
         </div>
 
-        {/* Disable Button */}
-        {profile?.app_lock_type && (
-          <Button
-            onClick={handleDisableLock}
-            disabled={isLoading}
-            variant="destructive"
-            className="w-full h-12 text-base font-semibold rounded-2xl"
-          >
-            {isLoading ? "Disabling..." : "Disable App Lock"}
-          </Button>
+        {/* Info */}
+        {(biometricEnabled || pinEnabled) && (
+          <div className="bg-primary/10 rounded-xl p-4">
+            <p className="text-sm text-primary font-medium">
+              App lock is active. You'll need to authenticate when opening the app.
+            </p>
+          </div>
         )}
       </div>
     </div>

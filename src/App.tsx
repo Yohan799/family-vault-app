@@ -1,8 +1,9 @@
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Welcome from "./pages/Welcome";
@@ -41,8 +42,31 @@ import TwoFactorVerify from "./pages/TwoFactorVerify";
 import AppLockSetup from "./pages/AppLockSetup";
 import SetupPIN from "./pages/SetupPIN";
 import NotFound from "./pages/NotFound";
+import { Capacitor } from "@capacitor/core";
 
 const queryClient = new QueryClient();
+
+// Back button handler component
+const BackButtonHandler = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      import("@capacitor/app").then(({ App }) => {
+        App.addListener("backButton", ({ canGoBack }) => {
+          if (canGoBack) {
+            window.history.back();
+          } else {
+            // On root page, minimize app or exit
+            App.minimizeApp();
+          }
+        });
+      });
+    }
+  }, [navigate]);
+
+  return null;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -51,6 +75,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <BackButtonHandler />
           <Routes>
           <Route path="/" element={<Welcome />} />
           <Route path="/onboarding" element={<Onboarding />} />

@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { Shield, User, Mail, Lock, X, Eye } from "lucide-react";
+import { Shield, User, Mail, Lock, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,7 +20,6 @@ const SignUp = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    agreeToTerms: false,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -81,16 +79,6 @@ const SignUp = () => {
       return;
     }
 
-    // Check terms
-    if (!formData.agreeToTerms) {
-      toast({
-        title: "Error",
-        description: "Please agree to the terms and conditions",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsLoading(true);
     try {
       await signUp(formData.email.toLowerCase(), formData.password, formData.name);
@@ -133,28 +121,19 @@ const SignUp = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-card rounded-3xl shadow-xl p-8 relative">
-        <button
-          onClick={() => navigate("/")}
-          className="absolute right-4 top-4 text-muted-foreground hover:text-foreground"
-        >
-          <X className="w-6 h-6" />
-        </button>
-
-        <div className="space-y-6">
-          <div className="text-center space-y-4">
-            <h1 className="text-3xl font-bold text-foreground">
-              Sign Up
-            </h1>
+      <div className="w-full max-w-md bg-card rounded-3xl shadow-xl p-6">
+        <div className="space-y-4">
+          <div className="text-center space-y-2">
+            <h1 className="text-2xl font-bold text-foreground">Sign Up</h1>
             <div className="flex justify-center">
-              <div className="w-20 h-20 bg-accent rounded-full flex items-center justify-center">
-                <Shield className="w-10 h-10 text-primary" strokeWidth={2.5} />
+              <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center">
+                <Shield className="w-8 h-8 text-primary" strokeWidth={2.5} />
               </div>
             </div>
-            <p className="text-muted-foreground text-base">Create Your Family Vault</p>
+            <p className="text-muted-foreground text-sm">Create Your Family Vault</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3">
             <div className="relative">
               <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
@@ -162,7 +141,7 @@ const SignUp = () => {
                 placeholder="Name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="pl-12 bg-input border-0 h-14 rounded-2xl text-base"
+                className="pl-12 bg-input border-0 h-12 rounded-2xl text-base"
                 required
               />
             </div>
@@ -174,7 +153,7 @@ const SignUp = () => {
                 placeholder="Email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="pl-12 bg-input border-0 h-14 rounded-2xl text-base"
+                className="pl-12 bg-input border-0 h-12 rounded-2xl text-base"
                 required
               />
             </div>
@@ -186,7 +165,7 @@ const SignUp = () => {
                 placeholder="Password"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="pl-12 pr-12 bg-input border-0 h-14 rounded-2xl text-base"
+                className="pl-12 pr-12 bg-input border-0 h-12 rounded-2xl text-base"
                 required
               />
               <button
@@ -205,7 +184,7 @@ const SignUp = () => {
                 placeholder="Confirm Password"
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                className="pl-12 pr-12 bg-input border-0 h-14 rounded-2xl text-base"
+                className="pl-12 pr-12 bg-input border-0 h-12 rounded-2xl text-base"
                 required
               />
               <button
@@ -217,23 +196,7 @@ const SignUp = () => {
               </button>
             </div>
 
-            <div className="flex items-start space-x-2 pt-2">
-              <Checkbox
-                id="terms"
-                checked={formData.agreeToTerms}
-                onCheckedChange={(checked) =>
-                  setFormData({ ...formData, agreeToTerms: checked as boolean })
-                }
-                className="mt-0.5"
-              />
-              <label htmlFor="terms" className="text-sm text-muted-foreground cursor-pointer leading-tight">
-                I agree to{" "}
-                <span className="text-primary">Terms & Conditions</span> and{" "}
-                <span className="text-primary">Privacy Policy</span>
-              </label>
-            </div>
-
-            <Button type="submit" className="w-full h-14 text-base font-semibold rounded-2xl" disabled={isLoading}>
+            <Button type="submit" className="w-full h-12 text-base font-semibold rounded-2xl" disabled={isLoading}>
               {isLoading ? "Creating account..." : "SIGN UP"}
             </Button>
 
@@ -249,7 +212,7 @@ const SignUp = () => {
             <Button
               type="button"
               variant="outline"
-              className="w-full h-14 text-base font-medium rounded-2xl bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 shadow-sm hover:shadow transition-all"
+              className="w-full h-12 text-base font-medium rounded-2xl bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 shadow-sm hover:shadow transition-all"
               onClick={handleGoogleSignUp}
               disabled={isLoading}
             >

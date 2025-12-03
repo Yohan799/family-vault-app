@@ -1,6 +1,5 @@
-import { Lock, Mail, Shield, Fingerprint, Bell, ShieldAlert, HelpCircle, LogOut, Trash2, LockKeyhole, Home, ChevronRight, Vault, Settings, Smartphone } from "lucide-react";
+import { Lock, Mail, Shield, Bell, HelpCircle, LogOut, Trash2, LockKeyhole, Home, ChevronRight, Vault, Settings, Smartphone } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
@@ -13,12 +12,9 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 const SettingsPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { profile, user, updateProfile, signOut } = useAuth();
+  const { profile, user, signOut } = useAuth();
   const [toggleStates, setToggleStates] = useState({
-    twoFactorAuth: false,
-    biometric: false,
     pushNotifications: false,
-    securityAlerts: false,
   });
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -30,88 +26,44 @@ const SettingsPage = () => {
   };
 
   useEffect(() => {
-    // Load settings from profile (for 2FA and biometric) and localStorage (for others)
-    if (profile) {
-      const savedUserSettings = localStorage.getItem("userSettings");
-      let localSettings: any = {};
-      
-      if (savedUserSettings) {
-        try {
-          localSettings = JSON.parse(savedUserSettings);
-        } catch (error) {
-          console.error("Error parsing saved settings:", error);
-        }
+    // Load settings from localStorage
+    const savedUserSettings = localStorage.getItem("userSettings");
+    let localSettings: any = {};
+    
+    if (savedUserSettings) {
+      try {
+        localSettings = JSON.parse(savedUserSettings);
+      } catch (error) {
+        console.error("Error parsing saved settings:", error);
       }
-
-      setToggleStates({
-        twoFactorAuth: profile.two_factor_enabled || false,
-        biometric: profile.biometric_enabled || false,
-        pushNotifications: localSettings.pushNotifications ?? true,
-        securityAlerts: localSettings.securityAlerts ?? true,
-      });
     }
+
+    setToggleStates({
+      pushNotifications: localSettings.pushNotifications ?? true,
+    });
   }, [profile]);
 
   const handleToggle = async (key: keyof typeof toggleStates) => {
-    // For 2FA, navigate to setup page instead of toggle
-    if (key === 'twoFactorAuth') {
-      navigate("/two-factor-setup");
-      return;
-    }
-
     const newValue = !toggleStates[key];
     setToggleStates((prev) => ({ ...prev, [key]: newValue }));
 
-    // Update database for biometric
-    if (key === 'biometric') {
+    // Store settings in localStorage
+    const savedUserSettings = localStorage.getItem("userSettings");
+    let localSettings: any = {};
+    
+    if (savedUserSettings) {
       try {
-        await updateProfile({ biometric_enabled: newValue });
-
-        // Log activity
-        if (user) {
-          await logActivity(
-            user.id,
-            `settings.biometric_${newValue ? 'enable' : 'disable'}`,
-            'profile',
-            user.id
-          );
-        }
-
-        // Dispatch event to update dashboard readiness score
-        window.dispatchEvent(new CustomEvent('countsUpdated'));
+        localSettings = JSON.parse(savedUserSettings);
       } catch (error) {
-        console.error(`Error updating ${key}:`, error);
-        // Rollback on error
-        setToggleStates((prev) => ({ ...prev, [key]: !newValue }));
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to update Biometric Login",
-        });
-        return;
+        console.error("Error parsing saved settings:", error);
       }
-    } else {
-      // Store other settings in localStorage
-      const savedUserSettings = localStorage.getItem("userSettings");
-      let localSettings: any = {};
-      
-      if (savedUserSettings) {
-        try {
-          localSettings = JSON.parse(savedUserSettings);
-        } catch (error) {
-          console.error("Error parsing saved settings:", error);
-        }
-      }
-
-      localSettings = { ...localSettings, [key]: newValue };
-      localStorage.setItem("userSettings", JSON.stringify(localSettings));
     }
 
+    localSettings = { ...localSettings, [key]: newValue };
+    localStorage.setItem("userSettings", JSON.stringify(localSettings));
+
     const messages: { [key: string]: { enabled: string; disabled: string } } = {
-      twoFactorAuth: { enabled: "Two-Factor Auth Enabled", disabled: "Two-Factor Auth Disabled" },
-      biometric: { enabled: "Biometric Login Enabled", disabled: "Biometric Login Disabled" },
       pushNotifications: { enabled: "Push Notifications Enabled", disabled: "Push Notifications Disabled" },
-      securityAlerts: { enabled: "Security Alerts Enabled", disabled: "Security Alerts Disabled" },
     };
 
     const message = messages[key];
@@ -165,20 +117,18 @@ const SettingsPage = () => {
     }
   };
 
-  // Flattened list of settings for "Quick Action" style
+  // Flattened list of settings
   const settings = [
     // Account
     { icon: Lock, title: "Change Password", subtitle: "Update your password", path: "/change-password", color: "bg-blue-100" },
     { icon: Mail, title: "Email Preferences", subtitle: "Manage email settings", path: "/email-preferences", color: "bg-indigo-100" },
 
     // Security
-    { icon: ShieldAlert, title: "Two-Factor Auth", subtitle: profile?.two_factor_enabled ? "Enabled" : "Extra security layer", path: "/two-factor-setup", color: "bg-purple-100" },
-    { icon: Smartphone, title: "App Lock", subtitle: profile?.app_lock_type ? `Active (${profile.app_lock_type})` : "PIN, Biometric, Password", path: "/app-lock-setup", color: "bg-violet-100" },
-    { icon: Fingerprint, title: "Biometric Login", subtitle: "FaceID / Fingerprint", toggle: "biometric", color: "bg-pink-100" },
+    { icon: Shield, title: "Two-Factor Auth", subtitle: profile?.two_factor_enabled ? "Enabled" : "Extra security layer", path: "/two-factor-setup", color: "bg-purple-100" },
+    { icon: Smartphone, title: "App Lock", subtitle: profile?.app_lock_type ? `Active (${profile.app_lock_type})` : "PIN or Biometric", path: "/app-lock-setup", color: "bg-violet-100" },
 
-    // Notifications (Toggles)
+    // Notifications
     { icon: Bell, title: "Push Notifications", subtitle: "Get mobile alerts", toggle: "pushNotifications", color: "bg-amber-100" },
-    { icon: Shield, title: "Security Alerts", subtitle: "Critical updates", toggle: "securityAlerts", color: "bg-orange-100" },
 
     // Vault
     { icon: LockKeyhole, title: "Auto Lock Timeout", subtitle: getAutoLockLabel(profile?.auto_lock_minutes), path: "/auto-lock-timeout", color: "bg-emerald-100" },
@@ -232,7 +182,7 @@ const SettingsPage = () => {
           <ChevronRight className="w-5 h-5 text-muted-foreground" />
         </button>
 
-        {/* Settings List - Quick Action Style */}
+        {/* Settings List */}
         <div className="space-y-2">
           {settings.map((setting, index) => {
             const Icon = setting.icon;
