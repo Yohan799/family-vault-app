@@ -208,7 +208,7 @@ export const UploadDocumentModal = ({
 
   return (
     <Dialog open={open} onOpenChange={isUploading ? undefined : onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-card border-border rounded-2xl p-0 gap-0">
+      <DialogContent className="sm:max-w-md bg-card border-border rounded-2xl p-0 gap-0" hideCloseButton>
         <DialogHeader className="p-6 pb-4 border-b border-border/50">
           <DialogTitle className="text-xl font-bold text-foreground text-center">
             Upload Document
