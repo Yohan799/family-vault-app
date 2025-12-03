@@ -188,28 +188,11 @@ const NomineeCenter = () => {
 
       if (insertError) throw insertError;
 
-      // Send verification email
-      const { error: emailError } = await supabase.functions.invoke('send-nominee-verification', {
-        body: {
-          nomineeId: newNominee.id,
-          nomineeEmail: formData.email,
-          nomineeName: formData.fullName
-        }
+      // Note: Email verification bypassed for now - will be enabled after Resend domain verification
+      toast({
+        title: "Nominee added successfully!",
+        description: `${formData.fullName} has been added. Email verification will be available soon.`,
       });
-
-      if (emailError) {
-        console.error("Error sending verification email:", emailError);
-        toast({
-          title: "Nominee added but email failed",
-          description: "Nominee was added but verification email could not be sent",
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "Nominee added successfully!",
-          description: `Verification email sent to ${formData.email}`,
-        });
-      }
 
       setFormData({ fullName: '', relation: '', email: '', phone: '', avatarUrl: 'avatar-1' });
       setShowAddForm(false);
@@ -532,27 +515,27 @@ const NomineeCenter = () => {
 
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
-        <div className="flex justify-around items-center h-16 max-w-md mx-auto">
+        <div className="flex justify-around items-center h-14 max-w-md mx-auto">
           <button
             onClick={() => navigate("/dashboard")}
-            className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
+            className="flex flex-col items-center gap-0.5 text-muted-foreground hover:text-foreground"
           >
-            <Home className="w-6 h-6" />
-            <span className="text-xs font-medium">Home</span>
+            <Home className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Home</span>
           </button>
           <button
             onClick={() => navigate("/vault")}
-            className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
+            className="flex flex-col items-center gap-0.5 text-muted-foreground hover:text-foreground"
           >
-            <Vault className="w-6 h-6" />
-            <span className="text-xs font-medium">Vault</span>
+            <Vault className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Vault</span>
           </button>
           <button
             onClick={() => navigate("/settings")}
-            className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
+            className="flex flex-col items-center gap-0.5 text-muted-foreground hover:text-foreground"
           >
-            <Settings className="w-6 h-6" />
-            <span className="text-xs font-medium">Settings</span>
+            <Settings className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Settings</span>
           </button>
         </div>
       </div>
