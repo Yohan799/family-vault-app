@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1060322376675",
+    "project_id": "my-family-vault-ddc11",
+    "storage_bucket": "my-family-vault-ddc11.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1060322376675:android:c54ba9005c3f72b6a14ff9",
+        "android_client_info": {
+          "package_name": "com.example.FamilyVaultapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1060322376675-q0jl69e8lm7hvr4r1kp5e9kh0m5l8r1g.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDummy_Key_Replace_With_Actual"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1060322376675-q0jl69e8lm7hvr4r1kp5e9kh0m5l8r1g.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

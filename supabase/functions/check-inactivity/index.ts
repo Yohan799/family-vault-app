@@ -28,12 +28,35 @@ interface InactivityTrigger {
 interface Profile {
   email: string;
   full_name: string | null;
+  push_notifications_enabled: boolean | null;
 }
 
 interface Nominee {
   id: string;
   email: string;
   full_name: string;
+}
+
+// Helper function to send push notification
+async function sendPushNotification(userId: string, title: string, body: string) {
+  try {
+    const response = await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${supabaseServiceKey}`,
+      },
+      body: JSON.stringify({ user_id: userId, title, body }),
+    });
+    
+    if (!response.ok) {
+      console.error("Push notification failed:", await response.text());
+    } else {
+      console.log(`Push notification sent to user ${userId}`);
+    }
+  } catch (error) {
+    console.error("Error sending push notification:", error);
+  }
 }
 
 serve(async (req: Request) => {
@@ -121,7 +144,7 @@ async function sendUserWarning(trigger: InactivityTrigger, inactiveDays: number)
   // Get user profile
   const { data: profile } = await supabase
     .from("profiles")
-    .select("email, full_name")
+    .select("email, full_name, push_notifications_enabled")
     .eq("id", trigger.user_id)
     .single() as { data: Profile | null };
 
@@ -133,6 +156,7 @@ async function sendUserWarning(trigger: InactivityTrigger, inactiveDays: number)
   const customMessage = trigger.custom_message || "We haven't seen you in a while. Please log in to keep your account active.";
 
   try {
+    // Send email
     await resend.emails.send({
       from: "Family Vault <onboarding@resend.dev>",
       to: [profile.email],
@@ -145,6 +169,15 @@ async function sendUserWarning(trigger: InactivityTrigger, inactiveDays: number)
         <p>Best regards,<br>Family Vault Team</p>
       `,
     });
+
+    // Send push notification if enabled
+    if (profile.push_notifications_enabled) {
+      await sendPushNotification(
+        trigger.user_id,
+        "Inactivity Alert",
+        `You've been inactive for ${inactiveDays} days. Log in to keep your account active.`
+      );
+    }
 
     // Log alert
     await supabase.from("inactivity_alerts").insert({
@@ -168,7 +201,7 @@ async function sendNomineeWarnings(trigger: InactivityTrigger, inactiveDays: num
   // Get user profile
   const { data: profile } = await supabase
     .from("profiles")
-    .select("email, full_name")
+    .select("email, full_name, push_notifications_enabled")
     .eq("id", trigger.user_id)
     .single() as { data: Profile | null };
 
@@ -217,6 +250,15 @@ async function sendNomineeWarnings(trigger: InactivityTrigger, inactiveDays: num
       console.error(`Error sending warning to nominee ${nominee.email}:`, error);
     }
   }
+
+  // Send push notification to user about nominee warnings
+  if (profile.push_notifications_enabled) {
+    await sendPushNotification(
+      trigger.user_id,
+      "Nominees Notified",
+      `Your nominees have been notified about your ${inactiveDays} days of inactivity.`
+    );
+  }
 }
 
 async function grantEmergencyAccess(trigger: InactivityTrigger, inactiveDays: number) {
@@ -239,7 +281,7 @@ async function grantEmergencyAccess(trigger: InactivityTrigger, inactiveDays: nu
   // Get user profile
   const { data: profile } = await supabase
     .from("profiles")
-    .select("email, full_name")
+    .select("email, full_name, push_notifications_enabled")
     .eq("id", trigger.user_id)
     .single() as { data: Profile | null };
 
@@ -289,6 +331,15 @@ async function grantEmergencyAccess(trigger: InactivityTrigger, inactiveDays: nu
     } catch (error) {
       console.error(`Error notifying nominee ${nominee.email}:`, error);
     }
+  }
+
+  // Send push notification to user about emergency access
+  if (profile.push_notifications_enabled) {
+    await sendPushNotification(
+      trigger.user_id,
+      "Emergency Access Granted",
+      "Emergency access has been granted to your nominees due to prolonged inactivity."
+    );
   }
 
   console.log("✅ Emergency access granted and nominees notified");
