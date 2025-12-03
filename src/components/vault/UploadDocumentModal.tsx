@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Upload, Camera, Cloud, Loader2, X } from "lucide-react";
+import { Upload, Camera, Cloud, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -198,8 +198,8 @@ export const UploadDocumentModal = ({
     {
       id: "cloud",
       icon: Cloud,
-      title: "Import from Cloud",
-      subtitle: "Google Drive & more",
+      title: "Google Drive",
+      subtitle: "Import files from Drive",
       iconBg: "bg-green-100 dark:bg-green-900/30",
       iconColor: "text-green-600 dark:text-green-400",
       onClick: handleGoogleDrive,
@@ -210,21 +210,9 @@ export const UploadDocumentModal = ({
     <Dialog open={open} onOpenChange={isUploading ? undefined : onOpenChange}>
       <DialogContent className="sm:max-w-md bg-card border-border rounded-2xl p-0 gap-0">
         <DialogHeader className="p-6 pb-4 border-b border-border/50">
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-xl font-bold text-foreground">
-              Upload Document
-            </DialogTitle>
-            {!isUploading && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleClose}
-                className="h-8 w-8 rounded-full hover:bg-muted"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
+          <DialogTitle className="text-xl font-bold text-foreground text-center">
+            Upload Document
+          </DialogTitle>
         </DialogHeader>
 
         <div className="p-6 space-y-3">
