@@ -30,6 +30,7 @@ interface AuthContextType {
   session: Session | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  hasGoogleIdentity: boolean;
   signUp: (email: string, password: string, fullName: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
@@ -38,6 +39,7 @@ interface AuthContextType {
   refreshProfile: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updatePassword: (newPassword: string) => Promise<void>;
+  getGoogleAccessToken: () => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -175,7 +177,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const response = await SocialLogin.login({
           provider: 'google',
           options: {
-            scopes: ['profile', 'email'],
+            scopes: ['profile', 'email', 'https://www.googleapis.com/auth/drive.readonly'],
           }
         });
         
@@ -208,19 +210,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw error;
       }
     } else {
-      // Web flow using OAuth redirect
+      // Web flow using OAuth redirect with Drive scope
       const redirectUrl = `${window.location.origin}/dashboard`;
       
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: redirectUrl,
+          scopes: 'https://www.googleapis.com/auth/drive.readonly',
         }
       });
 
       if (error) throw error;
       
       localStorage.setItem('isFirstLogin', 'true');
+    }
+  };
+
+  // Check if user has Google identity linked
+  const hasGoogleIdentity = !!user?.identities?.some(
+    (identity) => identity.provider === 'google'
+  );
+
+  // Get Google access token from session
+  const getGoogleAccessToken = async (): Promise<string | null> => {
+    try {
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      return currentSession?.provider_token || null;
+    } catch (error) {
+      console.error('Error getting Google access token:', error);
+      return null;
     }
   };
 
@@ -291,6 +310,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         session,
         isAuthenticated: !!user,
         isLoading,
+        hasGoogleIdentity,
         signUp,
         signIn,
         signInWithGoogle,
@@ -299,6 +319,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         refreshProfile,
         resetPassword,
         updatePassword,
+        getGoogleAccessToken,
       }}
     >
       {children}

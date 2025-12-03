@@ -11,6 +11,10 @@ import { useToast } from "@/hooks/use-toast";
 import { validateFile } from "@/lib/validation";
 import { openGoogleDrivePicker, downloadFileFromGoogleDrive } from "@/lib/googleDrivePicker";
 import { scanDocument } from "@/lib/documentScanner";
+import { useAuth } from "@/contexts/AuthContext";
+import { GoogleDriveBrowser } from "@/components/GoogleDriveBrowser";
+import { ConnectGoogleDriveModal } from "@/components/ConnectGoogleDriveModal";
+import { Capacitor } from "@capacitor/core";
 
 interface UploadDocumentModalProps {
   open: boolean;
@@ -33,8 +37,12 @@ export const UploadDocumentModal = ({
   onUploadComplete,
 }: UploadDocumentModalProps) => {
   const { toast } = useToast();
+  const { hasGoogleIdentity, getGoogleAccessToken } = useAuth();
   const [isUploading, setIsUploading] = useState(false);
   const [uploadingSource, setUploadingSource] = useState<string | null>(null);
+  const [showDriveBrowser, setShowDriveBrowser] = useState(false);
+  const [showConnectModal, setShowConnectModal] = useState(false);
+  const [driveAccessToken, setDriveAccessToken] = useState<string | null>(null);
 
   const handleClose = () => {
     if (isUploading) return;
@@ -147,45 +155,128 @@ export const UploadDocumentModal = ({
   };
 
   const handleGoogleDrive = async () => {
-    handleClose();
-    
+    const isNative = Capacitor.isNativePlatform();
+
+    // On native, always use native file picker (can access Google Drive if app installed)
+    if (isNative) {
+      handleClose();
+      try {
+        const file = await openGoogleDrivePicker();
+        if (file) {
+          toast({
+            title: "Downloading file",
+            description: "Please wait...",
+          });
+
+          const blob = await downloadFileFromGoogleDrive(file);
+          const driveFile = new File([blob], file.name, { type: file.mimeType });
+          
+          const validation = validateFile(driveFile);
+          if (!validation.valid) {
+            toast({
+              title: "Upload Failed",
+              description: validation.error,
+              variant: "destructive",
+            });
+            return;
+          }
+
+          const { storeDocument } = await import('@/lib/documentStorage');
+          await storeDocument(driveFile, categoryId, subcategoryId, folderId, 'google_drive');
+
+          toast({
+            title: "Upload successful",
+            description: `${file.name} has been added from Google Drive`,
+          });
+
+          if (onUploadComplete) {
+            onUploadComplete();
+          }
+        }
+      } catch (error) {
+        console.error('Error importing from Google Drive:', error);
+        toast({
+          title: "Import Error",
+          description: error instanceof Error ? error.message : "Failed to import file",
+          variant: "destructive",
+        });
+      }
+      return;
+    }
+
+    // On web: Check if user has Google identity linked
+    if (hasGoogleIdentity) {
+      // Get access token and open browser
+      const token = await getGoogleAccessToken();
+      if (token) {
+        setDriveAccessToken(token);
+        handleClose();
+        setShowDriveBrowser(true);
+      } else {
+        // Token not available, show connect modal
+        handleClose();
+        setShowConnectModal(true);
+      }
+    } else {
+      // No Google identity, show connect modal
+      handleClose();
+      setShowConnectModal(true);
+    }
+  };
+
+  const handleDriveFileSelect = async (file: File) => {
+    const validation = validateFile(file);
+    if (!validation.valid) {
+      toast({
+        title: "Upload Failed",
+        description: validation.error,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const { storeDocument } = await import('@/lib/documentStorage');
+      await storeDocument(file, categoryId, subcategoryId, folderId, 'google_drive');
+      
+      toast({
+        title: "Upload successful",
+        description: `${file.name} has been added from Google Drive`,
+      });
+
+      if (onUploadComplete) {
+        onUploadComplete();
+      }
+    } catch (error) {
+      console.error('Error storing file from Drive:', error);
+      toast({
+        title: "Upload Failed",
+        description: error instanceof Error ? error.message : "Failed to store file",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleUseNativePicker = async () => {
     try {
       const file = await openGoogleDrivePicker();
       if (file) {
         toast({
-          title: "Downloading from Google Drive",
+          title: "Downloading file",
           description: "Please wait...",
         });
 
         const blob = await downloadFileFromGoogleDrive(file);
         const driveFile = new File([blob], file.name, { type: file.mimeType });
-        
-        const validation = validateFile(driveFile);
-        if (!validation.valid) {
-          toast({
-            title: "Upload Failed",
-            description: validation.error,
-            variant: "destructive",
-          });
-          return;
-        }
-
-        const { storeDocument } = await import('@/lib/documentStorage');
-        await storeDocument(driveFile, categoryId, subcategoryId, folderId, 'google_drive');
-
-        toast({
-          title: "Upload successful",
-          description: `${file.name} has been added from Google Drive`,
-        });
-
-        if (onUploadComplete) {
-          onUploadComplete();
-        }
+        await handleDriveFileSelect(driveFile);
       }
     } catch (error) {
-      console.error('Error importing from Google Drive:', error);
+      console.error('Error with native picker:', error);
       toast({
-        title: "Google Drive Error",
+        title: "Import Error",
         description: error instanceof Error ? error.message : "Failed to import file",
         variant: "destructive",
       });
@@ -223,66 +314,88 @@ export const UploadDocumentModal = ({
   ];
 
   return (
-    <Dialog open={open} onOpenChange={isUploading ? undefined : onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-card border-border rounded-2xl p-0 gap-0" hideCloseButton>
-        <DialogHeader className="p-6 pb-4 border-b border-border/50">
-          <DialogTitle className="text-xl font-bold text-foreground text-center">
-            Upload Document
-          </DialogTitle>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={isUploading ? undefined : onOpenChange}>
+        <DialogContent className="sm:max-w-md bg-card border-border rounded-2xl p-0 gap-0" hideCloseButton>
+          <DialogHeader className="p-6 pb-4 border-b border-border/50">
+            <DialogTitle className="text-xl font-bold text-foreground text-center">
+              Upload Document
+            </DialogTitle>
+          </DialogHeader>
 
-        <div className="p-6 space-y-3">
-          {uploadOptions.map((option) => {
-            const Icon = option.icon;
-            const isLoading = isUploading && uploadingSource === option.id;
-            const isDisabled = isUploading && uploadingSource !== option.id;
+          <div className="p-6 space-y-3">
+            {uploadOptions.map((option) => {
+              const Icon = option.icon;
+              const isLoading = isUploading && uploadingSource === option.id;
+              const isDisabled = isUploading && uploadingSource !== option.id;
 
-            return (
-              <button
-                key={option.id}
-                onClick={option.onClick}
-                disabled={isUploading}
-                className={`w-full flex items-center gap-4 p-4 rounded-xl transition-all duration-200 min-h-[72px] ${
-                  isDisabled
-                    ? "opacity-50 cursor-not-allowed bg-muted/30"
-                    : isLoading
-                    ? "bg-primary/10 border-2 border-primary"
-                    : "bg-muted/50 hover:bg-muted hover:scale-[1.02] active:scale-[0.98]"
-                }`}
-              >
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${option.iconBg}`}>
-                  {isLoading ? (
-                    <Loader2 className="w-6 h-6 text-primary animate-spin" />
-                  ) : (
-                    <Icon className={`w-6 h-6 ${option.iconColor}`} />
-                  )}
-                </div>
-                <div className="flex-1 text-left">
-                  <span className="font-semibold text-foreground block">
-                    {isLoading ? "Uploading..." : option.title}
-                  </span>
-                  <span className="text-sm text-muted-foreground">
-                    {option.subtitle}
-                  </span>
-                </div>
-              </button>
-            );
-          })}
+              return (
+                <button
+                  key={option.id}
+                  onClick={option.onClick}
+                  disabled={isUploading}
+                  className={`w-full flex items-center gap-4 p-4 rounded-xl transition-all duration-200 min-h-[72px] ${
+                    isDisabled
+                      ? "opacity-50 cursor-not-allowed bg-muted/30"
+                      : isLoading
+                      ? "bg-primary/10 border-2 border-primary"
+                      : "bg-muted/50 hover:bg-muted hover:scale-[1.02] active:scale-[0.98]"
+                  }`}
+                >
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${option.iconBg}`}>
+                    {isLoading ? (
+                      <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                    ) : (
+                      <Icon className={`w-6 h-6 ${option.iconColor}`} />
+                    )}
+                  </div>
+                  <div className="flex-1 text-left">
+                    <span className="font-semibold text-foreground block">
+                      {isLoading ? "Uploading..." : option.title}
+                    </span>
+                    <span className="text-sm text-muted-foreground">
+                      {option.subtitle}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
 
-          <p className="text-xs text-muted-foreground text-center pt-2">
-            Maximum file size: 20MB
-          </p>
+            <p className="text-xs text-muted-foreground text-center pt-2">
+              Maximum file size: 20MB
+            </p>
 
-          <Button
-            variant="outline"
-            onClick={handleClose}
-            disabled={isUploading}
-            className="w-full h-12 rounded-xl mt-2"
-          >
-            Cancel
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+            <Button
+              variant="outline"
+              onClick={handleClose}
+              disabled={isUploading}
+              className="w-full h-12 rounded-xl mt-2"
+            >
+              Cancel
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Google Drive Browser */}
+      {driveAccessToken && (
+        <GoogleDriveBrowser
+          open={showDriveBrowser}
+          onClose={() => {
+            setShowDriveBrowser(false);
+            setDriveAccessToken(null);
+          }}
+          accessToken={driveAccessToken}
+          onFileSelect={handleDriveFileSelect}
+        />
+      )}
+
+      {/* Connect Google Drive Modal */}
+      <ConnectGoogleDriveModal
+        open={showConnectModal}
+        onClose={() => setShowConnectModal(false)}
+        onUseNativePicker={handleUseNativePicker}
+      />
+    </>
   );
 };
