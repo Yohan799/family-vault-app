@@ -10,35 +10,62 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { linkGoogleAccount } from '@/services/googleDriveService';
+import { useAuth } from '@/contexts/AuthContext';
+import { Capacitor } from '@capacitor/core';
 
 interface ConnectGoogleDriveModalProps {
   open: boolean;
   onClose: () => void;
   onUseNativePicker: () => void;
+  onGoogleAuthSuccess?: (accessToken: string) => void;
 }
 
 export const ConnectGoogleDriveModal = ({
   open,
   onClose,
   onUseNativePicker,
+  onGoogleAuthSuccess,
 }: ConnectGoogleDriveModalProps) => {
   const { toast } = useToast();
+  const { authenticateGoogleForDrive } = useAuth();
   const [isConnecting, setIsConnecting] = useState(false);
 
   const handleConnectGoogle = async () => {
     setIsConnecting(true);
+    
+    const isNative = Capacitor.isNativePlatform();
+    
     try {
-      const result = await linkGoogleAccount();
-      
-      if (!result.success) {
-        toast({
-          title: 'Connection failed',
-          description: result.error || 'Failed to connect Google account',
-          variant: 'destructive',
-        });
-        setIsConnecting(false);
+      if (isNative) {
+        // On native APK: Use SocialLogin to get Drive access token
+        console.log('[ConnectGoogle] Using native SocialLogin for Drive access');
+        const token = await authenticateGoogleForDrive();
+        
+        if (token) {
+          console.log('[ConnectGoogle] Got native token, calling onGoogleAuthSuccess');
+          onGoogleAuthSuccess?.(token);
+          onClose();
+        } else {
+          toast({
+            title: 'Connection failed',
+            description: 'Failed to get Google Drive access',
+            variant: 'destructive',
+          });
+        }
+      } else {
+        // On web: Use Supabase OAuth redirect to link Google account
+        console.log('[ConnectGoogle] Using web OAuth flow');
+        const result = await linkGoogleAccount();
+        
+        if (!result.success) {
+          toast({
+            title: 'Connection failed',
+            description: result.error || 'Failed to connect Google account',
+            variant: 'destructive',
+          });
+        }
+        // If successful, the page will redirect for OAuth
       }
-      // If successful, the page will redirect for OAuth
     } catch (error) {
       console.error('[ConnectGoogle] Error:', error);
       toast({
@@ -46,6 +73,7 @@ export const ConnectGoogleDriveModal = ({
         description: error instanceof Error ? error.message : 'Failed to connect Google account',
         variant: 'destructive',
       });
+    } finally {
       setIsConnecting(false);
     }
   };
@@ -81,7 +109,7 @@ export const ConnectGoogleDriveModal = ({
                 <path d="M12.545 10.239v3.821h5.445c-.712 2.315-2.647 3.972-5.445 3.972a6.033 6.033 0 110-12.064c1.498 0 2.866.549 3.921 1.453l2.814-2.814A9.969 9.969 0 0012.545 2C7.021 2 2.543 6.477 2.543 12s4.478 10 10.002 10c8.396 0 10.249-7.85 9.426-11.748l-9.426-.013z" />
               </svg>
             )}
-            {isConnecting ? 'Connecting...' : 'Connect with Google'}
+            {isConnecting ? 'Connecting...' : 'Sign in with Google'}
           </Button>
 
           <div className="relative">

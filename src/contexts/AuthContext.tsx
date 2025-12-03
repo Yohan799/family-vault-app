@@ -40,6 +40,7 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<void>;
   updatePassword: (newPassword: string) => Promise<void>;
   getGoogleAccessToken: () => Promise<string | null>;
+  authenticateGoogleForDrive: () => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -49,6 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<Profile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [nativeGoogleAccessToken, setNativeGoogleAccessToken] = useState<string | null>(null);
 
   // Fetch user profile from database
   const fetchProfile = async (userId: string) => {
@@ -100,6 +102,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }, 0);
         } else {
           setProfile(null);
+          // Clear native token on sign out
+          setNativeGoogleAccessToken(null);
         }
       }
     );
@@ -182,18 +186,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
         
         if (response.provider === 'google' && response.result) {
-          // Extract token from response (structure varies by platform)
+          // Extract tokens from response
           const result = response.result as any;
-          const token = result.idToken || result.authentication?.idToken || result.accessToken;
+          const idToken = result.idToken || result.authentication?.idToken;
+          const accessToken = result.accessToken || result.authentication?.accessToken;
           
-          if (!token) {
+          if (!idToken) {
             throw new Error('No authentication token received from Google');
+          }
+          
+          // Store access token for Google Drive
+          if (accessToken) {
+            console.log('[AuthContext] Storing native Google access token for Drive');
+            setNativeGoogleAccessToken(accessToken);
           }
           
           // Use the ID token to sign in with Supabase
           const { data, error } = await supabase.auth.signInWithIdToken({
             provider: 'google',
-            token: token,
+            token: idToken,
           });
           
           if (error) throw error;
@@ -232,14 +243,57 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     (identity) => identity.provider === 'google'
   );
 
-  // Get Google access token from session
+  // Get Google access token - prioritize native token on APK
   const getGoogleAccessToken = async (): Promise<string | null> => {
     try {
+      // Check native token first (for APK users who signed in with Google)
+      if (Capacitor.isNativePlatform() && nativeGoogleAccessToken) {
+        console.log('[AuthContext] Returning native Google access token');
+        return nativeGoogleAccessToken;
+      }
+      
+      // Fall back to Supabase session token (for web)
       const { data: { session: currentSession } } = await supabase.auth.getSession();
       return currentSession?.provider_token || null;
     } catch (error) {
       console.error('Error getting Google access token:', error);
       return null;
+    }
+  };
+
+  // Authenticate with Google specifically to get Drive access token
+  // Used by email/password users who want to access Google Drive
+  const authenticateGoogleForDrive = async (): Promise<string | null> => {
+    if (!Capacitor.isNativePlatform()) {
+      console.log('[AuthContext] authenticateGoogleForDrive called on web - use linkIdentity instead');
+      return null;
+    }
+    
+    try {
+      console.log('[AuthContext] Authenticating with Google for Drive access...');
+      const response = await SocialLogin.login({
+        provider: 'google',
+        options: {
+          scopes: ['profile', 'email', 'https://www.googleapis.com/auth/drive.readonly'],
+        }
+      });
+      
+      if (response.provider === 'google' && response.result) {
+        const result = response.result as any;
+        const accessToken = result.accessToken || result.authentication?.accessToken;
+        
+        if (accessToken) {
+          console.log('[AuthContext] Got Google access token for Drive');
+          setNativeGoogleAccessToken(accessToken);
+          return accessToken;
+        }
+      }
+      
+      console.log('[AuthContext] No access token received from Google');
+      return null;
+    } catch (error) {
+      console.error('[AuthContext] Error authenticating Google for Drive:', error);
+      throw error;
     }
   };
 
@@ -258,6 +312,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     setProfile(null);
     setSession(null);
+    setNativeGoogleAccessToken(null);
   };
 
   const updateProfile = async (updates: Partial<Profile>) => {
@@ -320,6 +375,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         resetPassword,
         updatePassword,
         getGoogleAccessToken,
+        authenticateGoogleForDrive,
       }}
     >
       {children}
