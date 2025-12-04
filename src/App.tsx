@@ -12,6 +12,7 @@ import Onboarding from "./pages/Onboarding";
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
 import ForgotPassword from "./pages/ForgotPassword";
+import PasswordResetOTP from "./pages/PasswordResetOTP";
 import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import Vault from "./pages/Vault";
@@ -84,6 +85,7 @@ const App = () => (
           <Route path="/signup" element={<SignUp />} />
           <Route path="/signin" element={<SignIn />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/password-reset-otp" element={<PasswordResetOTP />} />
           <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/vault" element={<ProtectedRoute><Vault /></ProtectedRoute>} />

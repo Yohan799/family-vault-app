@@ -1,17 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Shield, Lock, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { passwordSchema } from "@/lib/validation";
-import { z } from "zod";
 
 const ResetPassword = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
-  const { updatePassword } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -19,6 +18,17 @@ const ResetPassword = () => {
     password: "",
     confirmPassword: "",
   });
+
+  // Get email and resetToken from navigation state (OTP flow)
+  const email = location.state?.email;
+  const resetToken = location.state?.resetToken;
+
+  useEffect(() => {
+    // If no email/token in state, redirect to forgot password
+    if (!email || !resetToken) {
+      navigate("/forgot-password");
+    }
+  }, [email, resetToken, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,7 +56,18 @@ const ResetPassword = () => {
 
     setIsLoading(true);
     try {
-      await updatePassword(formData.password);
+      const { data, error } = await supabase.functions.invoke("reset-password-with-token", {
+        body: { 
+          email, 
+          resetToken, 
+          newPassword: formData.password 
+        },
+      });
+
+      if (error || !data?.success) {
+        throw new Error(data?.error || "Failed to reset password");
+      }
+
       toast({
         title: "Password Reset Successful",
         description: "You can now sign in with your new password",
@@ -57,7 +78,7 @@ const ResetPassword = () => {
       toast({
         title: "Reset Failed",
         description: errorMessage.includes("token")
-          ? "Reset link expired. Please request a new one."
+          ? "Reset session expired. Please restart the process."
           : errorMessage,
         variant: "destructive",
       });
@@ -65,6 +86,10 @@ const ResetPassword = () => {
       setIsLoading(false);
     }
   };
+
+  if (!email || !resetToken) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
