@@ -28,24 +28,39 @@ const scanWithMLKit = async (): Promise<ScannedDocument | null> => {
     const { DocumentScanner } = await import('@capacitor-mlkit/document-scanner');
     
     console.log("[DocumentScanner] Starting ML Kit scan...");
-    // Use type assertion for flexibility with different plugin versions
     const result = await DocumentScanner.scanDocument({
       pageLimit: 1,
       galleryImportAllowed: true,
-      resultFormats: 'JPEG'
-    }) as { pages?: string[]; scannedDocuments?: Array<{ jpeg?: string }> };
+      resultFormats: 'JPEG' // Single format string
+    });
 
-    console.log("[DocumentScanner] ML Kit result:", JSON.stringify(result, null, 2));
+    console.log("[DocumentScanner] Full ML Kit result:", JSON.stringify(result, null, 2));
 
-    // Handle different response formats
-    const imagePath = result.pages?.[0] || result.scannedDocuments?.[0]?.jpeg;
+    // Handle ALL possible response formats from different plugin versions
+    let imagePath: string | undefined;
+    
+    // Format 1: scannedImages array (most common in newer versions)
+    if (result.scannedImages && result.scannedImages.length > 0) {
+      imagePath = result.scannedImages[0];
+      console.log("[DocumentScanner] Found image in scannedImages:", imagePath);
+    }
+    // Format 2: pages array (older versions)
+    else if ((result as any).pages && (result as any).pages.length > 0) {
+      imagePath = (result as any).pages[0];
+      console.log("[DocumentScanner] Found image in pages:", imagePath);
+    }
+    // Format 3: scannedDocuments with jpeg property
+    else if ((result as any).scannedDocuments?.[0]?.jpeg) {
+      imagePath = (result as any).scannedDocuments[0].jpeg;
+      console.log("[DocumentScanner] Found image in scannedDocuments:", imagePath);
+    }
 
     if (!imagePath) {
-      console.log("[DocumentScanner] No image path in result - user likely cancelled");
+      console.log("[DocumentScanner] No image path in any format - user likely cancelled");
       return null;
     }
 
-    console.log("[DocumentScanner] Image path:", imagePath);
+    console.log("[DocumentScanner] Using image path:", imagePath);
 
     // Convert the file path to a File object
     const response = await fetch(imagePath);
