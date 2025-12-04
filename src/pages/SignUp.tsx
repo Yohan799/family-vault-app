@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Shield, User, Mail, Lock, Eye } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Shield, User, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
@@ -11,7 +11,7 @@ import { passwordSchema, sanitizeInput } from "@/lib/validation";
 const SignUp = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signUp, signInWithGoogle } = useAuth();
+  const { signUp, signInWithGoogle, user, isLoading: authLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -21,6 +21,13 @@ const SignUp = () => {
     password: "",
     confirmPassword: "",
   });
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (!authLoading && user) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [user, authLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -119,6 +126,11 @@ const SignUp = () => {
     }
   };
 
+  // Don't render form if already authenticated
+  if (!authLoading && user) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-card rounded-3xl shadow-xl p-6">
@@ -173,7 +185,7 @@ const SignUp = () => {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
-                <Eye className="w-5 h-5" />
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
 
@@ -192,7 +204,7 @@ const SignUp = () => {
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
-                <Eye className="w-5 h-5" />
+                {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
 

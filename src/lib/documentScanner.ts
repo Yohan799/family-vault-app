@@ -5,6 +5,13 @@ export interface ScannedDocument {
   dataUrl: string;
 }
 
+// ML Kit ScanResult type
+interface MLKitScanResult {
+  scannedImages?: string[];
+  pages?: string[];
+  scannedDocuments?: Array<{ jpeg?: string }>;
+}
+
 /**
  * Opens the ML Kit document scanner on native platforms
  * Falls back to camera capture on web
@@ -20,19 +27,35 @@ export const scanDocument = async (): Promise<ScannedDocument | null> => {
 };
 
 /**
- * Native ML Kit document scanner with edge detection
+ * Native ML Kit document scanner with edge detection and timeout
  */
 const scanWithMLKit = async (): Promise<ScannedDocument | null> => {
+  // Create a timeout promise
+  const timeoutPromise = new Promise<null>((_, reject) => {
+    setTimeout(() => {
+      reject(new Error('Document scan timed out after 60 seconds'));
+    }, 60000); // 60 second timeout
+  });
+
   try {
     console.log("[DocumentScanner] Loading ML Kit Document Scanner plugin...");
     const { DocumentScanner } = await import('@capacitor-mlkit/document-scanner');
     
     console.log("[DocumentScanner] Starting ML Kit scan...");
-    const result = await DocumentScanner.scanDocument({
+    
+    // Race between scan and timeout
+    const scanPromise = DocumentScanner.scanDocument({
       pageLimit: 1,
       galleryImportAllowed: true,
       resultFormats: 'JPEG' // Single format string
     });
+
+    const result = await Promise.race([scanPromise, timeoutPromise]) as MLKitScanResult | null;
+    
+    if (!result) {
+      console.log("[DocumentScanner] Scan returned null result");
+      return null;
+    }
 
     console.log("[DocumentScanner] Full ML Kit result:", JSON.stringify(result, null, 2));
 
@@ -45,13 +68,13 @@ const scanWithMLKit = async (): Promise<ScannedDocument | null> => {
       console.log("[DocumentScanner] Found image in scannedImages:", imagePath);
     }
     // Format 2: pages array (older versions)
-    else if ((result as any).pages && (result as any).pages.length > 0) {
-      imagePath = (result as any).pages[0];
+    else if (result.pages && result.pages.length > 0) {
+      imagePath = result.pages[0];
       console.log("[DocumentScanner] Found image in pages:", imagePath);
     }
     // Format 3: scannedDocuments with jpeg property
-    else if ((result as any).scannedDocuments?.[0]?.jpeg) {
-      imagePath = (result as any).scannedDocuments[0].jpeg;
+    else if (result.scannedDocuments?.[0]?.jpeg) {
+      imagePath = result.scannedDocuments[0].jpeg;
       console.log("[DocumentScanner] Found image in scannedDocuments:", imagePath);
     }
 
@@ -62,33 +85,53 @@ const scanWithMLKit = async (): Promise<ScannedDocument | null> => {
 
     console.log("[DocumentScanner] Using image path:", imagePath);
 
-    // Convert the file path to a File object
-    const response = await fetch(imagePath);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch scanned image: ${response.status}`);
+    // Convert the file path to a File object with timeout
+    const fetchController = new AbortController();
+    const fetchTimeout = setTimeout(() => fetchController.abort(), 30000); // 30 second fetch timeout
+
+    try {
+      const response = await fetch(imagePath, { signal: fetchController.signal });
+      clearTimeout(fetchTimeout);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch scanned image: ${response.status}`);
+      }
+      
+      const blob = await response.blob();
+      console.log("[DocumentScanner] Blob created:", { size: blob.size, type: blob.type });
+      
+      // Ensure we have a valid MIME type
+      const mimeType = blob.type || 'image/jpeg';
+      const fileName = `scan_${Date.now()}.jpg`;
+      
+      const file = new File([blob], fileName, { type: mimeType });
+      console.log("[DocumentScanner] File created:", { name: file.name, size: file.size, type: file.type });
+      
+      // Create data URL for preview
+      const dataUrl = await blobToDataUrl(blob);
+      
+      return { file, dataUrl };
+    } catch (fetchError) {
+      clearTimeout(fetchTimeout);
+      throw fetchError;
     }
-    
-    const blob = await response.blob();
-    console.log("[DocumentScanner] Blob created:", { size: blob.size, type: blob.type });
-    
-    // Ensure we have a valid MIME type
-    const mimeType = blob.type || 'image/jpeg';
-    const fileName = `scan_${Date.now()}.jpg`;
-    
-    const file = new File([blob], fileName, { type: mimeType });
-    console.log("[DocumentScanner] File created:", { name: file.name, size: file.size, type: file.type });
-    
-    // Create data URL for preview
-    const dataUrl = await blobToDataUrl(blob);
-    
-    return { file, dataUrl };
   } catch (error) {
     console.error('[DocumentScanner] ML Kit scanner error:', error);
     
     // Check if user cancelled
-    if (error instanceof Error && error.message.includes('cancel')) {
-      console.log("[DocumentScanner] User cancelled ML Kit scan");
-      return null;
+    if (error instanceof Error) {
+      if (error.message.includes('cancel')) {
+        console.log("[DocumentScanner] User cancelled ML Kit scan");
+        return null;
+      }
+      if (error.message.includes('timed out')) {
+        console.log("[DocumentScanner] Scan timed out, falling back to camera");
+        return scanWithCamera();
+      }
+      if (error.name === 'AbortError') {
+        console.log("[DocumentScanner] Fetch aborted, falling back to camera");
+        return scanWithCamera();
+      }
     }
     
     // Fall back to camera if ML Kit fails

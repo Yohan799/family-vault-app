@@ -1,17 +1,28 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import logo from "@/assets/logo_fv.jpg";
 
 const Welcome = () => {
   const navigate = useNavigate();
+  const { user, isLoading } = useAuth();
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      navigate("/onboarding");
-    }, 1700);
+    // If authenticated, redirect to dashboard
+    if (!isLoading && user) {
+      navigate("/dashboard", { replace: true });
+      return;
+    }
 
-    return () => clearTimeout(timer);
-  }, [navigate]);
+    // Only start timer if not authenticated
+    if (!isLoading && !user) {
+      const timer = setTimeout(() => {
+        navigate("/onboarding");
+      }, 1700);
+
+      return () => clearTimeout(timer);
+    }
+  }, [navigate, user, isLoading]);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">

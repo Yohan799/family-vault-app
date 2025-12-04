@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Shield, FileText, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const onboardingSteps = [
   {
@@ -24,14 +25,21 @@ const onboardingSteps = [
 const Onboarding = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const navigate = useNavigate();
+  const { user, isLoading } = useAuth();
 
-  // Check if onboarding was already completed
   useEffect(() => {
-    const onboardingComplete = localStorage.getItem('onboardingComplete');
-    if (onboardingComplete === 'true') {
-      navigate("/signup");
+    // If authenticated, redirect to dashboard
+    if (!isLoading && user) {
+      navigate("/dashboard", { replace: true });
+      return;
     }
-  }, [navigate]);
+
+    // Check if onboarding was already completed
+    const onboardingComplete = localStorage.getItem('onboardingComplete');
+    if (onboardingComplete === 'true' && !user) {
+      navigate("/signup", { replace: true });
+    }
+  }, [navigate, user, isLoading]);
 
   const handleNext = () => {
     if (currentStep < onboardingSteps.length - 1) {
