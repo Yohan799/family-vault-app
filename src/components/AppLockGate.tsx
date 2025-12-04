@@ -1,10 +1,49 @@
 import { useState, useEffect, ReactNode } from "react";
 import { LockScreen } from "@/components/LockScreen";
 import { getLocalLockPreference, type AppLockType } from "@/services/appLockService";
+import { Capacitor } from "@capacitor/core";
 
 interface AppLockGateProps {
   children: ReactNode;
 }
+
+const SESSION_UNLOCKED_KEY = "app_lock_session_unlocked";
+
+// Helper to get/set session unlock state (works with Capacitor Preferences on native)
+const getSessionUnlocked = async (): Promise<boolean> => {
+  if (Capacitor.isNativePlatform()) {
+    try {
+      const { Preferences } = await import("@capacitor/preferences");
+      const { value } = await Preferences.get({ key: SESSION_UNLOCKED_KEY });
+      return value === "true";
+    } catch (error) {
+      console.error("Error reading session unlock state:", error);
+      return false;
+    }
+  }
+  return sessionStorage.getItem(SESSION_UNLOCKED_KEY) === "true";
+};
+
+const setSessionUnlocked = async (unlocked: boolean): Promise<void> => {
+  if (Capacitor.isNativePlatform()) {
+    try {
+      const { Preferences } = await import("@capacitor/preferences");
+      if (unlocked) {
+        await Preferences.set({ key: SESSION_UNLOCKED_KEY, value: "true" });
+      } else {
+        await Preferences.remove({ key: SESSION_UNLOCKED_KEY });
+      }
+    } catch (error) {
+      console.error("Error setting session unlock state:", error);
+    }
+    return;
+  }
+  if (unlocked) {
+    sessionStorage.setItem(SESSION_UNLOCKED_KEY, "true");
+  } else {
+    sessionStorage.removeItem(SESSION_UNLOCKED_KEY);
+  }
+};
 
 export const AppLockGate = ({ children }: AppLockGateProps) => {
   const [isLocked, setIsLocked] = useState(true);
@@ -18,8 +57,7 @@ export const AppLockGate = ({ children }: AppLockGateProps) => {
   const checkAppLock = async () => {
     try {
       // Check if already unlocked this session
-      const sessionKey = "app_lock_session_unlocked";
-      const isUnlockedThisSession = sessionStorage.getItem(sessionKey);
+      const isUnlockedThisSession = await getSessionUnlocked();
 
       if (isUnlockedThisSession) {
         setIsLocked(false);
@@ -46,10 +84,10 @@ export const AppLockGate = ({ children }: AppLockGateProps) => {
     }
   };
 
-  const handleUnlock = () => {
+  const handleUnlock = async () => {
     setIsLocked(false);
     // Mark as unlocked for this session
-    sessionStorage.setItem("app_lock_session_unlocked", "true");
+    await setSessionUnlocked(true);
   };
 
   if (isChecking) {

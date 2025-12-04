@@ -3,8 +3,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { AppLockGate } from "@/components/AppLockGate";
 import Welcome from "./pages/Welcome";
@@ -51,21 +51,37 @@ const queryClient = new QueryClient();
 // Back button handler component
 const BackButtonHandler = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
       import("@capacitor/app").then(({ App }) => {
         App.addListener("backButton", ({ canGoBack }) => {
+          const currentPath = location.pathname;
+          const authPaths = ['/', '/onboarding', '/signup', '/signin', '/forgot-password', '/password-reset-otp', '/reset-password'];
+          
+          // If authenticated and on auth page, minimize app instead of going back
+          if (user && authPaths.includes(currentPath)) {
+            App.minimizeApp();
+            return;
+          }
+          
+          // If on dashboard (main page after login), minimize app
+          if (currentPath === '/dashboard') {
+            App.minimizeApp();
+            return;
+          }
+          
           if (canGoBack) {
             window.history.back();
           } else {
-            // On root page, minimize app or exit
             App.minimizeApp();
           }
         });
       });
     }
-  }, [navigate]);
+  }, [navigate, location.pathname, user]);
 
   return null;
 };

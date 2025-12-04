@@ -83,10 +83,10 @@ const SetupPIN = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-4">
-      <div className="max-w-md mx-auto space-y-8 pt-4">
+    <div className="min-h-screen bg-background p-4 flex flex-col">
+      <div className="max-w-md mx-auto w-full flex-1 flex flex-col">
         {/* Header */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 pt-2">
           <button
             onClick={() => step === "confirm" ? setStep("create") : navigate("/app-lock-setup")}
             className="p-2 hover:bg-accent rounded-full transition-colors"
@@ -99,18 +99,18 @@ const SetupPIN = () => {
         </div>
 
         {/* Lock Icon */}
-        <div className="flex justify-center pt-8">
-          <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center">
-            <Lock className="w-10 h-10 text-primary" />
+        <div className="flex justify-center pt-4">
+          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+            <Lock className="w-8 h-8 text-primary" />
           </div>
         </div>
 
         {/* Instructions */}
-        <div className="text-center space-y-2">
-          <h2 className="text-xl font-semibold text-foreground">
+        <div className="text-center space-y-1 pt-3">
+          <h2 className="text-lg font-semibold text-foreground">
             {step === "create" ? "Create a 6-digit PIN" : "Confirm your PIN"}
           </h2>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             {step === "create" 
               ? "Enter a PIN you'll remember"
               : "Enter the same PIN again to confirm"}
@@ -118,7 +118,7 @@ const SetupPIN = () => {
         </div>
 
         {/* PIN Dots */}
-        <div className="flex justify-center gap-3 py-8">
+        <div className="flex justify-center gap-3 py-4">
           {[...Array(6)].map((_, idx) => (
             <div
               key={idx}
@@ -130,31 +130,35 @@ const SetupPIN = () => {
         </div>
 
         {/* PIN Pad */}
-        <PinPad
-          onNumberPress={handleNumberPress}
-          onDelete={handleDelete}
-          disabled={isLoading}
-        />
+        <div className="flex-1 flex flex-col justify-center">
+          <PinPad
+            onNumberPress={handleNumberPress}
+            onDelete={handleDelete}
+            disabled={isLoading}
+          />
+        </div>
 
         {/* Continue Button */}
-        {step === "create" && pin.length === 6 && (
-          <Button
-            onClick={handleContinue}
-            className="w-full h-14 text-base font-semibold rounded-2xl mt-6"
-          >
-            Continue
-          </Button>
-        )}
+        <div className="pb-4">
+          {step === "create" && pin.length === 6 && (
+            <Button
+              onClick={handleContinue}
+              className="w-full h-12 text-base font-semibold rounded-2xl"
+            >
+              Continue
+            </Button>
+          )}
 
-        {step === "confirm" && confirmPin.length === 6 && (
-          <Button
-            onClick={handleConfirm}
-            disabled={isLoading}
-            className="w-full h-14 text-base font-semibold rounded-2xl mt-6"
-          >
-            {isLoading ? "Saving..." : "Confirm PIN"}
-          </Button>
-        )}
+          {step === "confirm" && confirmPin.length === 6 && (
+            <Button
+              onClick={handleConfirm}
+              disabled={isLoading}
+              className="w-full h-12 text-base font-semibold rounded-2xl"
+            >
+              {isLoading ? "Saving..." : "Confirm PIN"}
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
