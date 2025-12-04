@@ -4,15 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { resetPassword } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
   const [email, setEmail] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,15 +33,22 @@ const ForgotPassword = () => {
 
     setIsLoading(true);
     try {
-      await resetPassword(email.toLowerCase());
-      setEmailSent(true);
-      toast({
-        title: "Reset Email Sent",
-        description: "Check your inbox for the password reset link",
+      const { data, error } = await supabase.functions.invoke("send-password-reset-otp", {
+        body: { email: email.toLowerCase() },
       });
+
+      if (error) throw error;
+
+      toast({
+        title: "OTP Sent",
+        description: "Check your email for the reset code",
+      });
+
+      // Navigate to OTP entry page
+      navigate("/password-reset-otp", { state: { email: email.toLowerCase() } });
     } catch (error: any) {
       toast({
-        title: "Failed to Send Reset Email",
+        title: "Failed to Send OTP",
         description: error.message || "Please try again later",
         variant: "destructive",
       });
@@ -73,61 +78,31 @@ const ForgotPassword = () => {
               </div>
             </div>
             <p className="text-muted-foreground text-base">
-              {emailSent
-                ? "Reset link sent to your email"
-                : "Enter your email to receive a password reset link"}
+              Enter your email to receive a password reset OTP
             </p>
           </div>
 
-          {!emailSent ? (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-12 bg-input border-0 h-14 rounded-2xl text-base"
-                  required
-                />
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full h-14 text-base font-semibold rounded-2xl"
-                disabled={isLoading}
-              >
-                {isLoading ? "Sending..." : "Send Reset Link"}
-              </Button>
-            </form>
-          ) : (
-            <div className="space-y-4">
-              <div className="bg-accent/50 border border-border rounded-2xl p-4 text-center">
-                <p className="text-sm text-muted-foreground">
-                  If an account exists with <strong className="text-foreground">{email}</strong>,
-                  you'll receive a password reset link shortly.
-                </p>
-              </div>
-              <Button
-                onClick={() => {
-                  setEmailSent(false);
-                  setEmail("");
-                }}
-                variant="outline"
-                className="w-full h-14 text-base font-medium rounded-2xl"
-              >
-                Send Another Link
-              </Button>
-              <Button
-                onClick={() => navigate("/signin")}
-                variant="ghost"
-                className="w-full h-14 text-base font-medium rounded-2xl"
-              >
-                Back to Sign In
-              </Button>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="relative">
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Input
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="pl-12 bg-input border-0 h-14 rounded-2xl text-base"
+                required
+              />
             </div>
-          )}
+
+            <Button
+              type="submit"
+              className="w-full h-14 text-base font-semibold rounded-2xl"
+              disabled={isLoading}
+            >
+              {isLoading ? "Sending..." : "Send OTP"}
+            </Button>
+          </form>
         </div>
       </div>
     </div>

@@ -1,1 +1,43 @@
 project_id = "yebyowfzsbqakzrfydxr"
+
+[functions.check-inactivity]
+verify_jwt = false
+
+[functions.check-release-dates]
+verify_jwt = false
+
+[functions.create-backup]
+verify_jwt = false
+
+[functions.delete-user-account]
+verify_jwt = false
+
+[functions.google-drive-proxy]
+verify_jwt = false
+
+[functions.send-2fa-otp]
+verify_jwt = false
+
+[functions.send-emergency-otp]
+verify_jwt = false
+
+[functions.send-nominee-verification]
+verify_jwt = false
+
+[functions.send-push-notification]
+verify_jwt = false
+
+[functions.send-support-message]
+verify_jwt = false
+
+[functions.verify-2fa-otp]
+verify_jwt = false
+
+[functions.send-password-reset-otp]
+verify_jwt = false
+
+[functions.verify-password-reset-otp]
+verify_jwt = false
+
+[functions.reset-password-with-token]
+verify_jwt = false

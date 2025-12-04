@@ -181,7 +181,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const response = await SocialLogin.login({
           provider: 'google',
           options: {
-            scopes: ['profile', 'email', 'https://www.googleapis.com/auth/drive.readonly'],
+            scopes: ['profile', 'email', 'https://www.googleapis.com/auth/drive'],
           }
         });
         
@@ -228,7 +228,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         provider: 'google',
         options: {
           redirectTo: redirectUrl,
-          scopes: 'https://www.googleapis.com/auth/drive.readonly',
+          scopes: 'https://www.googleapis.com/auth/drive',
         }
       });
 
@@ -274,7 +274,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const response = await SocialLogin.login({
         provider: 'google',
         options: {
-          scopes: ['profile', 'email', 'https://www.googleapis.com/auth/drive.readonly'],
+          scopes: ['profile', 'email', 'https://www.googleapis.com/auth/drive'],
         }
       });
       
