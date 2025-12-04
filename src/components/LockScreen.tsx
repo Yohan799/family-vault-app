@@ -142,47 +142,84 @@ export const LockScreen = ({ lockType, onUnlock, isPreLogin = false }: LockScree
   };
 
   const handleBiometricUnlock = async () => {
-    if (!Capacitor.isNativePlatform()) {
-      toast({
-        title: "Biometric Not Available",
-        description: "Biometric authentication requires the mobile app",
-      });
-      return;
-    }
-
     setIsLoading(true);
+    
     try {
-      // On native platform, we'll use the device's biometric authentication
-      // The actual verification happens at the OS level
-      // For now, unlock directly - in production, integrate with native biometric plugin
-      
-      // Simple biometric check using Web Credentials API as fallback
-      if ('credentials' in navigator && 'PublicKeyCredential' in window) {
+      if (Capacitor.isNativePlatform()) {
+        // Use ML Kit's biometric auth or native bridge
         try {
-          const available = await (window as any).PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-          if (available) {
-            unlockApp();
-            onUnlock();
+          const { NativeBiometric } = await import('capacitor-native-biometric');
+          
+          // Check if biometric is available
+          const result = await NativeBiometric.isAvailable();
+          
+          if (!result.isAvailable) {
             toast({
-              title: "App Unlocked",
-              description: "Biometric verified!",
+              title: "Biometric Not Available",
+              description: "Your device doesn't support biometric authentication",
+              variant: "destructive",
             });
             return;
           }
-        } catch {
-          // Continue to fallback
-        }
-      }
 
-      // Direct unlock for native platforms
-      unlockApp();
-      onUnlock();
-      toast({
-        title: "App Unlocked",
-        description: "Welcome back!",
-      });
+          // Perform actual biometric verification
+          await NativeBiometric.verifyIdentity({
+            reason: "Unlock Family Vault",
+            title: "Family Vault",
+            subtitle: "Verify your identity to continue",
+            description: "Use your fingerprint or face to unlock",
+          });
+
+          // If we reach here, biometric was successful
+          unlockApp();
+          onUnlock();
+          toast({
+            title: "App Unlocked",
+            description: "Biometric verified!",
+          });
+        } catch (pluginError: any) {
+          console.error("[LockScreen] Native biometric error:", pluginError);
+          
+          // Handle user cancellation silently
+          if (pluginError?.code === 'BIOMETRIC_DISMISSED' || 
+              pluginError?.message?.includes('cancel') ||
+              pluginError?.message?.includes('dismissed')) {
+            return;
+          }
+          
+          toast({
+            title: "Biometric Failed",
+            description: pluginError?.message || "Please try again",
+            variant: "destructive",
+          });
+        }
+      } else {
+        // Web fallback - check for WebAuthn support
+        if ('credentials' in navigator && 'PublicKeyCredential' in window) {
+          try {
+            const available = await (window as any).PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+            if (available) {
+              unlockApp();
+              onUnlock();
+              toast({
+                title: "App Unlocked",
+                description: "Biometric verified!",
+              });
+              return;
+            }
+          } catch {
+            // WebAuthn not available
+          }
+        }
+        
+        toast({
+          title: "Biometric Not Available",
+          description: "Biometric authentication requires the mobile app",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
-      console.error("Biometric error:", error);
+      console.error("[LockScreen] Biometric error:", error);
       toast({
         title: "Biometric Failed",
         description: "Please try again or use another method",
