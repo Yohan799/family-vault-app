@@ -83,48 +83,48 @@ export const GrantAccessModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-background">
-        <DialogHeader>
-          <DialogTitle className="text-center">Grant Access to {personName}</DialogTitle>
+      <DialogContent className="max-w-[95vw] sm:max-w-md bg-background p-4 sm:p-6">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="text-center text-lg">Grant Access to {personName}</DialogTitle>
         </DialogHeader>
 
-        <RadioGroup value={permission} onValueChange={setPermission} className="space-y-3">
-          <div className="border rounded-xl p-4 cursor-pointer hover:bg-muted/50 transition-colors">
+        <RadioGroup value={permission} onValueChange={setPermission} className="space-y-2">
+          <div className="border rounded-xl p-3 cursor-pointer hover:bg-muted/50 transition-colors">
             <div className="flex items-start gap-3">
-              <RadioGroupItem value="view-only" id="view-only" className="mt-1" />
+              <RadioGroupItem value="view-only" id="view-only" className="mt-0.5" />
               <div className="flex-1">
-                <Label htmlFor="view-only" className="font-semibold cursor-pointer">
+                <Label htmlFor="view-only" className="font-semibold cursor-pointer text-sm">
                   View Only
                 </Label>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-xs text-muted-foreground mt-0.5">
                   Can view the document but cannot save it.
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="border rounded-xl p-4 cursor-pointer hover:bg-muted/50 transition-colors">
+          <div className="border rounded-xl p-3 cursor-pointer hover:bg-muted/50 transition-colors">
             <div className="flex items-start gap-3">
-              <RadioGroupItem value="download-only" id="download-only" className="mt-1" />
+              <RadioGroupItem value="download-only" id="download-only" className="mt-0.5" />
               <div className="flex-1">
-                <Label htmlFor="download-only" className="font-semibold cursor-pointer">
+                <Label htmlFor="download-only" className="font-semibold cursor-pointer text-sm">
                   Download Only
                 </Label>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-xs text-muted-foreground mt-0.5">
                   Can save a copy but cannot view it online.
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="border rounded-xl p-4 cursor-pointer hover:bg-muted/50 transition-colors">
+          <div className="border rounded-xl p-3 cursor-pointer hover:bg-muted/50 transition-colors">
             <div className="flex items-start gap-3">
-              <RadioGroupItem value="view-download" id="view-download" className="mt-1" />
+              <RadioGroupItem value="view-download" id="view-download" className="mt-0.5" />
               <div className="flex-1">
-                <Label htmlFor="view-download" className="font-semibold cursor-pointer">
+                <Label htmlFor="view-download" className="font-semibold cursor-pointer text-sm">
                   View and Download
                 </Label>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-xs text-muted-foreground mt-0.5">
                   Can view and save a copy of the document.
                 </p>
               </div>
@@ -132,11 +132,11 @@ export const GrantAccessModal = ({
           </div>
         </RadioGroup>
 
-        <div className="flex flex-col gap-3 mt-4">
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="h-12">
+        <div className="flex flex-col gap-2 mt-3">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="h-11">
             Cancel
           </Button>
-          <Button onClick={handleConfirm} className="h-12 bg-blue-600 hover:bg-blue-700">
+          <Button onClick={handleConfirm} className="h-11 bg-primary hover:bg-primary/90">
             Confirm
           </Button>
         </div>
