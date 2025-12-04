@@ -189,7 +189,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Extract tokens from response
           const result = response.result as any;
           const idToken = result.idToken || result.authentication?.idToken;
-          const accessToken = result.accessToken || result.authentication?.accessToken;
+          const accessToken = result.accessToken?.token || result.authentication?.accessToken;
           
           if (!idToken) {
             throw new Error('No authentication token received from Google');
@@ -280,7 +280,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (response.provider === 'google' && response.result) {
         const result = response.result as any;
-        const accessToken = result.accessToken || result.authentication?.accessToken;
+        const accessToken = result.accessToken?.token || result.authentication?.accessToken;
         
         if (accessToken) {
           console.log('[AuthContext] Got Google access token for Drive');
