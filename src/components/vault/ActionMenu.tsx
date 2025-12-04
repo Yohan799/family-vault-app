@@ -14,7 +14,9 @@ interface ActionMenuProps {
 
 export const ActionMenu: React.FC<ActionMenuProps> = ({ items }) => {
     const [isOpen, setIsOpen] = useState(false);
+    const [openAbove, setOpenAbove] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
+    const buttonRef = useRef<HTMLButtonElement>(null);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -32,13 +34,25 @@ export const ActionMenu: React.FC<ActionMenuProps> = ({ items }) => {
         };
     }, [isOpen]);
 
+    const handleToggle = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        
+        // Calculate if button is in bottom 40% of viewport
+        if (buttonRef.current) {
+            const rect = buttonRef.current.getBoundingClientRect();
+            const viewportHeight = window.innerHeight;
+            // Open above if button is in bottom 40% of screen
+            setOpenAbove(rect.bottom > viewportHeight * 0.6);
+        }
+        
+        setIsOpen(!isOpen);
+    };
+
     return (
         <div ref={menuRef} className="relative">
             <button
-                onClick={(e) => {
-                    e.stopPropagation();
-                    setIsOpen(!isOpen);
-                }}
+                ref={buttonRef}
+                onClick={handleToggle}
                 className="p-2 hover:bg-white/20 rounded-lg transition-colors"
                 aria-label="More options"
             >
@@ -46,7 +60,11 @@ export const ActionMenu: React.FC<ActionMenuProps> = ({ items }) => {
             </button>
 
             {isOpen && (
-                <div className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-xl border border-gray-200 py-2 min-w-[180px] z-50">
+                <div 
+                    className={`absolute right-0 bg-white rounded-xl shadow-xl border border-gray-200 py-2 min-w-[180px] z-50 ${
+                        openAbove ? 'bottom-full mb-1' : 'top-full mt-1'
+                    }`}
+                >
                     {items.map((item, index) => (
                         <button
                             key={index}

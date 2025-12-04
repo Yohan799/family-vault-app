@@ -54,6 +54,30 @@ export const AppLockGate = ({ children }: AppLockGateProps) => {
     checkAppLock();
   }, []);
 
+  // Clear session unlock when app goes to background (native only)
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      const setupStateListener = async () => {
+        try {
+          const { App } = await import("@capacitor/app");
+          const listener = await App.addListener("appStateChange", async ({ isActive }) => {
+            if (!isActive) {
+              // App went to background - clear session unlock so lock shows on resume
+              await setSessionUnlocked(false);
+            }
+          });
+          
+          return () => {
+            listener.remove();
+          };
+        } catch (error) {
+          console.error("Error setting up app state listener:", error);
+        }
+      };
+      setupStateListener();
+    }
+  }, []);
+
   const checkAppLock = async () => {
     try {
       // Check if already unlocked this session

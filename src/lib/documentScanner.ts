@@ -5,11 +5,12 @@ export interface ScannedDocument {
   dataUrl: string;
 }
 
-// ML Kit ScanResult type
+// ML Kit ScanResult type - handle all possible formats
 interface MLKitScanResult {
   scannedImages?: string[];
   pages?: string[];
-  scannedDocuments?: Array<{ jpeg?: string }>;
+  scannedDocuments?: Array<{ jpeg?: string; pdf?: string }>;
+  [key: string]: unknown; // Allow for other unknown properties
 }
 
 /**
@@ -47,39 +48,59 @@ const scanWithMLKit = async (): Promise<ScannedDocument | null> => {
     const scanPromise = DocumentScanner.scanDocument({
       pageLimit: 1,
       galleryImportAllowed: true,
-      resultFormats: 'JPEG' // Single format string
+      resultFormats: 'JPEG' // Single format string as required by plugin
     });
 
     const result = await Promise.race([scanPromise, timeoutPromise]) as MLKitScanResult | null;
     
+    console.log("[DocumentScanner] Raw ML Kit result:", result);
+    
     if (!result) {
-      console.log("[DocumentScanner] Scan returned null result");
+      console.log("[DocumentScanner] Scan returned null/undefined result - user likely cancelled");
       return null;
     }
 
+    console.log("[DocumentScanner] Full ML Kit result keys:", Object.keys(result));
     console.log("[DocumentScanner] Full ML Kit result:", JSON.stringify(result, null, 2));
 
     // Handle ALL possible response formats from different plugin versions
     let imagePath: string | undefined;
     
     // Format 1: scannedImages array (most common in newer versions)
-    if (result.scannedImages && result.scannedImages.length > 0) {
+    if (result.scannedImages && Array.isArray(result.scannedImages) && result.scannedImages.length > 0) {
       imagePath = result.scannedImages[0];
       console.log("[DocumentScanner] Found image in scannedImages:", imagePath);
     }
     // Format 2: pages array (older versions)
-    else if (result.pages && result.pages.length > 0) {
+    else if (result.pages && Array.isArray(result.pages) && result.pages.length > 0) {
       imagePath = result.pages[0];
       console.log("[DocumentScanner] Found image in pages:", imagePath);
     }
     // Format 3: scannedDocuments with jpeg property
-    else if (result.scannedDocuments?.[0]?.jpeg) {
-      imagePath = result.scannedDocuments[0].jpeg;
+    else if (result.scannedDocuments && Array.isArray(result.scannedDocuments) && result.scannedDocuments.length > 0) {
+      const doc = result.scannedDocuments[0];
+      imagePath = doc?.jpeg || doc?.pdf;
       console.log("[DocumentScanner] Found image in scannedDocuments:", imagePath);
+    }
+    // Format 4: Check for any string property that looks like a path
+    else {
+      for (const [key, value] of Object.entries(result)) {
+        if (typeof value === 'string' && (value.startsWith('file://') || value.startsWith('/') || value.startsWith('content://'))) {
+          imagePath = value;
+          console.log(`[DocumentScanner] Found image path in property '${key}':`, imagePath);
+          break;
+        }
+        if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'string') {
+          imagePath = value[0];
+          console.log(`[DocumentScanner] Found image path in array property '${key}':`, imagePath);
+          break;
+        }
+      }
     }
 
     if (!imagePath) {
-      console.log("[DocumentScanner] No image path in any format - user likely cancelled");
+      console.log("[DocumentScanner] No image path found in any format - user likely cancelled or scan failed");
+      console.log("[DocumentScanner] Result structure:", JSON.stringify(result, null, 2));
       return null;
     }
 
@@ -90,15 +111,22 @@ const scanWithMLKit = async (): Promise<ScannedDocument | null> => {
     const fetchTimeout = setTimeout(() => fetchController.abort(), 30000); // 30 second fetch timeout
 
     try {
+      console.log("[DocumentScanner] Fetching image from path...");
       const response = await fetch(imagePath, { signal: fetchController.signal });
       clearTimeout(fetchTimeout);
       
       if (!response.ok) {
+        console.error("[DocumentScanner] Fetch failed:", response.status, response.statusText);
         throw new Error(`Failed to fetch scanned image: ${response.status}`);
       }
       
       const blob = await response.blob();
       console.log("[DocumentScanner] Blob created:", { size: blob.size, type: blob.type });
+      
+      if (blob.size === 0) {
+        console.error("[DocumentScanner] Blob is empty");
+        throw new Error('Scanned image is empty');
+      }
       
       // Ensure we have a valid MIME type
       const mimeType = blob.type || 'image/jpeg';
@@ -110,9 +138,11 @@ const scanWithMLKit = async (): Promise<ScannedDocument | null> => {
       // Create data URL for preview
       const dataUrl = await blobToDataUrl(blob);
       
+      console.log("[DocumentScanner] Scan complete, returning result");
       return { file, dataUrl };
     } catch (fetchError) {
       clearTimeout(fetchTimeout);
+      console.error("[DocumentScanner] Fetch error:", fetchError);
       throw fetchError;
     }
   } catch (error) {
@@ -120,11 +150,12 @@ const scanWithMLKit = async (): Promise<ScannedDocument | null> => {
     
     // Check if user cancelled
     if (error instanceof Error) {
-      if (error.message.includes('cancel')) {
+      const errorMessage = error.message.toLowerCase();
+      if (errorMessage.includes('cancel') || errorMessage.includes('dismissed') || errorMessage.includes('closed')) {
         console.log("[DocumentScanner] User cancelled ML Kit scan");
         return null;
       }
-      if (error.message.includes('timed out')) {
+      if (errorMessage.includes('timed out')) {
         console.log("[DocumentScanner] Scan timed out, falling back to camera");
         return scanWithCamera();
       }
