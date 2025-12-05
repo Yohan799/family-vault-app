@@ -14,6 +14,7 @@ import { AccessControlModal } from "@/components/vault/AccessControlModal";
 import { ActionMenu, createDocumentActionMenu } from "@/components/vault/ActionMenu";
 import { DocumentViewerModal } from "@/components/vault/DocumentViewerModal";
 import { filterItems, debounce } from "@/lib/searchUtils";
+import { SubcategoryViewSkeleton } from "@/components/skeletons";
 
 const SubcategoryView = () => {
   const navigate = useNavigate();
@@ -318,11 +319,7 @@ const SubcategoryView = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-[#FCFCF9] flex items-center justify-center">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
-    );
+    return <SubcategoryViewSkeleton />;
   }
 
   if (!category || !subcategory) {
@@ -371,7 +368,7 @@ const SubcategoryView = () => {
             className="pl-12 pr-12 h-12 bg-[#F5F5F5] border-none rounded-xl"
           />
           {searchQuery && (
-            <button 
+            <button
               onClick={() => setSearchQuery("")}
               className="absolute right-4 top-1/2 -translate-y-1/2 hover:bg-accent rounded-full p-1"
             >
@@ -467,8 +464,8 @@ const SubcategoryView = () => {
             <div className="bg-card rounded-2xl p-8 text-center">
               <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
               <p className="text-muted-foreground mb-4">No documents yet</p>
-              <Button 
-                onClick={() => setUploadOpen(true)} 
+              <Button
+                onClick={() => setUploadOpen(true)}
                 variant="outline"
                 className="min-h-[44px]"
               >
@@ -479,34 +476,34 @@ const SubcategoryView = () => {
           ) : filteredDocuments.length > 0 ? (
             <div className="space-y-2">
               {filteredDocuments.map((doc) => (
-              <div
-                key={doc.id}
-                className="bg-card rounded-xl p-4 flex items-center justify-between hover:bg-accent/50 transition-colors"
-              >
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <FileText className="w-5 h-5 text-primary" />
+                <div
+                  key={doc.id}
+                  className="bg-card rounded-xl p-4 flex items-center justify-between hover:bg-accent/50 transition-colors"
+                >
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <FileText className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-medium text-foreground truncate">{doc.name}</h3>
+                      <p className="text-xs text-muted-foreground">
+                        {doc.size} • {doc.date}
+                      </p>
+                    </div>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="font-medium text-foreground truncate">{doc.name}</h3>
-                    <p className="text-xs text-muted-foreground">
-                      {doc.size} • {doc.date}
-                    </p>
-                  </div>
+                  <ActionMenu
+                    items={createDocumentActionMenu(
+                      () => handleViewDocument(doc),
+                      () => handleDownloadDocument(doc),
+                      () => setAccessControlDocument(doc),
+                      () => handleDeleteDocument(doc)
+                    )}
+                  />
                 </div>
-                <ActionMenu
-                  items={createDocumentActionMenu(
-                    () => handleViewDocument(doc),
-                    () => handleDownloadDocument(doc),
-                    () => setAccessControlDocument(doc),
-                    () => handleDeleteDocument(doc)
-                  )}
-                />
-              </div>
-            ))}
-          </div>
-        ) : null}
-      </div>
+              ))}
+            </div>
+          ) : null}
+        </div>
       )}
 
       {/* Folder Delete Confirmation */}
