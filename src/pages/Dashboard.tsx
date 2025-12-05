@@ -6,41 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { fetchDashboardStats, calculateReadinessScore, updateInactivityTrigger, type DashboardStats } from "@/services/dashboardService";
-import SpotlightTour from "@/components/SpotlightTour";
-
-// Onboarding tour steps - ONLY static elements that always exist
-const tourSteps = [
-  {
-    targetId: "welcome-header",
-    title: "Welcome to Family Vault! 👋",
-    description: "Your secure digital legacy platform. Let's take a quick tour!",
-    position: "bottom" as const,
-  },
-  {
-    targetId: "security-score",
-    title: "📊 Security Score",
-    description: "Your vault readiness score. Complete actions to reach 100%!",
-    position: "bottom" as const,
-  },
-  {
-    targetId: "stats-grid",
-    title: "📈 Quick Stats",
-    description: "See your document count, nominees, time capsules, and trigger status.",
-    position: "bottom" as const,
-  },
-  {
-    targetId: "quick-actions",
-    title: "⚡ Quick Actions",
-    description: "Access your vault, nominees, and time capsules quickly from here.",
-    position: "top" as const,
-  },
-  {
-    targetId: "bottom-nav",
-    title: "🎉 You're Ready!",
-    description: "Use the bottom tabs to navigate. Start by uploading a document!",
-    position: "top" as const,
-  },
-];
+import FeatureTour from "@/components/FeatureTour";
 import { useToast } from "@/hooks/use-toast";
 import { getQuickActions, initializeDefaultActions, type QuickAction } from "@/services/quickActionsService";
 import { DashboardSkeleton } from "@/components/skeletons";
@@ -92,7 +58,7 @@ const Dashboard = () => {
 
   const loadDashboardStats = async () => {
     if (!user) return;
-
+    
     setIsLoadingStats(true);
     try {
       const dashboardStats = await fetchDashboardStats(user.id);
@@ -110,7 +76,7 @@ const Dashboard = () => {
     try {
       // Initialize defaults if needed
       await initializeDefaultActions(user.id);
-
+      
       // Fetch actions
       const actions = await getQuickActions(user.id);
       setQuickActions(actions.filter(a => a.is_enabled));
@@ -128,24 +94,24 @@ const Dashboard = () => {
 
   const handleInactivityToggle = async (checked: boolean) => {
     if (!user) return;
-
+    
     // Debounce rapid toggling
     const now = Date.now();
     if (now - lastToggleTime.current < 500) {
       return;
     }
     lastToggleTime.current = now;
-
+    
     // Optimistic update
     const previousState = stats.inactivityTriggerActive;
     setStats(prev => ({ ...prev, inactivityTriggerActive: checked }));
-
+    
     // Show toast immediately
     toast({
       title: checked ? "Trigger is enabled" : "Trigger is disabled",
       duration: 2000,
     });
-
+    
     try {
       await updateInactivityTrigger(user.id, checked);
     } catch (error) {
@@ -176,7 +142,7 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background pb-16">
       <div className="bg-primary/20 text-foreground p-4 rounded-b-3xl">
-        <div className="flex justify-between items-start mb-3" data-tour-id="welcome-header">
+        <div className="flex justify-between items-start mb-3">
           <div>
             <p className="text-xs text-muted-foreground mb-0.5">Welcome,</p>
             <h1 className="text-xl font-bold text-foreground">{firstName}</h1>
@@ -196,7 +162,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="bg-card rounded-xl p-3 text-center" data-tour-id="security-score">
+        <div className="bg-card rounded-xl p-3 text-center">
           <div className="relative inline-flex items-center justify-center mb-1">
             <svg className="w-14 h-14 transform -rotate-90">
               <circle cx="28" cy="28" r="24" stroke="currentColor" strokeWidth="5" fill="none" className="text-muted" />
@@ -212,23 +178,23 @@ const Dashboard = () => {
       </div>
 
       <div className="p-4 space-y-4">
-        <div className="grid grid-cols-2 gap-2" data-tour-id="stats-grid">
-          <div className="bg-card rounded-lg p-2.5 text-center flex flex-col items-center justify-center h-20" data-tour-id="stat-documents">
+        <div className="grid grid-cols-2 gap-2">
+          <div className="bg-card rounded-lg p-2.5 text-center flex flex-col items-center justify-center h-20">
             <FileText className="w-5 h-5 text-primary mb-1.5" />
             <span className="text-xs font-medium text-foreground truncate">{stats.documents} Docs</span>
           </div>
 
-          <div className="bg-card rounded-lg p-2.5 text-center flex flex-col items-center justify-center h-20" data-tour-id="stat-nominees">
+          <div className="bg-card rounded-lg p-2.5 text-center flex flex-col items-center justify-center h-20">
             <Users className="w-5 h-5 text-primary mb-1.5" />
             <span className="text-xs font-medium text-foreground truncate">{stats.nominees} Nominees</span>
           </div>
 
-          <div className="bg-card rounded-lg p-2.5 text-center flex flex-col items-center justify-center h-20" data-tour-id="stat-capsules">
+          <div className="bg-card rounded-lg p-2.5 text-center flex flex-col items-center justify-center h-20">
             <Clock className="w-5 h-5 text-primary mb-1.5" />
             <span className="text-xs font-medium text-foreground truncate">{stats.timeCapsules} Capsules</span>
           </div>
 
-          <div className="bg-card rounded-lg p-2.5 text-center flex flex-col items-center justify-center h-20" data-tour-id="stat-trigger">
+          <div className="bg-card rounded-lg p-2.5 text-center flex flex-col items-center justify-center h-20">
             <Shield className="w-5 h-5 text-primary mb-0.5" />
             <span className="text-[10px] font-medium text-foreground truncate mb-0.5">Trigger</span>
             <Switch
@@ -239,7 +205,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div data-tour-id="quick-actions">
+        <div>
           <h2 className="text-base font-bold text-foreground mb-2">Quick Actions</h2>
           <div className="space-y-1.5">
             {quickActions.length === 0 ? (
@@ -252,23 +218,10 @@ const Dashboard = () => {
                     navigate(action.route);
                   }
                 };
-
-                // Map action_key to tour ID
-                const actionTourIdMap: Record<string, string> = {
-                  'vault': 'action-vault',
-                  'nominees': 'action-nominees',
-                  'inactivity': 'action-inactivity',
-                  'time-capsule': 'action-time-capsule',
-                };
-                const tourId = actionTourIdMap[action.action_key || ''];
-
+                
                 return (
-                  <button
-                    key={action.id}
-                    onClick={handleClick}
-                    data-tour-id={tourId}
-                    className="w-full bg-card rounded-lg p-2.5 flex items-center gap-2.5 hover:bg-accent transition-colors"
-                  >
+                  <button key={action.id} onClick={handleClick}
+                    className="w-full bg-card rounded-lg p-2.5 flex items-center gap-2.5 hover:bg-accent transition-colors">
                     <div className="w-9 h-9 bg-accent rounded-full flex items-center justify-center flex-shrink-0">
                       <Icon className="w-4 h-4 text-primary" />
                     </div>
@@ -289,25 +242,25 @@ const Dashboard = () => {
 
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border" data-tour-id="bottom-nav">
+      <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
         <div className="flex justify-around items-center h-14 max-w-md mx-auto">
           <button className="flex flex-col items-center gap-0.5 text-primary">
             <Home className="w-5 h-5" />
             <span className="text-[10px] font-medium">Home</span>
           </button>
-          <button onClick={() => navigate("/vault")} className="flex flex-col items-center gap-0.5 text-muted-foreground hover:text-foreground" data-tour-id="nav-vault">
+          <button onClick={() => navigate("/vault")} className="flex flex-col items-center gap-0.5 text-muted-foreground hover:text-foreground">
             <Vault className="w-5 h-5" />
             <span className="text-[10px] font-medium">Vault</span>
           </button>
-          <button onClick={() => navigate("/settings")} className="flex flex-col items-center gap-0.5 text-muted-foreground hover:text-foreground" data-tour-id="nav-settings">
+          <button onClick={() => navigate("/settings")} className="flex flex-col items-center gap-0.5 text-muted-foreground hover:text-foreground">
             <Settings className="w-5 h-5" />
             <span className="text-[10px] font-medium">Settings</span>
           </button>
         </div>
       </div>
 
-      {/* Spotlight Feature Tour */}
-      <SpotlightTour isOpen={showTour} onClose={handleTourClose} steps={tourSteps} />
+      {/* Feature Tour */}
+      <FeatureTour isOpen={showTour} onClose={handleTourClose} />
     </div>
   );
 };

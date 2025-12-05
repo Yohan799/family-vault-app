@@ -28,7 +28,7 @@ task clean(type: Delete) {
     delete rootProject.buildDir
 }
 
-// Force Java 17 for all subprojects including capacitor plugins
+// Force Java 17 for all subprojects including capacitor-android
 subprojects {
     afterEvaluate { project ->
         if (project.hasProperty('android')) {

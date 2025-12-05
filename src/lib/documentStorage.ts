@@ -1,5 +1,4 @@
 import { supabase } from "@/integrations/supabase/client";
-import { Capacitor } from "@capacitor/core";
 
 export interface StoredDocument {
   id: string;
@@ -276,35 +275,7 @@ export const downloadDocument = async (doc: StoredDocument): Promise<void> => {
       .eq('id', doc.id)
       .eq('user_id', user.id);
 
-    // For native APK, use Capacitor Filesystem
-    if (Capacitor.isNativePlatform()) {
-      try {
-        const { Filesystem, Directory } = await import('@capacitor/filesystem');
-        
-        // Fetch file as blob
-        const response = await fetch(doc.fileUrl);
-        if (!response.ok) throw new Error('Failed to fetch file');
-        
-        const blob = await response.blob();
-        const base64 = await blobToBase64(blob);
-        
-        // Save to Downloads directory
-        const fileName = doc.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-        await Filesystem.writeFile({
-          path: fileName,
-          data: base64,
-          directory: Directory.Documents,
-        });
-        
-        console.log('[Download] File saved to Documents:', fileName);
-        return;
-      } catch (nativeError) {
-        console.error('[Download] Native download failed:', nativeError);
-        // Fall through to web download
-      }
-    }
-
-    // Web download: Try blob download first
+    // Try blob download first (works locally), fallback to direct link (for CORS issues)
     try {
       const response = await fetch(doc.fileUrl, {
         mode: 'cors',
@@ -341,23 +312,6 @@ export const downloadDocument = async (doc: StoredDocument): Promise<void> => {
     console.error('Error downloading document:', error);
     throw new Error('Failed to download document');
   }
-};
-
-/**
- * Convert blob to base64 string
- */
-const blobToBase64 = (blob: Blob): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
-      // Remove data URL prefix (e.g., "data:application/pdf;base64,")
-      const base64 = result.split(',')[1] || result;
-      resolve(base64);
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
 };
 
 /**
