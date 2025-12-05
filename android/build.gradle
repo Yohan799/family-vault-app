@@ -44,14 +44,5 @@ subprojects {
             sourceCompatibility = '17'
             targetCompatibility = '17'
         }
-        
-        // Override Java toolchain for all projects with Java plugin
-        project.plugins.withType(JavaPlugin) {
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(17)
-                }
-            }
-        }
     }
 }
