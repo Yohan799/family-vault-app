@@ -26,7 +26,7 @@ export const scanDocument = async (): Promise<ScannedDocument | null> => {
 const scanWithCapgoScanner = async (): Promise<ScannedDocument | null> => {
     try {
         console.log("[Scanner] Loading Capgo Document Scanner...");
-        const { DocumentScanner } = await import('@capgo/capacitor-document-scanner');
+        const { DocumentScanner, ResponseType } = await import('@capgo/capacitor-document-scanner');
 
         console.log("[Scanner] Starting document scan with edge detection...");
 
@@ -34,7 +34,7 @@ const scanWithCapgoScanner = async (): Promise<ScannedDocument | null> => {
         const result = await DocumentScanner.scanDocument({
             letUserAdjustCrop: true,     // Allow user to adjust crop corners
             maxNumDocuments: 1,          // Single document
-            responseType: 'base64',      // Return as base64 (critical!)
+            responseType: ResponseType.Base64,  // Return as base64
         });
 
         console.log("[Scanner] Scan result:", result ? "Got result" : "No result");

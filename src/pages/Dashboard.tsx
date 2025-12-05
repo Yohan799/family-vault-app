@@ -8,7 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { fetchDashboardStats, calculateReadinessScore, updateInactivityTrigger, type DashboardStats } from "@/services/dashboardService";
 import SpotlightTour from "@/components/SpotlightTour";
 
-// Onboarding tour steps - focused on key features
+// Onboarding tour steps - ONLY static elements that always exist
 const tourSteps = [
   {
     targetId: "welcome-header",
@@ -25,55 +25,19 @@ const tourSteps = [
   {
     targetId: "stats-grid",
     title: "📈 Quick Stats",
-    description: "See your document count, nominees, time capsules, and trigger status at a glance.",
+    description: "See your document count, nominees, time capsules, and trigger status.",
     position: "bottom" as const,
   },
   {
-    targetId: "stat-trigger",
-    title: "🛡️ Inactivity Trigger",
-    description: "Toggle this ON to auto-share documents with nominees if you become inactive.",
-    position: "bottom" as const,
-  },
-  {
-    targetId: "action-vault",
-    title: "📁 Digital Vault",
-    description: "Store all your important documents here - IDs, insurance, property papers, etc.",
-    position: "top" as const,
-  },
-  {
-    targetId: "action-nominees",
-    title: "👥 Nominee Center",
-    description: "Add trusted people who can access your documents when needed.",
-    position: "top" as const,
-  },
-  {
-    targetId: "action-inactivity",
-    title: "⏰ Inactivity Triggers",
-    description: "Configure automatic document sharing if you're inactive for a set period.",
-    position: "top" as const,
-  },
-  {
-    targetId: "action-time-capsule",
-    title: "💌 Time Capsule",
-    description: "Create messages to be delivered to loved ones at a future date.",
-    position: "top" as const,
-  },
-  {
-    targetId: "nav-vault",
-    title: "📂 Vault Tab",
-    description: "Tap here to access your vault. Organize by categories and subcategories.",
-    position: "top" as const,
-  },
-  {
-    targetId: "nav-settings",
-    title: "⚙️ Settings",
-    description: "Customize app settings, security, quick actions, and more.",
+    targetId: "quick-actions",
+    title: "⚡ Quick Actions",
+    description: "Access your vault, nominees, and time capsules quickly from here.",
     position: "top" as const,
   },
   {
     targetId: "bottom-nav",
     title: "🎉 You're Ready!",
-    description: "Start by uploading a document or adding a nominee. Welcome aboard!",
+    description: "Use the bottom tabs to navigate. Start by uploading a document!",
     position: "top" as const,
   },
 ];

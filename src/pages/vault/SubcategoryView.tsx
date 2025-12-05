@@ -394,12 +394,12 @@ const SubcategoryView = () => {
               <div key={folder.id} className="relative">
                 <button
                   onClick={() => navigate(`/vault/${categoryId}/${subcategoryId}/${folder.id}`)}
-                  className="w-full bg-[#F3E8FF] rounded-2xl p-5 flex flex-col items-center justify-center hover:opacity-80 transition-opacity"
+                  className="w-full h-full min-h-[160px] bg-[#F3E8FF] rounded-2xl p-5 flex flex-col items-center justify-center hover:opacity-80 transition-opacity"
                 >
-                  <div className="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center mb-3">
+                  <div className="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center mb-3 flex-shrink-0">
                     <Folder className="w-7 h-7 text-[#6D28D9]" />
                   </div>
-                  <h3 className="font-semibold text-[#1F2121] text-center mb-1">{folder.name}</h3>
+                  <h3 className="font-semibold text-[#1F2121] text-center mb-1 line-clamp-2 max-w-full">{folder.name}</h3>
                   <p className="text-sm text-[#626C71]">{folder.documentCount || 0} Documents</p>
                 </button>
 
@@ -418,9 +418,9 @@ const SubcategoryView = () => {
             {!debouncedQuery && (
               <button
                 onClick={() => setShowAddFolderDialog(true)}
-                className="bg-[#F3E8FF] border-2 border-dashed border-[#6D28D9] rounded-2xl p-5 flex flex-col items-center justify-center hover:opacity-80 transition-opacity"
+                className="min-h-[160px] bg-[#F3E8FF] border-2 border-dashed border-[#6D28D9] rounded-2xl p-5 flex flex-col items-center justify-center hover:opacity-80 transition-opacity"
               >
-                <div className="w-14 h-14 bg-white/60 rounded-full flex items-center justify-center mb-3">
+                <div className="w-14 h-14 bg-white/60 rounded-full flex items-center justify-center mb-3 flex-shrink-0">
                   <Plus className="w-7 h-7 text-[#6D28D9]" />
                 </div>
                 <h3 className="font-semibold text-[#1F2121]">Add Folder</h3>
