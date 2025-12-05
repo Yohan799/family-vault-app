@@ -28,7 +28,7 @@ task clean(type: Delete) {
     delete rootProject.buildDir
 }
 
-// Force Java 17 for all subprojects including capacitor-android
+// Force Java 17 for all subprojects including capacitor plugins
 subprojects {
     afterEvaluate { project ->
         if (project.hasProperty('android')) {
@@ -43,6 +43,16 @@ subprojects {
         tasks.withType(JavaCompile).configureEach {
             sourceCompatibility = '17'
             targetCompatibility = '17'
+            options.release.set(17)
+        }
+        
+        // Override Java toolchain for all projects with Java plugin
+        project.plugins.withType(JavaPlugin) {
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(17)
+                }
+            }
         }
     }
 }
