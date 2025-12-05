@@ -21,95 +21,117 @@ const SpotlightTour = ({ isOpen, onClose, steps }: SpotlightTourProps) => {
     const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
     const [arrowPosition, setArrowPosition] = useState({ top: 0, left: 0, rotation: 0 });
 
+    // Find valid steps (elements that exist in DOM)
+    const findNextValidStep = useCallback((startIndex: number, direction: 1 | -1 = 1): number => {
+        let index = startIndex;
+        while (index >= 0 && index < steps.length) {
+            const step = steps[index];
+            const element = document.querySelector(`[data-tour-id="${step.targetId}"]`);
+            if (element) return index;
+            index += direction;
+        }
+        return -1; // No valid step found
+    }, [steps]);
+
     const updatePositions = useCallback(() => {
         if (!isOpen || currentStep >= steps.length) return;
 
         const step = steps[currentStep];
         const element = document.querySelector(`[data-tour-id="${step.targetId}"]`);
 
-        if (element) {
-            const rect = element.getBoundingClientRect();
-            setTargetRect(rect);
-
-            // Calculate tooltip position based on step position preference
-            const padding = 16;
-            const tooltipWidth = Math.min(300, window.innerWidth - 32);
-            const tooltipHeight = 200;
-            const arrowOffset = 20;
-            const gap = 12; // Gap between element and tooltip
-
-            let top = 0;
-            let left = 0;
-            let arrowTop = 0;
-            let arrowLeft = 0;
-            let arrowRotation = 0;
-
-            const viewportWidth = window.innerWidth;
-            const viewportHeight = window.innerHeight;
-
-            let position = step.position || "bottom";
-
-            // Check if there's enough space, if not, flip position
-            const spaceAbove = rect.top;
-            const spaceBelow = viewportHeight - rect.bottom;
-
-            if (position === "bottom" && spaceBelow < tooltipHeight + arrowOffset + gap) {
-                position = "top";
-            } else if (position === "top" && spaceAbove < tooltipHeight + arrowOffset + gap) {
-                position = "bottom";
+        // If element not found, try to find next valid step
+        if (!element) {
+            const nextValid = findNextValidStep(currentStep + 1);
+            if (nextValid >= 0) {
+                setCurrentStep(nextValid);
+            } else {
+                // No more valid steps, close tour
+                onClose();
             }
-
-            switch (position) {
-                case "top":
-                    top = rect.top - tooltipHeight - arrowOffset - gap;
-                    left = rect.left + rect.width / 2 - tooltipWidth / 2;
-                    arrowTop = rect.top - arrowOffset;
-                    arrowLeft = rect.left + rect.width / 2 - 12;
-                    arrowRotation = 180;
-                    break;
-                case "bottom":
-                    top = rect.bottom + arrowOffset + gap;
-                    left = rect.left + rect.width / 2 - tooltipWidth / 2;
-                    arrowTop = rect.bottom + gap;
-                    arrowLeft = rect.left + rect.width / 2 - 12;
-                    arrowRotation = 0;
-                    break;
-                case "left":
-                    top = rect.top + rect.height / 2 - tooltipHeight / 2;
-                    left = rect.left - tooltipWidth - arrowOffset - gap;
-                    arrowTop = rect.top + rect.height / 2 - 12;
-                    arrowLeft = rect.left - arrowOffset;
-                    arrowRotation = 90;
-                    break;
-                case "right":
-                    top = rect.top + rect.height / 2 - tooltipHeight / 2;
-                    left = rect.right + arrowOffset + gap;
-                    arrowTop = rect.top + rect.height / 2 - 12;
-                    arrowLeft = rect.right + gap;
-                    arrowRotation = -90;
-                    break;
-            }
-
-            // Keep tooltip within viewport bounds (but don't let it cover the target)
-            if (left < padding) left = padding;
-            if (left + tooltipWidth > viewportWidth - padding) {
-                left = viewportWidth - tooltipWidth - padding;
-            }
-
-            // For top position, don't push down if it would cover the element
-            if (position === "top" && top < padding) {
-                top = padding;
-            }
-            // For bottom position, don't push up if it would cover the element
-            if (position === "bottom" && top + tooltipHeight > viewportHeight - 70) {
-                // Account for bottom nav
-                top = viewportHeight - tooltipHeight - 70;
-            }
-
-            setTooltipPosition({ top, left });
-            setArrowPosition({ top: arrowTop, left: arrowLeft, rotation: arrowRotation });
+            return;
         }
-    }, [isOpen, currentStep, steps]);
+
+        const rect = element.getBoundingClientRect();
+        setTargetRect(rect);
+
+        // Calculate tooltip position based on step position preference
+        const padding = 16;
+        const tooltipWidth = Math.min(300, window.innerWidth - 32);
+        const tooltipHeight = 200;
+        const arrowOffset = 20;
+        const gap = 12; // Gap between element and tooltip
+
+        let top = 0;
+        let left = 0;
+        let arrowTop = 0;
+        let arrowLeft = 0;
+        let arrowRotation = 0;
+
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+
+        let position = step.position || "bottom";
+
+        // Check if there's enough space, if not, flip position
+        const spaceAbove = rect.top;
+        const spaceBelow = viewportHeight - rect.bottom;
+
+        if (position === "bottom" && spaceBelow < tooltipHeight + arrowOffset + gap) {
+            position = "top";
+        } else if (position === "top" && spaceAbove < tooltipHeight + arrowOffset + gap) {
+            position = "bottom";
+        }
+
+        switch (position) {
+            case "top":
+                top = rect.top - tooltipHeight - arrowOffset - gap;
+                left = rect.left + rect.width / 2 - tooltipWidth / 2;
+                arrowTop = rect.top - arrowOffset;
+                arrowLeft = rect.left + rect.width / 2 - 12;
+                arrowRotation = 180;
+                break;
+            case "bottom":
+                top = rect.bottom + arrowOffset + gap;
+                left = rect.left + rect.width / 2 - tooltipWidth / 2;
+                arrowTop = rect.bottom + gap;
+                arrowLeft = rect.left + rect.width / 2 - 12;
+                arrowRotation = 0;
+                break;
+            case "left":
+                top = rect.top + rect.height / 2 - tooltipHeight / 2;
+                left = rect.left - tooltipWidth - arrowOffset - gap;
+                arrowTop = rect.top + rect.height / 2 - 12;
+                arrowLeft = rect.left - arrowOffset;
+                arrowRotation = 90;
+                break;
+            case "right":
+                top = rect.top + rect.height / 2 - tooltipHeight / 2;
+                left = rect.right + arrowOffset + gap;
+                arrowTop = rect.top + rect.height / 2 - 12;
+                arrowLeft = rect.right + gap;
+                arrowRotation = -90;
+                break;
+        }
+
+        // Keep tooltip within viewport bounds (but don't let it cover the target)
+        if (left < padding) left = padding;
+        if (left + tooltipWidth > viewportWidth - padding) {
+            left = viewportWidth - tooltipWidth - padding;
+        }
+
+        // For top position, don't push down if it would cover the element
+        if (position === "top" && top < padding) {
+            top = padding;
+        }
+        // For bottom position, don't push up if it would cover the element
+        if (position === "bottom" && top + tooltipHeight > viewportHeight - 70) {
+            // Account for bottom nav
+            top = viewportHeight - tooltipHeight - 70;
+        }
+
+        setTooltipPosition({ top, left });
+        setArrowPosition({ top: arrowTop, left: arrowLeft, rotation: arrowRotation });
+    }, [isOpen, currentStep, steps, findNextValidStep, onClose]);
 
     useEffect(() => {
         updatePositions();
