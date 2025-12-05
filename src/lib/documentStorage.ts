@@ -1,4 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
+import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory } from '@capacitor/filesystem';
 
 export interface StoredDocument {
   id: string;
@@ -261,6 +263,21 @@ export const deleteDocument = async (documentId: string): Promise<{ success: boo
 };
 
 /**
+ * Convert blob to base64 for native filesystem
+ */
+const blobToBase64 = (blob: Blob): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = (reader.result as string).split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+};
+
+/**
  * Download document
  */
 export const downloadDocument = async (doc: StoredDocument): Promise<void> => {
@@ -275,7 +292,33 @@ export const downloadDocument = async (doc: StoredDocument): Promise<void> => {
       .eq('id', doc.id)
       .eq('user_id', user.id);
 
-    // Try blob download first (works locally), fallback to direct link (for CORS issues)
+    // Native APK download using Capacitor Filesystem
+    if (Capacitor.isNativePlatform()) {
+      console.log('[Download] Native platform detected, using Filesystem API');
+      try {
+        const response = await fetch(doc.fileUrl);
+        if (!response.ok) throw new Error('Failed to fetch file');
+        
+        const blob = await response.blob();
+        const base64Data = await blobToBase64(blob);
+        
+        // Save to Downloads directory
+        const fileName = doc.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        await Filesystem.writeFile({
+          path: fileName,
+          data: base64Data,
+          directory: Directory.Documents,
+        });
+        
+        console.log('[Download] File saved to Documents:', fileName);
+        return;
+      } catch (nativeError) {
+        console.error('[Download] Native download failed:', nativeError);
+        throw new Error('Failed to save file to device');
+      }
+    }
+
+    // Web download - try blob first, fallback to direct link
     try {
       const response = await fetch(doc.fileUrl, {
         mode: 'cors',
