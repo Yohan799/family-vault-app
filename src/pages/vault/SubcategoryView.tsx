@@ -347,8 +347,8 @@ const SubcategoryView = () => {
     <div className="min-h-screen bg-[#FCFCF9] pb-20">
       <div className="bg-[#FCFCF9] p-6">
         <div className="flex items-center gap-4 mb-4">
-          <button onClick={() => navigate(-1)} className="p-1">
-            <ArrowLeft className="w-6 h-6 text-[#1F2121]" />
+          <button onClick={() => navigate(-1)} className="p-2 hover:bg-accent rounded-full transition-colors">
+            <ArrowLeft className="w-5 h-5 text-[#1F2121]" />
           </button>
           <div className="flex-1 text-center -ml-10">
             <div className="flex items-center justify-center gap-2">

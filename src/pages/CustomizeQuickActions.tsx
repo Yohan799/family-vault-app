@@ -182,9 +182,9 @@ const CustomizeQuickActions = () => {
       {/* Header */}
       <div className="bg-primary text-primary-foreground p-6">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")} className="text-primary-foreground">
-            <ArrowLeft className="w-6 h-6" />
-          </Button>
+          <button onClick={() => navigate("/dashboard")} className="p-2 hover:bg-accent rounded-full transition-colors">
+            <ArrowLeft className="w-5 h-5 text-primary-foreground" />
+          </button>
           <h1 className="text-2xl font-bold">Customize Quick Actions</h1>
         </div>
       </div>

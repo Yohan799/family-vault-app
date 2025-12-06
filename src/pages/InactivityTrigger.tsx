@@ -87,8 +87,8 @@ const InactivityTrigger = () => {
             {/* Header */}
             <div className="bg-primary/10 p-6 rounded-b-3xl">
                 <div className="flex items-center gap-4 mb-4">
-                    <button onClick={() => navigate("/dashboard")} className="p-1">
-                        <ArrowLeft className="w-6 h-6 text-foreground" />
+                    <button onClick={() => navigate("/dashboard")} className="p-2 hover:bg-accent rounded-full transition-colors">
+                        <ArrowLeft className="w-5 h-5 text-foreground" />
                     </button>
                     <div className="flex-1">
                         <h1 className="text-2xl font-bold text-foreground">Inactivity Trigger</h1>

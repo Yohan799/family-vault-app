@@ -1,4 +1,5 @@
 import { ArrowLeft, Clock, Home, Vault, Settings, Info, Send, Edit2, Trash2, Camera } from "lucide-react";
+import { validateGmailOnly, validatePhoneExact10 } from "@/lib/validation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -168,6 +169,26 @@ const TimeCapsule = () => {
       return;
     }
 
+    // Gmail-only validation
+    if (!validateGmailOnly(formData.recipientEmail)) {
+      toast({
+        title: "Invalid email",
+        description: "Only Gmail addresses are allowed (example@gmail.com)",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Phone validation (if provided)
+    if (formData.phone && !validatePhoneExact10(formData.phone)) {
+      toast({
+        title: "Invalid phone number",
+        description: "Phone number must be exactly 10 digits",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       let attachmentUrl: string | undefined;
@@ -262,9 +283,9 @@ const TimeCapsule = () => {
       {/* Header */}
       <div className="bg-primary/20 text-foreground p-6 rounded-b-3xl">
         <div className="flex items-center gap-4 mb-6">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="text-foreground">
-            <ArrowLeft className="w-6 h-6" />
-          </Button>
+          <button onClick={() => navigate(-1)} className="p-2 hover:bg-accent rounded-full transition-colors">
+            <ArrowLeft className="w-5 h-5 text-foreground" />
+          </button>
           <div className="flex-1 text-center -ml-10">
             <h1 className="text-2xl font-bold">Time Capsule</h1>
             <p className="text-sm text-muted-foreground mt-1">Create messages for the future</p>
@@ -326,22 +347,28 @@ const TimeCapsule = () => {
               <label className="text-sm font-medium text-foreground">Recipient Email *</label>
               <Input
                 type="email"
-                placeholder="Enter recipient email address"
+                placeholder="example@gmail.com"
                 value={formData.recipientEmail}
                 onChange={(e) => setFormData({ ...formData, recipientEmail: e.target.value })}
                 className="bg-background border-border"
               />
+              <p className="text-xs text-muted-foreground">Only Gmail addresses are accepted</p>
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Phone Number</label>
               <Input
                 type="tel"
-                placeholder="Enter phone number (optional)"
+                placeholder="9876543210"
                 value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 10);
+                  setFormData({ ...formData, phone: value });
+                }}
+                maxLength={10}
                 className="bg-background border-border"
               />
+              <p className="text-xs text-muted-foreground">10 digits only</p>
             </div>
 
             <div className="space-y-2">
