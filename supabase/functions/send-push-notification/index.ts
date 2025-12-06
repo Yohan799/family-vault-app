@@ -24,14 +24,14 @@ async function getAccessToken(): Promise<string> {
   }
 
   const serviceAccount = JSON.parse(serviceAccountJson);
-  
+
   // Create JWT for service account
   const now = Math.floor(Date.now() / 1000);
   const header = {
     alg: "RS256",
     typ: "JWT",
   };
-  
+
   const payload = {
     iss: serviceAccount.client_email,
     scope: "https://www.googleapis.com/auth/firebase.messaging",
@@ -60,9 +60,9 @@ async function getAccessToken(): Promise<string> {
     .replace(/-----BEGIN PRIVATE KEY-----/, '')
     .replace(/-----END PRIVATE KEY-----/, '')
     .replace(/\n/g, '');
-  
+
   const binaryKey = Uint8Array.from(atob(pemContents), c => c.charCodeAt(0));
-  
+
   const cryptoKey = await crypto.subtle.importKey(
     "pkcs8",
     binaryKey,
@@ -115,7 +115,7 @@ async function sendFcmNotification(
   data?: Record<string, string>
 ): Promise<boolean> {
   const projectId = "my-family-vault-ddc11";
-  
+
   const message = {
     message: {
       token: deviceToken,
@@ -168,6 +168,25 @@ serve(async (req) => {
 
     console.log(`Sending push notification to user ${user_id}: ${title}`);
 
+    // Save notification to database for in-app notification history
+    const { error: insertError } = await supabase
+      .from("notifications")
+      .insert({
+        user_id: user_id,
+        title: title,
+        body: body,
+        type: data?.type || "general",
+        data: data || {},
+        is_read: false,
+      });
+
+    if (insertError) {
+      console.error("Error saving notification to database:", insertError);
+      // Continue anyway - push notification should still be sent
+    } else {
+      console.log("Notification saved to database");
+    }
+
     // Get user's device tokens
     const { data: tokens, error: tokenError } = await supabase
       .from("device_tokens")
@@ -185,7 +204,7 @@ serve(async (req) => {
     if (!tokens || tokens.length === 0) {
       console.log("No device tokens found for user");
       return new Response(
-        JSON.stringify({ success: true, message: "No devices registered" }),
+        JSON.stringify({ success: true, message: "No devices registered", saved: true }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -203,10 +222,11 @@ serve(async (req) => {
     console.log(`Sent ${successCount}/${tokens.length} notifications`);
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        sent: successCount, 
-        total: tokens.length 
+      JSON.stringify({
+        success: true,
+        sent: successCount,
+        total: tokens.length,
+        saved: true
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

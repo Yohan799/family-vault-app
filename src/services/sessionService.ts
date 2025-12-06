@@ -33,11 +33,69 @@ const getDeviceInfo = () => {
     else deviceName = 'Desktop';
   }
 
-  return { deviceType, deviceName };
+  // Create a simple device fingerprint for comparison
+  const deviceFingerprint = `${deviceType}-${deviceName}`;
+
+  return { deviceType, deviceName, deviceFingerprint };
+};
+
+// Check if this is a new device for the user
+const isNewDevice = async (userId: string, deviceName: string, deviceType: string): Promise<boolean> => {
+  try {
+    const { data: existingSessions } = await supabase
+      .from('user_sessions')
+      .select('device_name, device_type')
+      .eq('user_id', userId);
+
+    if (!existingSessions || existingSessions.length === 0) {
+      // First login ever - not considered "new device" alert
+      return false;
+    }
+
+    // Check if this device combination already exists
+    const deviceExists = existingSessions.some(
+      session => session.device_name === deviceName && session.device_type === deviceType
+    );
+
+    return !deviceExists;
+  } catch (error) {
+    console.error('Error checking for new device:', error);
+    return false;
+  }
+};
+
+// Send push notification for new device login
+const sendNewDeviceNotification = async (userId: string, deviceName: string): Promise<void> => {
+  try {
+    const now = new Date();
+    const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    const dateString = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+    await supabase.functions.invoke('send-push-notification', {
+      body: {
+        user_id: userId,
+        title: '🔐 New Device Login',
+        body: `New login from ${deviceName} at ${timeString} on ${dateString}. If this wasn't you, secure your account immediately.`,
+        data: {
+          type: 'new_device_login',
+          device_name: deviceName,
+          timestamp: now.toISOString(),
+        },
+      },
+    });
+
+    console.log('New device notification sent successfully');
+  } catch (error) {
+    console.error('Error sending new device notification:', error);
+    // Don't throw - notification failure shouldn't block login
+  }
 };
 
 export const createSession = async (userId: string): Promise<void> => {
   const { deviceType, deviceName } = getDeviceInfo();
+
+  // Check if this is a new device before creating session
+  const newDevice = await isNewDevice(userId, deviceName, deviceType);
 
   // Mark all existing sessions as not current
   await supabase
@@ -57,6 +115,12 @@ export const createSession = async (userId: string): Promise<void> => {
     });
 
   if (error) throw error;
+
+  // Send notification if new device (after successful session creation)
+  if (newDevice) {
+    console.log('New device detected, sending security notification...');
+    await sendNewDeviceNotification(userId, deviceName);
+  }
 };
 
 export const fetchSessions = async (userId: string): Promise<UserSession[]> => {

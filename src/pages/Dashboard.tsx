@@ -10,6 +10,7 @@ import FeatureTour from "@/components/FeatureTour";
 import { useToast } from "@/hooks/use-toast";
 import { getQuickActions, initializeDefaultActions, type QuickAction } from "@/services/quickActionsService";
 import { DashboardSkeleton } from "@/components/skeletons";
+import { getUnreadCount } from "@/services/notificationService";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ const Dashboard = () => {
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [quickActions, setQuickActions] = useState<QuickAction[]>([]);
   const lastToggleTime = useRef<number>(0);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   // Icon mapping for quick actions
   const iconMap: Record<string, any> = {
@@ -53,8 +55,15 @@ const Dashboard = () => {
     if (user) {
       loadDashboardStats();
       loadQuickActions();
+      loadUnreadCount();
     }
   }, [user]);
+
+  const loadUnreadCount = async () => {
+    if (!user) return;
+    const count = await getUnreadCount(user.id);
+    setUnreadNotifications(count);
+  };
 
   const loadDashboardStats = async () => {
     if (!user) return;
@@ -148,8 +157,13 @@ const Dashboard = () => {
             <h1 className="text-xl font-bold text-foreground">{firstName}</h1>
           </div>
           <div className="flex gap-2">
-            <Button variant="ghost" size="icon" className="text-foreground h-8 w-8" onClick={() => navigate("/notifications")}>
+            <Button variant="ghost" size="icon" className="text-foreground h-8 w-8 relative" onClick={() => navigate("/notifications")}>
               <Bell className="w-4 h-4" />
+              {unreadNotifications > 0 && (
+                <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center">
+                  {unreadNotifications > 99 ? '99+' : unreadNotifications}
+                </span>
+              )}
             </Button>
             <Button variant="ghost" size="icon" className="text-foreground p-0 h-8 w-8" onClick={() => navigate("/profile")}>
               <Avatar className="w-8 h-8 bg-primary">
