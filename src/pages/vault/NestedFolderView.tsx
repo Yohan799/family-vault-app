@@ -10,6 +10,7 @@ import { DocumentOptionsModal } from "@/components/vault/DocumentOptionsModal";
 import { LockDocumentModal } from "@/components/vault/LockDocumentModal";
 import { categoryNameSchema, sanitizeInput } from "@/lib/validation";
 import { filterItems, debounce } from "@/lib/searchUtils";
+import { supabase } from "@/integrations/supabase/client";
 
 const NestedFolderView = () => {
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ const NestedFolderView = () => {
   });
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [documents, setDocuments] = useState<Array<{ id: string; name: string; size: string; date: string }>>([]);
 
   // Debounce search query
   useEffect(() => {
@@ -41,26 +43,83 @@ const NestedFolderView = () => {
   }, [searchQuery]);
 
   useEffect(() => {
-    setLoading(true);
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          navigate("/vault");
+          return;
+        }
 
-    const stored = localStorage.getItem(`nested_folders_${subcategoryId}`);
-    if (stored) {
-      const folders = JSON.parse(stored);
-      const folder = folders.find((f: any) => f.id === folderId);
-      setCurrentFolder(folder);
-    }
+        // Load current folder from database
+        const { data: folderData } = await supabase
+          .from('folders')
+          .select('*')
+          .eq('id', folderId)
+          .eq('user_id', user.id)
+          .is('deleted_at', null)
+          .maybeSingle();
 
-    const nestedStored = localStorage.getItem(`nested_folders_${folderId}`);
-    if (nestedStored) {
-      setNestedFolders(JSON.parse(nestedStored));
-    } else {
-      setNestedFolders([]);
-    }
+        if (!folderData) {
+          navigate(`/vault/${categoryId}/${subcategoryId}`);
+          return;
+        }
 
-    setLoading(false);
-  }, [folderId, subcategoryId]);
+        setCurrentFolder({
+          id: folderData.id,
+          name: folderData.name,
+          documentCount: 0,
+          depth: 1,
+          isCustom: true
+        });
 
-  const handleAddFolder = () => {
+        // Load nested folders from database
+        const { data: nestedFoldersData } = await supabase
+          .from('folders')
+          .select('*')
+          .eq('parent_folder_id', folderId)
+          .eq('user_id', user.id)
+          .is('deleted_at', null);
+
+        const folders = (nestedFoldersData || []).map(folder => ({
+          id: folder.id,
+          name: folder.name,
+          icon: Folder,
+          documentCount: 0,
+          depth: 2,
+          isCustom: true
+        }));
+        setNestedFolders(folders);
+
+        // Load documents from Supabase
+        const { getDocuments, formatFileSize } = await import('@/lib/documentStorage');
+        const storedDocs = await getDocuments(categoryId!, subcategoryId!, folderId);
+
+        const formattedDocs = storedDocs.map(doc => ({
+          id: doc.id,
+          name: doc.name,
+          size: formatFileSize(doc.size),
+          date: new Date(doc.date).toLocaleDateString(),
+        }));
+        setDocuments(formattedDocs);
+
+        setLoading(false);
+      } catch (error) {
+        console.error("Error loading folder data:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load folder data",
+          variant: "destructive"
+        });
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [folderId, subcategoryId, categoryId, navigate, toast]);
+
+  const handleAddFolder = async () => {
     const sanitizedName = sanitizeInput(folderName);
     const validation = categoryNameSchema.safeParse(sanitizedName);
 
@@ -97,27 +156,50 @@ const NestedFolderView = () => {
       return;
     }
 
-    const newFolder = {
-      id: `folder-${Date.now()}`,
-      name: validation.data,
-      icon: Folder,
-      documentCount: 0,
-      depth: currentDepth + 1,
-      parentId: folderId,
-      isCustom: true
-    };
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-    const updated = [...nestedFolders, newFolder];
-    setNestedFolders(updated);
-    localStorage.setItem(`nested_folders_${folderId}`, JSON.stringify(updated));
+      const { data: newFolderData, error } = await supabase
+        .from('folders')
+        .insert({
+          name: validation.data,
+          category_id: categoryId,
+          subcategory_id: subcategoryId,
+          parent_folder_id: folderId,
+          user_id: user.id
+        })
+        .select()
+        .single();
 
-    toast({
-      title: "Folder created!",
-      description: `${validation.data} has been added`
-    });
+      if (error) throw error;
 
-    setFolderName("");
-    setShowAddFolderDialog(false);
+      const newFolder = {
+        id: newFolderData.id,
+        name: newFolderData.name,
+        icon: Folder,
+        documentCount: 0,
+        depth: currentDepth + 1,
+        isCustom: true
+      };
+
+      setNestedFolders([...nestedFolders, newFolder]);
+
+      toast({
+        title: "Folder created!",
+        description: `${validation.data} has been added`
+      });
+
+      setFolderName("");
+      setShowAddFolderDialog(false);
+    } catch (error) {
+      console.error("Error creating folder:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create folder",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleDeleteClick = (folder: any, e: React.MouseEvent) => {
@@ -125,23 +207,38 @@ const NestedFolderView = () => {
     setDeleteConfirm({ show: true, folder });
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!deleteConfirm.folder) return;
 
-    const folderId = deleteConfirm.folder.id;
-    const folderName = deleteConfirm.folder.name;
+    const folderIdToDelete = deleteConfirm.folder.id;
+    const folderNameToDelete = deleteConfirm.folder.name;
 
-    const updated = nestedFolders.filter(f => f.id !== folderId);
-    setNestedFolders(updated);
-    localStorage.setItem(`nested_folders_${currentFolder?.id}`, JSON.stringify(updated));
-    localStorage.removeItem(`nested_folders_${folderId}`);
+    try {
+      const { error } = await supabase
+        .from('folders')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', folderIdToDelete);
 
-    toast({
-      title: "Folder deleted",
-      description: `${folderName} has been removed`
-    });
+      if (error) throw error;
 
-    setDeleteConfirm({ show: false, folder: null });
+      const updated = nestedFolders.filter(f => f.id !== folderIdToDelete);
+      setNestedFolders(updated);
+
+      toast({
+        title: "Folder deleted",
+        description: `${folderNameToDelete} has been removed`
+      });
+
+      setDeleteConfirm({ show: false, folder: null });
+    } catch (error) {
+      console.error("Error deleting folder:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete folder",
+        variant: "destructive"
+      });
+      setDeleteConfirm({ show: false, folder: null });
+    }
   };
 
   const handleDocumentOptions = (doc: any) => {
@@ -168,7 +265,6 @@ const NestedFolderView = () => {
   }
 
   const canAddMore = (currentFolder?.depth || 0) < 3;
-  const documents: Array<{ id: string; name: string; size: string; date: string }> = [];
 
   // Filter folders based on search
   const filteredFolders = filterItems(nestedFolders, debouncedQuery, {
