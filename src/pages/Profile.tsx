@@ -98,7 +98,12 @@ const Profile = () => {
               </div>
               <div className="flex-1">
                 <p className="text-xs text-muted-foreground">Date of Birth</p>
-                <p className="font-medium text-foreground">{format(new Date(profile.date_of_birth), "MMMM d, yyyy")}</p>
+                <p className="font-medium text-foreground">
+                  {(() => {
+                    const [year, month, day] = profile.date_of_birth.split('-').map(Number);
+                    return format(new Date(year, month - 1, day), "MMMM d, yyyy");
+                  })()}
+                </p>
               </div>
             </div>
           )}

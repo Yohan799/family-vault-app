@@ -229,11 +229,11 @@ const TimeCapsule = () => {
     if (!deleteDialog.capsule) return;
 
     const capsuleToDelete = deleteDialog.capsule;
-    
+
     // Optimistic UI: Remove immediately
     setCapsules(prev => prev.filter(c => c.id !== capsuleToDelete.id));
     setDeleteDialog({ open: false, capsule: null });
-    
+
     try {
       await timeCapsuleService.delete(capsuleToDelete.id);
       toast({
@@ -242,10 +242,10 @@ const TimeCapsule = () => {
       });
     } catch (error) {
       console.error("Error deleting capsule:", error);
-      
+
       // Rollback on error
       await loadCapsules();
-      
+
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to delete time capsule",
@@ -262,7 +262,7 @@ const TimeCapsule = () => {
       {/* Header */}
       <div className="bg-primary/20 text-foreground p-6 rounded-b-3xl">
         <div className="flex items-center gap-4 mb-6">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")} className="text-foreground">
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="text-foreground">
             <ArrowLeft className="w-6 h-6" />
           </Button>
           <div className="flex-1 text-center -ml-10">
@@ -424,8 +424,8 @@ const TimeCapsule = () => {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              <Button 
-                onClick={handleCreateCapsule} 
+              <Button
+                onClick={handleCreateCapsule}
                 className="w-full sm:flex-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12 gap-2 min-h-[48px]"
                 disabled={loading}
               >
@@ -449,167 +449,169 @@ const TimeCapsule = () => {
         )}
 
         {/* Your Capsules Section */}
-        {capsules.length > 0 && (
-          <div className="space-y-4">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold text-foreground">Your Time Capsules</h2>
+            {capsules.length > 0 && !showCreateForm && (
+              <Button
+                onClick={() => setShowCreateForm(true)}
+                size="sm"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl text-sm h-9 px-4"
+              >
+                + Add Capsule
+              </Button>
+            )}
+          </div>
 
-            {capsules.map((capsule) => (
-              <div key={capsule.id} className="bg-card rounded-2xl p-4 flex justify-between items-start gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-semibold text-foreground">{capsule.title}</h3>
-                    {capsule.status === 'released' && (
-                      <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Released</span>
-                    )}
-                    {capsule.attachment_url && <span className="text-xs">📎</span>}
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{capsule.message}</p>
-                  <div className="flex gap-2 text-xs text-muted-foreground">
-                    <span>Release: {new Date(capsule.release_date).toLocaleDateString()}</span>
-                    <span>•</span>
-                    <span>{capsule.recipient_email}</span>
-                  </div>
-                </div>
-
-                {capsule.status !== 'released' && (
-                  <div className="flex gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        setFormData({
-                          title: capsule.title,
-                          message: capsule.message,
-                          releaseDate: capsule.release_date,
-                          recipientEmail: capsule.recipient_email,
-                          phone: capsule.phone || '',
-                          attachmentFile: null
-                        });
-                        setEditingId(capsule.id);
-                        setShowCreateForm(true);
-                      }}
-                      className="hover:bg-blue-100 hover:text-blue-600"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setDeleteDialog({ open: true, capsule })}
-                      className="hover:bg-red-100 hover:text-red-600"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                )}
+          {capsules.length === 0 ? (
+            <div className="bg-card rounded-2xl p-8 text-center">
+              <div className="w-24 h-24 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center">
+                <Clock className="w-12 h-12 text-primary" />
               </div>
-            ))}
+              <h3 className="text-xl font-bold text-foreground mb-2">No Time Capsules Yet</h3>
+              <p className="text-sm text-muted-foreground mb-6">
+                Create your first time capsule to send messages to the future.
+              </p>
+              {!showCreateForm && (
+                <Button
+                  onClick={() => setShowCreateForm(true)}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-8"
+                >
+                  + Create Time Capsule
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {capsules.map((capsule) => (
+                <div key={capsule.id} className="bg-card rounded-2xl p-4 flex justify-between items-start gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-semibold text-foreground">{capsule.title}</h3>
+                      {capsule.status === 'released' && (
+                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Released</span>
+                      )}
+                      {capsule.attachment_url && <span className="text-xs">📎</span>}
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{capsule.message}</p>
+                    <div className="flex gap-2 text-xs text-muted-foreground">
+                      <span>Release: {new Date(capsule.release_date).toLocaleDateString()}</span>
+                      <span>•</span>
+                      <span>{capsule.recipient_email}</span>
+                    </div>
+                  </div>
+
+                  {capsule.status !== 'released' && (
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setFormData({
+                            title: capsule.title,
+                            message: capsule.message,
+                            releaseDate: capsule.release_date,
+                            recipientEmail: capsule.recipient_email,
+                            phone: capsule.phone || '',
+                            attachmentFile: null
+                          });
+                          setEditingId(capsule.id);
+                          setShowCreateForm(true);
+                        }}
+                        className="hover:bg-blue-100 hover:text-blue-600"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setDeleteDialog({ open: true, capsule })}
+                        className="hover:bg-red-100 hover:text-red-600"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Info Box */}
+        <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 flex gap-3">
+          <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center flex-shrink-0">
+            <Info className="w-4 h-4 text-primary" />
           </div>
-        )}
-      </div>
-
-      {/* Create Capsule Button */}
-      {!showCreateForm && capsules.length === 0 && (
-        <div className="bg-card rounded-2xl p-8 text-center">
-          <div className="w-24 h-24 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
-            <Clock className="w-12 h-12 text-muted-foreground" />
+          <div>
+            <h3 className="font-semibold text-foreground mb-1">About Time Capsules</h3>
+            <p className="text-sm text-muted-foreground">
+              Time capsules are automatically delivered to recipients on the scheduled release date via email.
+              They're stored securely in your backend and can include attachments.
+            </p>
           </div>
-          <h3 className="text-xl font-bold text-foreground mb-2">No Time Capsules Yet</h3>
-          <p className="text-sm text-muted-foreground mb-6">
-            Create your first time capsule to send messages to the future.
-          </p>
-          <Button
-            onClick={() => setShowCreateForm(true)}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-8"
-          >
-            + Create Time Capsule
-          </Button>
         </div>
-      )}
 
-      {!showCreateForm && capsules.length > 0 && (
-        <Button
-          onClick={() => setShowCreateForm(true)}
-          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12 gap-2"
-        >
-          <Send className="w-4 h-4" />
-          Create New Time Capsule
-        </Button>
-      )}
-
-      {/* Info Box */}
-      <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 flex gap-3">
-        <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center flex-shrink-0">
-          <Info className="w-4 h-4 text-primary" />
+        {/* Bottom Navigation */}
+        <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
+          <div className="flex justify-around items-center h-16 max-w-md mx-auto">
+            <button
+              onClick={() => navigate("/dashboard")}
+              className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
+            >
+              <Home className="w-6 h-6" />
+              <span className="text-xs font-medium">Home</span>
+            </button>
+            <button
+              onClick={() => navigate("/vault")}
+              className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
+            >
+              <Vault className="w-6 h-6" />
+              <span className="text-xs font-medium">Vault</span>
+            </button>
+            <button
+              onClick={() => navigate("/settings")}
+              className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
+            >
+              <Settings className="w-6 h-6" />
+              <span className="text-xs font-medium">Settings</span>
+            </button>
+          </div>
         </div>
-        <div>
-          <h3 className="font-semibold text-foreground mb-1">About Time Capsules</h3>
-          <p className="text-sm text-muted-foreground">
-            Time capsules are automatically delivered to recipients on the scheduled release date via email.
-            They're stored securely in your backend and can include attachments.
-          </p>
-        </div>
-      </div>
 
-      {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
-        <div className="flex justify-around items-center h-14 max-w-md mx-auto">
-          <button
-            onClick={() => navigate("/dashboard")}
-            className="flex flex-col items-center gap-0.5 text-muted-foreground hover:text-foreground"
-          >
-            <Home className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Home</span>
-          </button>
-          <button
-            onClick={() => navigate("/vault")}
-            className="flex flex-col items-center gap-0.5 text-muted-foreground hover:text-foreground"
-          >
-            <Vault className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Vault</span>
-          </button>
-          <button
-            onClick={() => navigate("/settings")}
-            className="flex flex-col items-center gap-0.5 text-muted-foreground hover:text-foreground"
-          >
-            <Settings className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Settings</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Confirm Delete Dialog */}
-      <ConfirmDialog
-        open={deleteDialog.open}
-        onOpenChange={(open) => setDeleteDialog({ open, capsule: null })}
-        title="Delete Time Capsule?"
-        description={`Are you sure you want to delete "${deleteDialog.capsule?.title}"? This action cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
-        variant="destructive"
-        onConfirm={handleDelete}
-      />
-
-      {/* Google Drive Browser */}
-      {driveAccessToken && (
-        <GoogleDriveBrowser
-          open={showDriveBrowser}
-          onClose={() => {
-            setShowDriveBrowser(false);
-            setDriveAccessToken(null);
-          }}
-          accessToken={driveAccessToken}
-          onFileSelect={handleDriveFileSelect}
+        {/* Confirm Delete Dialog */}
+        <ConfirmDialog
+          open={deleteDialog.open}
+          onOpenChange={(open) => setDeleteDialog({ open, capsule: null })}
+          title="Delete Time Capsule?"
+          description={`Are you sure you want to delete "${deleteDialog.capsule?.title}"? This action cannot be undone.`}
+          confirmText="Delete"
+          cancelText="Cancel"
+          variant="destructive"
+          onConfirm={handleDelete}
         />
-      )}
 
-      {/* Connect Google Drive Modal */}
-      <ConnectGoogleDriveModal
-        open={showConnectModal}
-        onClose={() => setShowConnectModal(false)}
-        onUseNativePicker={handleUseNativePicker}
-        onGoogleAuthSuccess={handleNativeGoogleAuthSuccess}
-      />
+        {/* Google Drive Browser */}
+        {driveAccessToken && (
+          <GoogleDriveBrowser
+            open={showDriveBrowser}
+            onClose={() => {
+              setShowDriveBrowser(false);
+              setDriveAccessToken(null);
+            }}
+            accessToken={driveAccessToken}
+            onFileSelect={handleDriveFileSelect}
+          />
+        )}
+
+        {/* Connect Google Drive Modal */}
+        <ConnectGoogleDriveModal
+          open={showConnectModal}
+          onClose={() => setShowConnectModal(false)}
+          onUseNativePicker={handleUseNativePicker}
+          onGoogleAuthSuccess={handleNativeGoogleAuthSuccess}
+        />
+      </div>
     </div>
   );
 };

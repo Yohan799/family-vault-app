@@ -51,8 +51,8 @@ const PasswordResetOTP = () => {
         description: "Now set your new password",
       });
 
-      navigate("/reset-password", { 
-        state: { email, resetToken: data.resetToken } 
+      navigate("/reset-password", {
+        state: { email, resetToken: data.resetToken }
       });
     } catch (error: any) {
       toast({
@@ -99,7 +99,7 @@ const PasswordResetOTP = () => {
               onClick={() => navigate("/forgot-password")}
               className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-2"
             >
-              <ArrowLeft className="w-4 h-4 mr-1" />
+              <ArrowLeft className="w-5 h-5 mr-1" />
               Back
             </button>
             <h1 className="text-3xl font-bold text-foreground">

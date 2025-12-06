@@ -39,10 +39,10 @@ const SettingsPage = () => {
 
   const handlePushToggle = async () => {
     if (!user || isTogglingPush) return;
-    
+
     setIsTogglingPush(true);
     const newValue = !toggleStates.pushNotifications;
-    
+
     // Optimistic update
     setToggleStates((prev) => ({ ...prev, pushNotifications: newValue }));
 
@@ -64,7 +64,7 @@ const SettingsPage = () => {
             return;
           }
         }
-        
+
         // Update profile
         await updateProfile({ push_notifications_enabled: true });
         toast({
@@ -77,7 +77,7 @@ const SettingsPage = () => {
         if (isPushAvailable()) {
           await unregisterDevice(user.id);
         }
-        
+
         // Update profile
         await updateProfile({ push_notifications_enabled: false });
         toast({
@@ -121,7 +121,7 @@ const SettingsPage = () => {
 
   const handleDeleteAccount = async () => {
     if (!user) return;
-    
+
     setIsDeleting(true);
     try {
       const { error } = await supabase.functions.invoke("delete-user-account", {
@@ -185,7 +185,7 @@ const SettingsPage = () => {
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
       <div className="bg-primary/20 text-foreground p-6 rounded-b-3xl mb-4">
-        <div>
+        <div className="text-center">
           <h1 className="text-2xl font-bold">Settings</h1>
           <p className="text-sm text-muted-foreground mt-1">Manage your preferences</p>
         </div>
@@ -288,24 +288,25 @@ const SettingsPage = () => {
 
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
-        <div className="flex justify-around items-center h-14 max-w-md mx-auto">
+        <div className="flex justify-around items-center h-16 max-w-md mx-auto">
           <button
             onClick={() => navigate("/dashboard")}
-            className="flex flex-col items-center gap-0.5 text-muted-foreground hover:text-foreground"
+            className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
           >
-            <Home className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Home</span>
+            <Home className="w-6 h-6" />
+            <span className="text-xs font-medium">Home</span>
           </button>
           <button
             onClick={() => navigate("/vault")}
-            className="flex flex-col items-center gap-0.5 text-muted-foreground hover:text-foreground"
+            className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
           >
-            <Vault className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Vault</span>
+            <Vault className="w-6 h-6" />
+            <span className="text-xs font-medium">Vault</span>
           </button>
-          <button className="flex flex-col items-center gap-0.5 text-primary">
-            <Settings className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Settings</span>
+          <button className="flex flex-col items-center gap-1 text-primary relative">
+            <Settings className="w-6 h-6" />
+            <span className="text-xs font-medium">Settings</span>
+            <div className="absolute -bottom-2 w-12 h-1 bg-primary rounded-full" />
           </button>
         </div>
       </div>

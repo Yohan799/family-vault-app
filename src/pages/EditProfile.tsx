@@ -22,7 +22,7 @@ const EditProfile = () => {
   const [showCropper, setShowCropper] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
@@ -35,10 +35,12 @@ const EditProfile = () => {
         fullName: profile.full_name || "",
         phone: profile.phone || "",
       });
-      
+
       if (profile.date_of_birth) {
         try {
-          setDateOfBirth(new Date(profile.date_of_birth));
+          // Parse as local date to avoid timezone offset
+          const [year, month, day] = profile.date_of_birth.split('-').map(Number);
+          setDateOfBirth(new Date(year, month - 1, day));
         } catch (e) {
           console.error('Invalid date:', e);
         }
@@ -71,7 +73,7 @@ const EditProfile = () => {
 
   const handleCropComplete = async (croppedImageDataUrl: string) => {
     if (!user) return;
-    
+
     setIsUploading(true);
     try {
       // Convert base64 to blob
@@ -104,20 +106,28 @@ const EditProfile = () => {
 
   const handleSave = async () => {
     if (!user) return;
-    
+
     setIsSaving(true);
     try {
+      // Format date as local YYYY-MM-DD to avoid timezone issues
+      const formatDateLocal = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+
       await updateProfile({
         full_name: formData.fullName,
         phone: formData.phone,
-        date_of_birth: dateOfBirth ? dateOfBirth.toISOString().split('T')[0] : null,
+        date_of_birth: dateOfBirth ? formatDateLocal(dateOfBirth) : null,
       });
 
       toast({
         title: "Profile updated!",
         description: "Your changes have been saved successfully",
       });
-      
+
       navigate("/profile");
     } catch (error: any) {
       console.error('Error updating profile:', error);
@@ -219,9 +229,14 @@ const EditProfile = () => {
             <Input
               type="tel"
               value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              onChange={(e) => {
+                // Only allow digits, max 10 characters
+                const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 10);
+                setFormData({ ...formData, phone: value });
+              }}
               className="bg-card border-border"
-              placeholder="+91 98765 43210"
+              placeholder="9876543210"
+              maxLength={10}
             />
           </div>
 

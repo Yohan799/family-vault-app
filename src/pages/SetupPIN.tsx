@@ -51,15 +51,15 @@ const SetupPIN = () => {
         try {
           // Save PIN to database
           await savePin(user.id, pin);
-          
+
           // Save lock preference and PIN hash locally for pre-login lock
           await saveLocalLockPreference("pin");
           const pinHash = await hashPin(pin);
           await saveLocalPinHash(pinHash);
-          
+
           toast({
             title: "PIN Lock Enabled",
-            description: "Your app will lock after inactivity",
+            description: "Lock screen will show when you open the app",
           });
           navigate("/settings");
         } catch (error: any) {
@@ -111,7 +111,7 @@ const SetupPIN = () => {
             {step === "create" ? "Create a 6-digit PIN" : "Confirm your PIN"}
           </h2>
           <p className="text-muted-foreground text-sm">
-            {step === "create" 
+            {step === "create"
               ? "Enter a PIN you'll remember"
               : "Enter the same PIN again to confirm"}
           </p>
@@ -122,9 +122,8 @@ const SetupPIN = () => {
           {[...Array(6)].map((_, idx) => (
             <div
               key={idx}
-              className={`w-4 h-4 rounded-full transition-colors ${
-                idx < currentPin.length ? "bg-primary" : "bg-muted"
-              }`}
+              className={`w-4 h-4 rounded-full transition-colors ${idx < currentPin.length ? "bg-primary" : "bg-muted"
+                }`}
             />
           ))}
         </div>

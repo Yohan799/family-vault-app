@@ -11,6 +11,7 @@ import { AccessControlModal } from "@/components/vault/AccessControlModal";
 import { ActionMenu, createSubcategoryActionMenu } from "@/components/vault/ActionMenu";
 import { supabase } from "@/integrations/supabase/client";
 import { filterItems, debounce } from "@/lib/searchUtils";
+import { CategoryViewSkeleton } from "@/components/skeletons";
 
 const CategoryView = () => {
   const navigate = useNavigate();
@@ -208,7 +209,7 @@ const CategoryView = () => {
 
       setSubcategoryName("");
       setShowAddDialog(false);
-      
+
       // Reload data
       window.location.reload();
     } catch (error) {
@@ -223,7 +224,7 @@ const CategoryView = () => {
 
   const handleDeleteClick = (subcategory: any, e: React.MouseEvent) => {
     e.stopPropagation();
-    
+
     // Prevent deletion of default subcategories
     if (!subcategory.isCustom) {
       toast({
@@ -233,7 +234,7 @@ const CategoryView = () => {
       });
       return;
     }
-    
+
     setDeleteConfirm({ show: true, subcategory });
   };
 
@@ -257,7 +258,7 @@ const CategoryView = () => {
       });
 
       setDeleteConfirm({ show: false, subcategory: null });
-      
+
       // Reload data
       window.location.reload();
     } catch (error) {
@@ -271,11 +272,7 @@ const CategoryView = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-[#FCFCF9] flex items-center justify-center">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
-    );
+    return <CategoryViewSkeleton />;
   }
 
   if (!category) {
@@ -295,7 +292,7 @@ const CategoryView = () => {
     <div className="min-h-screen bg-[#FCFCF9] pb-20">
       <div className="bg-[#FCFCF9] p-6">
         <div className="flex items-center gap-4 mb-4">
-          <button onClick={() => navigate("/vault")} className="p-1">
+          <button onClick={() => navigate(-1)} className="p-1">
             <ArrowLeft className="w-6 h-6 text-[#1F2121]" />
           </button>
           <div className="flex-1 text-center -ml-10">
@@ -316,7 +313,7 @@ const CategoryView = () => {
             className="pl-12 pr-12 h-12 bg-[#F5F5F5] border-none rounded-xl"
           />
           {searchQuery && (
-            <button 
+            <button
               onClick={() => setSearchQuery("")}
               className="absolute right-4 top-1/2 -translate-y-1/2 hover:bg-accent rounded-full p-1"
             >
@@ -334,39 +331,41 @@ const CategoryView = () => {
             <p className="text-muted-foreground/60 text-sm mt-2">Try a different search term</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 items-stretch">
             {filteredSubcategories.map((subcategory) => {
-          const SubIcon = subcategory.icon || Folder;
-          return (
-            <div key={subcategory.id} className="relative">
-              <button
-                onClick={() => navigate(`/vault/${categoryId}/${subcategory.id}`)}
-                className="w-full bg-[#F3E8FF] rounded-2xl p-5 flex flex-col items-center justify-center hover:opacity-80 transition-opacity"
-              >
-                <div className="w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center mb-3">
-                  <SubIcon className="w-7 h-7 text-[#6D28D9]" />
-                </div>
-                <h3 className="font-semibold text-[#1F2121] text-center mb-1">{subcategory.name}</h3>
-                <p className="text-sm text-[#626C71]">{subcategory.documentCount} Documents</p>
-              </button>
+              const SubIcon = subcategory.icon || Folder;
+              return (
+                <div key={subcategory.id} className="relative h-full">
+                  <button
+                    onClick={() => navigate(`/vault/${categoryId}/${subcategory.id}`)}
+                    className="w-full h-full bg-[#F3E8FF] rounded-2xl p-5 flex flex-col items-center justify-between hover:opacity-80 transition-opacity min-h-[160px]"
+                  >
+                    <div className="flex flex-col items-center">
+                      <div className="w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center mb-3">
+                        <SubIcon className="w-7 h-7 text-[#6D28D9]" />
+                      </div>
+                      <h3 className="font-semibold text-[#1F2121] text-center mb-1 line-clamp-2">{subcategory.name}</h3>
+                    </div>
+                    <p className="text-sm text-[#626C71]">{subcategory.documentCount} Documents</p>
+                  </button>
 
-              {/* Action Menu - Three dots with Manage Access and Delete */}
-              <div className="absolute top-2 right-2 z-10">
-                <ActionMenu
-                  items={createSubcategoryActionMenu(
-                    () => setAccessControlSubcategory(subcategory),
-                    subcategory.isCustom ? () => handleDeleteClick(subcategory, { stopPropagation: () => { } } as any) : undefined
-                  )}
-                />
-              </div>
-            </div>
-            );
+                  {/* Action Menu - Three dots with Manage Access and Delete */}
+                  <div className="absolute top-2 right-2 z-10">
+                    <ActionMenu
+                      items={createSubcategoryActionMenu(
+                        () => setAccessControlSubcategory(subcategory),
+                        subcategory.isCustom ? () => handleDeleteClick(subcategory, { stopPropagation: () => { } } as any) : undefined
+                      )}
+                    />
+                  </div>
+                </div>
+              );
             })}
 
             {!debouncedQuery && (
               <button
                 onClick={() => setShowAddDialog(true)}
-                className="bg-[#F3E8FF] border-2 border-dashed border-[#6D28D9] rounded-2xl p-5 flex flex-col items-center justify-center hover:opacity-80 transition-opacity"
+                className="bg-[#F3E8FF] border-2 border-dashed border-[#6D28D9] rounded-2xl p-5 flex flex-col items-center justify-center hover:opacity-80 transition-opacity min-h-[160px]"
               >
                 <div className="w-14 h-14 bg-white/60 rounded-full flex items-center justify-center mb-3">
                   <Plus className="w-7 h-7 text-[#6D28D9]" />

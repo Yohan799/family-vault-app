@@ -229,12 +229,12 @@ export const getAllDocumentsInCategory = async (categoryId: string): Promise<Sto
 export const deleteDocument = async (documentId: string): Promise<{ success: boolean; error?: string }> => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+
     if (authError) {
       console.error('Auth error:', authError);
       return { success: false, error: 'Authentication failed' };
     }
-    
+
     if (!user) {
       return { success: false, error: 'User not authenticated' };
     }
@@ -261,10 +261,15 @@ export const deleteDocument = async (documentId: string): Promise<{ success: boo
   }
 };
 
+export interface DownloadResult {
+  success: boolean;
+  path?: string;
+}
+
 /**
  * Download document
  */
-export const downloadDocument = async (doc: StoredDocument): Promise<void> => {
+export const downloadDocument = async (doc: StoredDocument): Promise<DownloadResult> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("User not authenticated");
@@ -276,11 +281,49 @@ export const downloadDocument = async (doc: StoredDocument): Promise<void> => {
       .eq('id', doc.id)
       .eq('user_id', user.id);
 
-    // Native APK download - open in system browser
+    // Native APK download - use Filesystem plugin
     if (Capacitor.isNativePlatform()) {
-      console.log('[Download] Opening in system browser for download');
-      window.open(doc.fileUrl, '_blank');
-      return;
+      console.log('[Download] Using Capacitor Filesystem plugin');
+      try {
+        const { Filesystem, Directory } = await import('@capacitor/filesystem');
+
+        // Fetch the file as blob
+        const response = await fetch(doc.fileUrl);
+        if (!response.ok) throw new Error('Failed to fetch file');
+
+        const blob = await response.blob();
+
+        // Convert blob to base64
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const result = reader.result as string;
+            // Remove the data:mime;base64, prefix
+            const base64Data = result.split(',')[1];
+            resolve(base64Data);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+
+        // Save to Downloads directory
+        const fileName = doc.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const result = await Filesystem.writeFile({
+          path: fileName,
+          data: base64,
+          directory: Directory.Documents,
+        });
+
+        const savedPath = `/storage/emulated/0/Documents/${fileName}`;
+        console.log('[Download] File saved to:', savedPath);
+
+        // Return the path for toast display
+        return { success: true, path: savedPath };
+      } catch (fsError) {
+        console.warn('[Download] Filesystem plugin failed, falling back to browser:', fsError);
+        window.open(doc.fileUrl, '_blank');
+        return { success: true, path: 'Opened in browser' };
+      }
     }
 
     // Web download - try blob first, fallback to direct link
@@ -301,7 +344,7 @@ export const downloadDocument = async (doc: StoredDocument): Promise<void> => {
         link.click();
         window.document.body.removeChild(link);
         window.URL.revokeObjectURL(blobUrl);
-        return;
+        return { success: true, path: 'Downloaded to Downloads folder' };
       }
     } catch (fetchError) {
       console.warn('Blob download failed, using direct link:', fetchError);
@@ -316,6 +359,7 @@ export const downloadDocument = async (doc: StoredDocument): Promise<void> => {
     window.document.body.appendChild(link);
     link.click();
     window.document.body.removeChild(link);
+    return { success: true, path: 'Opened in browser' };
   } catch (error) {
     console.error('Error downloading document:', error);
     throw new Error('Failed to download document');

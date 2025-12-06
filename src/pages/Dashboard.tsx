@@ -58,7 +58,7 @@ const Dashboard = () => {
 
   const loadDashboardStats = async () => {
     if (!user) return;
-    
+
     setIsLoadingStats(true);
     try {
       const dashboardStats = await fetchDashboardStats(user.id);
@@ -76,7 +76,7 @@ const Dashboard = () => {
     try {
       // Initialize defaults if needed
       await initializeDefaultActions(user.id);
-      
+
       // Fetch actions
       const actions = await getQuickActions(user.id);
       setQuickActions(actions.filter(a => a.is_enabled));
@@ -94,24 +94,24 @@ const Dashboard = () => {
 
   const handleInactivityToggle = async (checked: boolean) => {
     if (!user) return;
-    
+
     // Debounce rapid toggling
     const now = Date.now();
     if (now - lastToggleTime.current < 500) {
       return;
     }
     lastToggleTime.current = now;
-    
+
     // Optimistic update
     const previousState = stats.inactivityTriggerActive;
     setStats(prev => ({ ...prev, inactivityTriggerActive: checked }));
-    
+
     // Show toast immediately
     toast({
       title: checked ? "Trigger is enabled" : "Trigger is disabled",
       duration: 2000,
     });
-    
+
     try {
       await updateInactivityTrigger(user.id, checked);
     } catch (error) {
@@ -218,7 +218,7 @@ const Dashboard = () => {
                     navigate(action.route);
                   }
                 };
-                
+
                 return (
                   <button key={action.id} onClick={handleClick}
                     className="w-full bg-card rounded-lg p-2.5 flex items-center gap-2.5 hover:bg-accent transition-colors">
@@ -243,18 +243,19 @@ const Dashboard = () => {
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
-        <div className="flex justify-around items-center h-14 max-w-md mx-auto">
-          <button className="flex flex-col items-center gap-0.5 text-primary">
-            <Home className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Home</span>
+        <div className="flex justify-around items-center h-16 max-w-md mx-auto">
+          <button className="flex flex-col items-center gap-1 text-primary relative">
+            <Home className="w-6 h-6" />
+            <span className="text-xs font-medium">Home</span>
+            <div className="absolute -bottom-2 w-12 h-1 bg-primary rounded-full" />
           </button>
-          <button onClick={() => navigate("/vault")} className="flex flex-col items-center gap-0.5 text-muted-foreground hover:text-foreground">
-            <Vault className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Vault</span>
+          <button onClick={() => navigate("/vault")} className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
+            <Vault className="w-6 h-6" />
+            <span className="text-xs font-medium">Vault</span>
           </button>
-          <button onClick={() => navigate("/settings")} className="flex flex-col items-center gap-0.5 text-muted-foreground hover:text-foreground">
-            <Settings className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Settings</span>
+          <button onClick={() => navigate("/settings")} className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
+            <Settings className="w-6 h-6" />
+            <span className="text-xs font-medium">Settings</span>
           </button>
         </div>
       </div>

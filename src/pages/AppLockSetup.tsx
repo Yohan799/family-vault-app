@@ -37,7 +37,7 @@ const AppLockSetup = () => {
           await refreshProfile?.();
           toast({
             title: "Biometric Lock Enabled",
-            description: "App will lock with biometric authentication",
+            description: "Lock screen will show when you open the app",
           });
         } catch (error: any) {
           toast({
@@ -64,6 +64,7 @@ const AppLockSetup = () => {
         await refreshProfile?.();
         toast({
           title: "Biometric Lock Disabled",
+          description: "App will open without authentication",
         });
       } catch (error: any) {
         toast({
@@ -93,6 +94,7 @@ const AppLockSetup = () => {
         await refreshProfile?.();
         toast({
           title: "PIN Lock Disabled",
+          description: "App will open without authentication",
         });
       } catch (error: any) {
         toast({

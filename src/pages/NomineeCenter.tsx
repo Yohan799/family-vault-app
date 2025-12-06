@@ -130,7 +130,7 @@ const NomineeCenter = () => {
         // Get fresh auth state
         await supabase.auth.refreshSession();
         const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
-        
+
         if (authError || !currentUser) {
           toast({
             title: "Authentication error",
@@ -170,7 +170,7 @@ const NomineeCenter = () => {
       // Add new nominee with fresh auth
       await supabase.auth.refreshSession();
       const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
-      
+
       if (authError || !currentUser) {
         toast({
           title: "Authentication error",
@@ -222,7 +222,7 @@ const NomineeCenter = () => {
 
     try {
       const { data: { user: currentUser } } = await supabase.auth.getUser();
-      
+
       const { error } = await supabase.functions.invoke('send-nominee-verification', {
         body: {
           nomineeId: nominee.id,
@@ -255,8 +255,8 @@ const NomineeCenter = () => {
       {/* Header */}
       <div className="bg-primary/20 text-foreground p-4 sm:p-6 rounded-b-3xl">
         <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")} className="text-foreground h-9 w-9 sm:h-10 sm:w-10">
-            <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="text-foreground h-9 w-9 sm:h-10 sm:w-10">
+            <ArrowLeft className="w-6 h-6" />
           </Button>
           <div className="flex-1 text-center -ml-9 sm:-ml-10">
             <h1 className="text-xl sm:text-2xl font-bold">Nominee Center</h1>
@@ -348,8 +348,8 @@ const NomineeCenter = () => {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              <Button 
-                onClick={handleAddNominee} 
+              <Button
+                onClick={handleAddNominee}
                 disabled={isLoading}
                 className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-11 sm:h-12 text-sm sm:text-base"
               >
@@ -527,27 +527,27 @@ const NomineeCenter = () => {
 
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
-        <div className="flex justify-around items-center h-14 max-w-md mx-auto">
+        <div className="flex justify-around items-center h-16 max-w-md mx-auto">
           <button
             onClick={() => navigate("/dashboard")}
-            className="flex flex-col items-center gap-0.5 text-muted-foreground hover:text-foreground"
+            className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
           >
-            <Home className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Home</span>
+            <Home className="w-6 h-6" />
+            <span className="text-xs font-medium">Home</span>
           </button>
           <button
             onClick={() => navigate("/vault")}
-            className="flex flex-col items-center gap-0.5 text-muted-foreground hover:text-foreground"
+            className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
           >
-            <Vault className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Vault</span>
+            <Vault className="w-6 h-6" />
+            <span className="text-xs font-medium">Vault</span>
           </button>
           <button
             onClick={() => navigate("/settings")}
-            className="flex flex-col items-center gap-0.5 text-muted-foreground hover:text-foreground"
+            className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
           >
-            <Settings className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Settings</span>
+            <Settings className="w-6 h-6" />
+            <span className="text-xs font-medium">Settings</span>
           </button>
         </div>
       </div>
@@ -563,13 +563,13 @@ const NomineeCenter = () => {
         variant="destructive"
         onConfirm={async () => {
           if (!deleteDialog.nominee) return;
-          
+
           const nomineeToDelete = deleteDialog.nominee;
-          
+
           try {
             // 1. Force refresh session and CHECK for errors
             const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-            
+
             if (refreshError) {
               console.error('Session refresh failed:', refreshError);
               toast({
@@ -580,10 +580,10 @@ const NomineeCenter = () => {
               setDeleteDialog({ open: false, nominee: null });
               return;
             }
-            
+
             // 2. Get fresh user from the refreshed session
             const currentUser = refreshData?.session?.user;
-            
+
             if (!currentUser) {
               toast({
                 title: 'Authentication error',
@@ -593,18 +593,18 @@ const NomineeCenter = () => {
               setDeleteDialog({ open: false, nominee: null });
               return;
             }
-            
+
             // 3. Optimistic UI update - immediately remove from local state
             setNominees(prev => prev.filter(n => n.id !== nomineeToDelete.id));
             setDeleteDialog({ open: false, nominee: null });
-            
+
             // 4. Use security definer function for cascade deletion
             const { data: success, error: deleteError } = await supabase
               .rpc('soft_delete_nominee', {
                 _nominee_id: nomineeToDelete.id,
                 _user_id: currentUser.id
               });
-            
+
             // 5. Check for errors or if function returned false
             if (deleteError || !success) {
               console.error("Delete nominee error:", deleteError);
@@ -615,9 +615,9 @@ const NomineeCenter = () => {
                 .eq("user_id", currentUser.id)
                 .is("deleted_at", null)
                 .order("created_at", { ascending: false });
-              
+
               if (revertData) setNominees(revertData);
-              
+
               toast({
                 title: 'Error removing nominee',
                 description: deleteError?.message || 'Failed to remove nominee',

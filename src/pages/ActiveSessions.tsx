@@ -95,8 +95,8 @@ const ActiveSessions = () => {
     <div className="min-h-screen bg-background pb-16">
       <div className="bg-primary/20 text-foreground p-4 rounded-b-3xl">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="text-foreground h-8 w-8">
-            <ArrowLeft className="w-4 h-4" />
+          <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="text-foreground h-10 w-10">
+            <ArrowLeft className="w-6 h-6" />
           </Button>
           <h1 className="text-xl font-bold text-foreground">Active Sessions</h1>
         </div>

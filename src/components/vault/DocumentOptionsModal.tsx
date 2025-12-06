@@ -67,8 +67,13 @@ export const DocumentOptionsModal = ({
       const doc = storedDocs.find(d => d.id === documentId);
 
       if (doc) {
-        downloadDocument(doc);
-        toast({ title: "Success", description: `${documentName} is being downloaded` });
+        const result = await downloadDocument(doc);
+        toast({
+          title: "Download Complete",
+          description: result.path
+            ? `Saved to: ${result.path}`
+            : `${documentName} has been downloaded`
+        });
       } else {
         toast({
           title: "Error",
@@ -89,11 +94,11 @@ export const DocumentOptionsModal = ({
   const handleManageAccess = () => {
     // Navigate to access control - pass document ID not subcategory
     navigate(`/vault/manage-access/${documentId}`, {
-      state: { 
+      state: {
         resourceType: 'document',
         resourceId: documentId,
         categoryId,
-        subcategoryId 
+        subcategoryId
       }
     });
     onOpenChange(false);

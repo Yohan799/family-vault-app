@@ -79,9 +79,9 @@ const VaultHome = () => {
 
       const { getAllUserSubcategories } = await import('@/services/vaultService');
       const subs = await getAllUserSubcategories(user.id);
-      
+
       // Merge with hardcoded subcategories from vaultCategories
-      const hardcodedSubs = vaultCategories.flatMap(cat => 
+      const hardcodedSubs = vaultCategories.flatMap(cat =>
         cat.subcategories.map(sub => ({
           id: sub.id,
           name: sub.name,
@@ -249,7 +249,7 @@ const VaultHome = () => {
 
   const handleDeleteClick = (category: any, e: React.MouseEvent) => {
     e.stopPropagation();
-    
+
     // Prevent deletion of default categories
     if (!category.isCustom) {
       toast({
@@ -259,7 +259,7 @@ const VaultHome = () => {
       });
       return;
     }
-    
+
     setDeleteConfirm({ show: true, category });
   };
 
@@ -312,9 +312,9 @@ const VaultHome = () => {
 
     customCategories.forEach((category) => {
       const categoryMatches = category.name.toLowerCase().includes(query);
-      
+
       // Find matching subcategories for this category
-      const matchingSubcategories = allSubcategories.filter(sub => 
+      const matchingSubcategories = allSubcategories.filter(sub =>
         sub.category_id === category.id && sub.name.toLowerCase().includes(query)
       );
 
@@ -334,11 +334,11 @@ const VaultHome = () => {
             const yearOnly = format(uploadDate, 'yyyy');
             const monthOnly = format(uploadDate, 'MMM').toLowerCase();
             const dayMonth = format(uploadDate, 'dd MMM').toLowerCase();
-            
-            dateMatch = formattedDate.includes(query) || 
-                       yearOnly.includes(query) || 
-                       monthOnly.includes(query) ||
-                       dayMonth.includes(query);
+
+            dateMatch = formattedDate.includes(query) ||
+              yearOnly.includes(query) ||
+              monthOnly.includes(query) ||
+              dayMonth.includes(query);
           } catch (e) {
             // Invalid date, skip
           }
@@ -378,7 +378,7 @@ const VaultHome = () => {
             className="pl-12 pr-12 h-12 bg-[#F5F5F5] border-none rounded-xl"
           />
           {searchQuery && (
-            <button 
+            <button
               onClick={() => setSearchQuery("")}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
             >
@@ -403,7 +403,7 @@ const VaultHome = () => {
             <p className="text-sm text-[#626C71] max-w-xs">
               Try adjusting your search or browse all categories
             </p>
-            <Button 
+            <Button
               onClick={() => setSearchQuery("")}
               className="mt-4"
               variant="outline"
@@ -412,39 +412,39 @@ const VaultHome = () => {
             </Button>
           </div>
         ) : (
-          <div className={searchQuery ? "space-y-4" : "grid grid-cols-2 gap-3"}>
+          <div className={searchQuery ? "space-y-4" : "grid grid-cols-2 gap-3 items-stretch"}>
             {filteredResults.map((result) => {
               const category = result.category;
               const Icon = category.icon;
-              
+
               return (
-                <div key={category.id} className={searchQuery ? "space-y-2" : ""}>
+                <div key={category.id} className={searchQuery ? "space-y-2" : "h-full"}>
                   {/* Category Tile */}
-                  <div className="relative">
+                  <div className="relative h-full">
                     <button
                       onClick={() => navigate(`/vault/${category.id}`)}
-                      className={`w-full bg-[#F3E8FF] rounded-2xl hover:opacity-80 transition-opacity ${
-                        searchQuery 
-                          ? "p-4 flex items-center gap-4" 
-                          : "p-4 flex flex-col items-center text-center"
-                      }`}
+                      className={`w-full bg-[#F3E8FF] rounded-2xl hover:opacity-80 transition-opacity ${searchQuery
+                        ? "p-4 flex items-center gap-4"
+                        : "p-4 h-full flex flex-col items-center justify-between text-center min-h-[140px]"
+                        }`}
                     >
-                      <div className={`${category.iconBgColor} rounded-full flex items-center justify-center flex-shrink-0 ${
-                        searchQuery ? "w-14 h-14" : "w-12 h-12"
-                      }`}>
-                        <Icon className={`text-[#6D28D9] ${searchQuery ? "w-7 h-7" : "w-6 h-6"}`} />
+                      <div className={searchQuery ? "" : "flex flex-col items-center"}>
+                        <div className={`${category.iconBgColor} rounded-full flex items-center justify-center flex-shrink-0 ${searchQuery ? "w-14 h-14" : "w-12 h-12"
+                          }`}>
+                          <Icon className={`text-[#6D28D9] ${searchQuery ? "w-7 h-7" : "w-6 h-6"}`} />
+                        </div>
+                        <div className={searchQuery ? "flex-1 text-left" : "w-full mt-2"}>
+                          <h3 className={`font-semibold text-[#1F2121] line-clamp-2 ${searchQuery ? "text-lg" : "text-base"}`}>
+                            {category.name}
+                          </h3>
+                        </div>
                       </div>
-                      <div className={searchQuery ? "flex-1 text-left" : "w-full mt-2"}>
-                        <h3 className={`font-semibold text-[#1F2121] ${searchQuery ? "text-lg" : "text-base"}`}>
-                          {category.name}
-                        </h3>
-                        <p className="text-sm text-[#626C71] mt-1">
-                          {searchQuery && result.totalMatches > 0 
-                            ? `${result.totalMatches} ${result.totalMatches === 1 ? 'match' : 'matches'}`
-                            : `${category.documentCount} Documents`
-                          }
-                        </p>
-                      </div>
+                      <p className="text-sm text-[#626C71] mt-1">
+                        {searchQuery && result.totalMatches > 0
+                          ? `${result.totalMatches} ${result.totalMatches === 1 ? 'match' : 'matches'}`
+                          : `${category.documentCount} Documents`
+                        }
+                      </p>
                     </button>
 
                     {/* Action Menu - Always show for all categories */}
@@ -605,24 +605,25 @@ const VaultHome = () => {
       )}
 
       <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
-        <div className="flex justify-around items-center h-14 max-w-md mx-auto">
+        <div className="flex justify-around items-center h-16 max-w-md mx-auto">
           <button
             onClick={() => navigate("/dashboard")}
-            className="flex flex-col items-center gap-0.5 text-muted-foreground hover:text-foreground"
+            className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
           >
-            <Home className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Home</span>
+            <Home className="w-6 h-6" />
+            <span className="text-xs font-medium">Home</span>
           </button>
-          <button className="flex flex-col items-center gap-0.5 text-primary">
-            <Vault className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Vault</span>
+          <button className="flex flex-col items-center gap-1 text-primary relative">
+            <Vault className="w-6 h-6" />
+            <span className="text-xs font-medium">Vault</span>
+            <div className="absolute -bottom-2 w-12 h-1 bg-primary rounded-full" />
           </button>
           <button
             onClick={() => navigate("/settings")}
-            className="flex flex-col items-center gap-0.5 text-muted-foreground hover:text-foreground"
+            className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
           >
-            <Settings className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Settings</span>
+            <Settings className="w-6 h-6" />
+            <span className="text-xs font-medium">Settings</span>
           </button>
         </div>
       </div>
