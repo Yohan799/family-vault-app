@@ -322,6 +322,29 @@ export const truncateText = (text: string, maxLength: number): string => {
 // TYPE EXPORTS
 // ============================================
 
+// ============================================
+// GMAIL-ONLY AND 10-DIGIT PHONE VALIDATION
+// ============================================
+
+/**
+ * Validates Gmail-only email addresses
+ */
+export const validateGmailOnly = (email: string): boolean => {
+  const gmailRegex = /^[^\s@]+@gmail\.com$/i;
+  return gmailRegex.test(email);
+};
+
+/**
+ * Validates phone number is exactly 10 digits
+ */
+export const validatePhoneExact10 = (phone: string): boolean => {
+  return /^[0-9]{10}$/.test(phone);
+};
+
+// ============================================
+// TYPE EXPORTS
+// ============================================
+
 export type NomineeFormData = z.infer<typeof nomineeSchema>;
 export type TimeCapsuleFormData = z.infer<typeof timeCapsuleSchema>;
 export type InactivityTriggerFormData = z.infer<typeof inactivityTriggerSchema>;

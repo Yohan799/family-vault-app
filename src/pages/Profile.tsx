@@ -29,9 +29,9 @@ const Profile = () => {
       {/* Header */}
       <div className="bg-primary/20 text-foreground p-6 rounded-b-3xl">
         <div className="flex items-center gap-4 mb-8">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="text-foreground">
-            <ArrowLeft className="w-6 h-6" />
-          </Button>
+          <button onClick={() => navigate("/settings")} className="p-2 hover:bg-accent rounded-full transition-colors">
+            <ArrowLeft className="w-5 h-5 text-foreground" />
+          </button>
           <h1 className="text-2xl font-bold">Profile</h1>
         </div>
 

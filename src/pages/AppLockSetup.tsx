@@ -113,11 +113,8 @@ const AppLockSetup = () => {
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center gap-3 pt-4">
-          <button
-            onClick={() => navigate("/settings")}
-            className="p-2 hover:bg-accent rounded-full transition-colors"
-          >
-            <ArrowLeft className="w-6 h-6 text-foreground" />
+          <button onClick={() => navigate("/settings")} className="p-2 hover:bg-accent rounded-full transition-colors">
+            <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
           <h1 className="text-2xl font-bold text-foreground">App Lock</h1>
         </div>

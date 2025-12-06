@@ -1,4 +1,5 @@
 import { ArrowLeft, CalendarIcon, ChevronRight } from "lucide-react";
+import { validatePhoneExact10 } from "@/lib/validation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -107,6 +108,16 @@ const EditProfile = () => {
   const handleSave = async () => {
     if (!user) return;
 
+    // Phone validation (if provided)
+    if (formData.phone && !validatePhoneExact10(formData.phone)) {
+      toast({
+        title: "Invalid phone number",
+        description: "Phone number must be exactly 10 digits",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsSaving(true);
     try {
       // Format date as local YYYY-MM-DD to avoid timezone issues
@@ -162,9 +173,9 @@ const EditProfile = () => {
       {/* Header */}
       <div className="bg-primary/20 text-foreground p-6 rounded-b-3xl">
         <div className="flex items-center gap-4 mb-8">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/profile")} className="text-foreground">
-            <ArrowLeft className="w-6 h-6" />
-          </Button>
+          <button onClick={() => navigate("/profile")} className="p-2 hover:bg-accent rounded-full transition-colors">
+            <ArrowLeft className="w-5 h-5 text-foreground" />
+          </button>
           <h1 className="text-2xl font-bold">Edit Profile</h1>
         </div>
 

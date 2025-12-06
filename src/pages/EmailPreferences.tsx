@@ -188,14 +188,9 @@ const EmailPreferences = () => {
       <div className="min-h-screen bg-background pb-safe">
         <div className="bg-primary/20 text-foreground p-4 sm:p-6 rounded-b-3xl">
           <div className="flex items-center gap-3">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => navigate("/settings")} 
-              className="text-primary-foreground min-h-[44px] min-w-[44px]"
-            >
-              <ArrowLeft className="w-6 h-6" />
-            </Button>
+            <button onClick={() => navigate("/settings")} className="p-2 hover:bg-accent rounded-full transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center">
+              <ArrowLeft className="w-5 h-5 text-foreground" />
+            </button>
             <h1 className="text-xl sm:text-2xl font-bold">Email Preferences</h1>
           </div>
         </div>
@@ -211,14 +206,9 @@ const EmailPreferences = () => {
       {/* Mobile-optimized header */}
       <div className="bg-primary/20 text-foreground p-4 sm:p-6 rounded-b-3xl">
         <div className="flex items-center gap-3">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => navigate("/settings")} 
-            className="text-primary-foreground min-h-[44px] min-w-[44px]"
-          >
-            <ArrowLeft className="w-6 h-6" />
-          </Button>
+          <button onClick={() => navigate("/settings")} className="p-2 hover:bg-accent rounded-full transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center">
+            <ArrowLeft className="w-5 h-5 text-foreground" />
+          </button>
           <h1 className="text-xl sm:text-2xl font-bold">Email Preferences</h1>
         </div>
       </div>

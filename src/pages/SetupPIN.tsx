@@ -87,11 +87,8 @@ const SetupPIN = () => {
       <div className="max-w-md mx-auto w-full flex-1 flex flex-col">
         {/* Header */}
         <div className="flex items-center gap-3 pt-2">
-          <button
-            onClick={() => step === "confirm" ? setStep("create") : navigate("/app-lock-setup")}
-            className="p-2 hover:bg-accent rounded-full transition-colors"
-          >
-            <ArrowLeft className="w-6 h-6 text-foreground" />
+          <button onClick={() => step === "confirm" ? setStep("create") : navigate("/app-lock-setup")} className="p-2 hover:bg-accent rounded-full transition-colors">
+            <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
           <h1 className="text-2xl font-bold text-foreground">
             {step === "create" ? "Create PIN" : "Confirm PIN"}
