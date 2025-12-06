@@ -15,6 +15,7 @@ import { ActionMenu, createDocumentActionMenu } from "@/components/vault/ActionM
 import { DocumentViewerModal } from "@/components/vault/DocumentViewerModal";
 import { filterItems, debounce } from "@/lib/searchUtils";
 import { SubcategoryViewSkeleton } from "@/components/skeletons";
+import { supabase } from "@/integrations/supabase/client";
 
 const SubcategoryView = () => {
   const navigate = useNavigate();
@@ -41,42 +42,108 @@ const SubcategoryView = () => {
 
   const loadData = async () => {
     try {
-      let foundCategory = vaultCategories.find((cat) => cat.id === categoryId);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate("/vault");
+        return;
+      }
 
-      if (!foundCategory) {
-        const customCats = localStorage.getItem('custom_categories');
-        if (customCats) {
-          const parsed = JSON.parse(customCats);
-          foundCategory = parsed.find((cat: any) => cat.id === categoryId);
-          if (foundCategory) foundCategory.icon = Folder;
+      // Check if default category first
+      const defaultCategory = vaultCategories.find(cat => cat.id === categoryId);
+      
+      // Load category from database if not default
+      let foundCategory: any = null;
+      if (defaultCategory) {
+        foundCategory = {
+          id: defaultCategory.id,
+          name: defaultCategory.name,
+          icon: defaultCategory.icon,
+          iconBgColor: defaultCategory.iconBgColor,
+          subcategories: defaultCategory.subcategories,
+          isCustom: false
+        };
+      } else {
+        const { data: categoryData } = await supabase
+          .from('categories')
+          .select('*')
+          .eq('id', categoryId)
+          .eq('user_id', user.id)
+          .is('deleted_at', null)
+          .maybeSingle();
+
+        if (categoryData) {
+          foundCategory = {
+            id: categoryData.id,
+            name: categoryData.name,
+            icon: Folder,
+            iconBgColor: categoryData.icon_bg_color || "bg-yellow-100",
+            subcategories: [],
+            isCustom: true
+          };
         }
       }
 
       if (!foundCategory) {
         setLoading(false);
+        navigate("/vault");
         return;
       }
       setCategory(foundCategory);
 
-      let foundSubcategory = foundCategory.subcategories?.find((sub) => sub.id === subcategoryId);
+      // Check if default subcategory first
+      const defaultSub = defaultCategory?.subcategories?.find(sub => sub.id === subcategoryId);
+      
+      let foundSubcategory: any = null;
+      if (defaultSub) {
+        foundSubcategory = {
+          id: defaultSub.id,
+          name: defaultSub.name,
+          icon: defaultSub.icon,
+          isCustom: false
+        };
+      } else {
+        const { data: subData } = await supabase
+          .from('subcategories')
+          .select('*')
+          .eq('id', subcategoryId)
+          .eq('user_id', user.id)
+          .is('deleted_at', null)
+          .maybeSingle();
 
-      if (!foundSubcategory) {
-        const customSubs = localStorage.getItem(`custom_subcategories_${categoryId}`);
-        if (customSubs) {
-          const parsed = JSON.parse(customSubs);
-          foundSubcategory = parsed.find((sub: any) => sub.id === subcategoryId);
-          if (foundSubcategory) foundSubcategory.icon = Folder;
+        if (subData) {
+          foundSubcategory = {
+            id: subData.id,
+            name: subData.name,
+            icon: Folder,
+            isCustom: true
+          };
         }
       }
 
+      if (!foundSubcategory) {
+        setLoading(false);
+        navigate(`/vault/${categoryId}`);
+        return;
+      }
       setSubcategory(foundSubcategory);
 
-      const storedFolders = localStorage.getItem(`nested_folders_${subcategoryId}`);
-      if (storedFolders) {
-        setNestedFolders(JSON.parse(storedFolders));
-      } else {
-        setNestedFolders([]);
-      }
+      // Load folders from database
+      const { data: foldersData } = await supabase
+        .from('folders')
+        .select('*')
+        .eq('subcategory_id', subcategoryId)
+        .eq('user_id', user.id)
+        .is('parent_folder_id', null)
+        .is('deleted_at', null);
+
+      const folders = (foldersData || []).map(folder => ({
+        id: folder.id,
+        name: folder.name,
+        icon: Folder,
+        documentCount: 0,
+        isCustom: true
+      }));
+      setNestedFolders(folders);
 
       // Load documents from Supabase
       const { getDocuments, formatFileSize } = await import('@/lib/documentStorage');
@@ -116,7 +183,7 @@ const SubcategoryView = () => {
     loadData();
   }, [categoryId, subcategoryId]);
 
-  const handleAddFolder = () => {
+  const handleAddFolder = async () => {
     const sanitizedName = sanitizeInput(folderName);
     const validation = categoryNameSchema.safeParse(sanitizedName);
 
@@ -143,28 +210,48 @@ const SubcategoryView = () => {
       return;
     }
 
-    const newFolder = {
-      id: `folder-${Date.now()}`,
-      name: validation.data,
-      icon: Folder,
-      documentCount: 0,
-      depth: 1,
-      isNested: true,
-      parentId: subcategoryId,
-      isCustom: true
-    };
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-    const updated = [...nestedFolders, newFolder];
-    setNestedFolders(updated);
-    localStorage.setItem(`nested_folders_${subcategoryId}`, JSON.stringify(updated));
+      const { data: newFolderData, error } = await supabase
+        .from('folders')
+        .insert({
+          name: validation.data,
+          category_id: categoryId,
+          subcategory_id: subcategoryId,
+          user_id: user.id
+        })
+        .select()
+        .single();
 
-    toast({
-      title: "Folder created!",
-      description: `${validation.data} has been added`
-    });
+      if (error) throw error;
 
-    setFolderName("");
-    setShowAddFolderDialog(false);
+      const newFolder = {
+        id: newFolderData.id,
+        name: newFolderData.name,
+        icon: Folder,
+        documentCount: 0,
+        isCustom: true
+      };
+
+      setNestedFolders([...nestedFolders, newFolder]);
+
+      toast({
+        title: "Folder created!",
+        description: `${validation.data} has been added`
+      });
+
+      setFolderName("");
+      setShowAddFolderDialog(false);
+    } catch (error) {
+      console.error("Error creating folder:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create folder",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleDeleteClick = (folder: any, e: React.MouseEvent) => {
@@ -172,23 +259,38 @@ const SubcategoryView = () => {
     setDeleteConfirm({ show: true, folder });
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!deleteConfirm.folder) return;
 
-    const folderId = deleteConfirm.folder.id;
-    const folderName = deleteConfirm.folder.name;
+    const folderIdToDelete = deleteConfirm.folder.id;
+    const folderNameToDelete = deleteConfirm.folder.name;
 
-    const updated = nestedFolders.filter(f => f.id !== folderId);
-    setNestedFolders(updated);
-    localStorage.setItem(`nested_folders_${subcategoryId}`, JSON.stringify(updated));
-    localStorage.removeItem(`nested_folders_${folderId}`);
+    try {
+      const { error } = await supabase
+        .from('folders')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', folderIdToDelete);
 
-    toast({
-      title: "Folder deleted",
-      description: `${folderName} has been removed`
-    });
+      if (error) throw error;
 
-    setDeleteConfirm({ show: false, folder: null });
+      const updated = nestedFolders.filter(f => f.id !== folderIdToDelete);
+      setNestedFolders(updated);
+
+      toast({
+        title: "Folder deleted",
+        description: `${folderNameToDelete} has been removed`
+      });
+
+      setDeleteConfirm({ show: false, folder: null });
+    } catch (error) {
+      console.error("Error deleting folder:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete folder",
+        variant: "destructive"
+      });
+      setDeleteConfirm({ show: false, folder: null });
+    }
   };
 
   const handleDocumentOptions = (doc: any) => {
