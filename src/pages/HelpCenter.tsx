@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
@@ -14,6 +15,7 @@ const HelpCenter = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { profile } = useAuth();
+  const { t } = useLanguage();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     subject: "",
@@ -22,20 +24,20 @@ const HelpCenter = () => {
 
   const faqs = [
     {
-      question: "How do I upload documents?",
-      answer: "Go to Vault, select a category, and tap the + button. You can upload from your device, scan documents with your camera, or import from Google Drive."
+      question: t("help.faq1Question"),
+      answer: t("help.faq1Answer")
     },
     {
-      question: "What is Two-Factor Authentication?",
-      answer: "2FA adds an extra security layer. When enabled, you'll receive a code via email each time you sign in, in addition to your password."
+      question: t("help.faq2Question"),
+      answer: t("help.faq2Answer")
     },
     {
-      question: "How do Time Capsules work?",
-      answer: "Time Capsules let you schedule messages to be sent on a specific date. Create one from your dashboard, set a release date, and we'll automatically email it to your recipient."
+      question: t("help.faq3Question"),
+      answer: t("help.faq3Answer")
     },
     {
-      question: "What happens if I'm inactive?",
-      answer: "If enabled, the Inactivity Trigger monitors your activity. After prolonged inactivity, it sends alerts to you, then your nominees, and can grant emergency access to your vault."
+      question: t("help.faq4Question"),
+      answer: t("help.faq4Answer")
     },
   ];
 
@@ -57,13 +59,13 @@ const HelpCenter = () => {
       if (error) throw error;
 
       toast({
-        title: "Message Sent",
-        description: "We'll get back to you soon!",
+        title: t("help.messageSent"),
+        description: t("help.weWillGetBack"),
       });
       setFormData({ subject: "", message: "" });
     } catch (error: any) {
       toast({
-        title: "Failed to Send",
+        title: t("help.failedToSend"),
         description: error.message,
         variant: "destructive",
       });
@@ -77,7 +79,7 @@ const HelpCenter = () => {
       <div className="bg-primary/20 text-foreground p-6 rounded-b-3xl">
         <div className="flex items-center gap-4">
           <BackButton to="/settings" />
-          <h1 className="text-2xl font-bold">Help & Support</h1>
+          <h1 className="text-2xl font-bold">{t("help.title")}</h1>
         </div>
       </div>
 
@@ -88,20 +90,20 @@ const HelpCenter = () => {
             <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
               <Phone className="w-6 h-6 text-green-600" />
             </div>
-            <span className="text-xs font-medium text-foreground">Call</span>
+            <span className="text-xs font-medium text-foreground">{t("help.call")}</span>
           </a>
           
           <a href="mailto:support@familyvault.com" className="bg-card rounded-2xl p-4 flex flex-col items-center gap-2 hover:bg-accent transition-colors">
             <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
               <Mail className="w-6 h-6 text-blue-600" />
             </div>
-            <span className="text-xs font-medium text-foreground">Email</span>
+            <span className="text-xs font-medium text-foreground">{t("help.email")}</span>
           </a>
         </div>
 
         {/* FAQs */}
         <div className="space-y-3">
-          <h2 className="text-lg font-semibold text-foreground">Frequently Asked Questions</h2>
+          <h2 className="text-lg font-semibold text-foreground">{t("help.faq")}</h2>
           <Accordion type="single" collapsible className="space-y-2">
             {faqs.map((faq, idx) => (
               <AccordionItem key={idx} value={`faq-${idx}`} className="bg-card rounded-2xl px-4 border-0">
@@ -118,17 +120,17 @@ const HelpCenter = () => {
 
         {/* Contact Form */}
         <div className="bg-card rounded-2xl p-5 space-y-4">
-          <h2 className="text-lg font-semibold text-foreground">Send us a message</h2>
+          <h2 className="text-lg font-semibold text-foreground">{t("help.sendMessage")}</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
-              placeholder="Subject"
+              placeholder={t("help.subject")}
               value={formData.subject}
               onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
               required
               className="h-12 rounded-xl"
             />
             <Textarea
-              placeholder="Describe your issue or question..."
+              placeholder={t("help.describeIssue")}
               value={formData.message}
               onChange={(e) => setFormData({ ...formData, message: e.target.value })}
               required
@@ -136,7 +138,7 @@ const HelpCenter = () => {
             />
             <Button type="submit" disabled={isSubmitting} className="w-full h-12 rounded-xl">
               <Send className="w-4 h-4 mr-2" />
-              {isSubmitting ? "Sending..." : "Send Message"}
+              {isSubmitting ? t("help.sending") : t("help.sendButton")}
             </Button>
           </form>
         </div>

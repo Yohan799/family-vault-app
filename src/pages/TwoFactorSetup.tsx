@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { NotificationTemplates } from "@/services/pushNotificationHelper";
 
@@ -12,13 +13,14 @@ const TwoFactorSetup = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, profile, updateProfile } = useAuth();
+  const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleEnable2FA = async () => {
     if (!user || !profile?.email) {
       toast({
-        title: "Error",
-        description: "User information not found",
+        title: t("toast.error"),
+        description: t("twoFactorSetup.userNotFound"),
         variant: "destructive",
       });
       return;
@@ -26,7 +28,6 @@ const TwoFactorSetup = () => {
 
     setIsLoading(true);
     try {
-      // Send OTP to user's email
       const { data, error } = await supabase.functions.invoke("send-2fa-otp", {
         body: { email: profile.email, userId: user.id },
       });
@@ -34,17 +35,16 @@ const TwoFactorSetup = () => {
       if (error) throw error;
 
       toast({
-        title: "Verification Code Sent",
-        description: `Please check your email at ${profile.email}`,
+        title: t("twoFactorSetup.codeSent"),
+        description: `${t("twoFactorSetup.checkEmail")} ${profile.email}`,
       });
 
-      // Navigate to verification page
       navigate("/two-factor-verify");
     } catch (error: any) {
       console.error("Failed to send OTP:", error);
       toast({
-        title: "Failed to Send Code",
-        description: error.message || "Please try again",
+        title: t("twoFactorSetup.sendFailed"),
+        description: error.message || t("common.tryAgain"),
         variant: "destructive",
       });
     } finally {
@@ -59,19 +59,18 @@ const TwoFactorSetup = () => {
     try {
       await updateProfile({ two_factor_enabled: false });
 
-      // Send push notification
       if (user) {
         NotificationTemplates.twoFactorDisabled(user.id);
       }
 
       toast({
-        title: "2FA Disabled",
-        description: "Two-factor authentication has been disabled",
+        title: t("twoFactorSetup.disabled"),
+        description: t("twoFactorSetup.disabledDesc"),
       });
       navigate("/settings");
     } catch (error: any) {
       toast({
-        title: "Failed to Disable 2FA",
+        title: t("twoFactorSetup.disableFailed"),
         description: error.message,
         variant: "destructive",
       });
@@ -86,7 +85,7 @@ const TwoFactorSetup = () => {
         {/* Header */}
         <div className="flex items-center gap-3 pt-4">
           <BackButton to="/settings" />
-          <h1 className="text-2xl font-bold text-foreground">Two-Factor Authentication</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t("twoFactorSetup.title")}</h1>
         </div>
 
         {/* 2FA Card */}
@@ -98,9 +97,9 @@ const TwoFactorSetup = () => {
           </div>
 
           <div className="text-center space-y-2">
-            <h2 className="text-xl font-semibold text-foreground">Secure Your Account</h2>
+            <h2 className="text-xl font-semibold text-foreground">{t("twoFactorSetup.secureAccount")}</h2>
             <p className="text-muted-foreground">
-              Add an extra layer of security by requiring a verification code when signing in
+              {t("twoFactorSetup.addExtraLayer")}
             </p>
           </div>
 
@@ -108,34 +107,34 @@ const TwoFactorSetup = () => {
             <div className="flex items-start gap-3">
               <Mail className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
               <div className="space-y-1">
-                <p className="font-medium text-foreground">Email Verification</p>
+                <p className="font-medium text-foreground">{t("twoFactorSetup.emailVerification")}</p>
                 <p className="text-sm text-muted-foreground">
-                  We'll send a 6-digit code to <strong>{profile?.email}</strong> each time you sign in
+                  {t("twoFactorSetup.sendCodeTo")} <strong>{profile?.email}</strong> {t("twoFactorSetup.eachSignIn")}
                 </p>
               </div>
             </div>
           </div>
 
           <div className="space-y-4 pt-2">
-            <h3 className="font-semibold text-foreground">How it works:</h3>
+            <h3 className="font-semibold text-foreground">{t("twoFactorSetup.howItWorks")}</h3>
             <div className="space-y-3">
               <div className="flex items-start gap-3">
                 <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                   <span className="text-sm font-semibold text-primary">1</span>
                 </div>
-                <p className="text-sm text-muted-foreground">Sign in with your email and password</p>
+                <p className="text-sm text-muted-foreground">{t("twoFactorSetup.step1")}</p>
               </div>
               <div className="flex items-start gap-3">
                 <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                   <span className="text-sm font-semibold text-primary">2</span>
                 </div>
-                <p className="text-sm text-muted-foreground">Receive a verification code via email</p>
+                <p className="text-sm text-muted-foreground">{t("twoFactorSetup.step2")}</p>
               </div>
               <div className="flex items-start gap-3">
                 <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                   <span className="text-sm font-semibold text-primary">3</span>
                 </div>
-                <p className="text-sm text-muted-foreground">Enter the code to complete sign in</p>
+                <p className="text-sm text-muted-foreground">{t("twoFactorSetup.step3")}</p>
               </div>
             </div>
           </div>
@@ -147,7 +146,7 @@ const TwoFactorSetup = () => {
               variant="destructive"
               className="w-full h-12 text-base font-semibold rounded-2xl"
             >
-              {isLoading ? "Disabling..." : "Disable Two-Factor Authentication"}
+              {isLoading ? t("twoFactorSetup.disabling") : t("twoFactorSetup.disableButton")}
             </Button>
           ) : (
             <Button
@@ -155,7 +154,7 @@ const TwoFactorSetup = () => {
               disabled={isLoading}
               className="w-full h-12 text-base font-semibold rounded-2xl"
             >
-              {isLoading ? "Sending Code..." : "Enable Two-Factor Authentication"}
+              {isLoading ? t("twoFactorSetup.sendingCode") : t("twoFactorSetup.enableButton")}
             </Button>
           )}
         </div>

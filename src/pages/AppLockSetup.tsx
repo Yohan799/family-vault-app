@@ -5,6 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { updateLockType, saveLocalLockPreference, clearLocalLockPreferences } from "@/services/appLockService";
 import { Capacitor } from "@capacitor/core";
 
@@ -12,6 +13,7 @@ const AppLockSetup = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, profile, refreshProfile } = useAuth();
+  const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
   const [biometricEnabled, setBiometricEnabled] = useState(false);
   const [pinEnabled, setPinEnabled] = useState(false);
@@ -27,22 +29,21 @@ const AppLockSetup = () => {
     if (!user) return;
 
     if (enabled) {
-      // Check if biometric is available on native platform
       if (Capacitor.isNativePlatform()) {
         setIsLoading(true);
         try {
           await updateLockType(user.id, "biometric");
-          await saveLocalLockPreference("biometric"); // Save locally for pre-login lock
+          await saveLocalLockPreference("biometric");
           setBiometricEnabled(true);
           setPinEnabled(false);
           await refreshProfile?.();
           toast({
-            title: "Biometric Lock Enabled",
-            description: "Lock screen will show when you open the app",
+            title: t("appLock.biometricEnabled"),
+            description: t("appLock.lockScreenWillShow"),
           });
         } catch (error: any) {
           toast({
-            title: "Failed to Enable Biometric",
+            title: t("appLock.biometricFailed"),
             description: error.message,
             variant: "destructive",
           });
@@ -51,25 +52,24 @@ const AppLockSetup = () => {
         }
       } else {
         toast({
-          title: "Biometric Not Available",
-          description: "Biometric authentication requires the mobile app",
+          title: t("appLock.biometricNotAvailable"),
+          description: t("appLock.requiresMobileApp"),
         });
       }
     } else {
-      // Disable biometric
       setIsLoading(true);
       try {
         await updateLockType(user.id, null);
-        await clearLocalLockPreferences(); // Clear local preferences
+        await clearLocalLockPreferences();
         setBiometricEnabled(false);
         await refreshProfile?.();
         toast({
-          title: "Biometric Lock Disabled",
-          description: "App will open without authentication",
+          title: t("appLock.biometricDisabled"),
+          description: t("appLock.appWillOpenWithoutAuth"),
         });
       } catch (error: any) {
         toast({
-          title: "Error",
+          title: t("toast.error"),
           description: error.message,
           variant: "destructive",
         });
@@ -83,23 +83,21 @@ const AppLockSetup = () => {
     if (!user) return;
 
     if (enabled) {
-      // Navigate to PIN setup
       navigate("/setup-pin");
     } else {
-      // Disable PIN
       setIsLoading(true);
       try {
         await updateLockType(user.id, null);
-        await clearLocalLockPreferences(); // Clear local preferences
+        await clearLocalLockPreferences();
         setPinEnabled(false);
         await refreshProfile?.();
         toast({
-          title: "PIN Lock Disabled",
-          description: "App will open without authentication",
+          title: t("appLock.pinDisabled"),
+          description: t("appLock.appWillOpenWithoutAuth"),
         });
       } catch (error: any) {
         toast({
-          title: "Error",
+          title: t("toast.error"),
           description: error.message,
           variant: "destructive",
         });
@@ -115,13 +113,13 @@ const AppLockSetup = () => {
         {/* Header */}
         <div className="flex items-center gap-3 pt-4">
           <BackButton to="/settings" />
-          <h1 className="text-2xl font-bold text-foreground">App Lock</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t("appLock.title")}</h1>
         </div>
 
         {/* Description */}
         <div className="bg-accent/50 rounded-xl p-4">
           <p className="text-sm text-muted-foreground">
-            Add an extra layer of security by requiring authentication when opening the app
+            {t("appLock.description")}
           </p>
         </div>
 
@@ -134,8 +132,8 @@ const AppLockSetup = () => {
                 <Fingerprint className="w-6 h-6 text-primary" />
               </div>
               <div className="flex-1 space-y-1">
-                <h3 className="font-semibold text-foreground">Biometric Lock</h3>
-                <p className="text-sm text-muted-foreground">Use fingerprint or Face ID</p>
+                <h3 className="font-semibold text-foreground">{t("appLock.biometricLock")}</h3>
+                <p className="text-sm text-muted-foreground">{t("appLock.useFingerprintOrFace")}</p>
               </div>
               <Switch
                 checked={biometricEnabled}
@@ -152,8 +150,8 @@ const AppLockSetup = () => {
                 <KeyRound className="w-6 h-6 text-primary" />
               </div>
               <div className="flex-1 space-y-1">
-                <h3 className="font-semibold text-foreground">PIN Lock</h3>
-                <p className="text-sm text-muted-foreground">Set a 6-digit PIN code</p>
+                <h3 className="font-semibold text-foreground">{t("appLock.pinLock")}</h3>
+                <p className="text-sm text-muted-foreground">{t("appLock.set6DigitPin")}</p>
               </div>
               <Switch
                 checked={pinEnabled}
@@ -168,7 +166,7 @@ const AppLockSetup = () => {
         {(biometricEnabled || pinEnabled) && (
           <div className="bg-primary/10 rounded-xl p-4">
             <p className="text-sm text-primary font-medium">
-              App lock is active. You'll need to authenticate when opening the app.
+              {t("appLock.lockActiveMessage")}
             </p>
           </div>
         )}

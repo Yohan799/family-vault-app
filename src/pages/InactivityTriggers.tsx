@@ -11,11 +11,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { getDaysSinceActivity } from "@/lib/activityTracking";
 
 const InactivityTriggers = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
+    const { t } = useLanguage();
     const [settings, setSettings] = useState({
         isActive: false,
         inactiveDays: 7,
@@ -37,7 +39,6 @@ const InactivityTriggers = () => {
         try {
             setLoading(true);
 
-            // Load from database
             const { data, error } = await supabase
                 .from("inactivity_triggers")
                 .select("*")
@@ -46,7 +47,7 @@ const InactivityTriggers = () => {
 
             if (error && error.code !== "PGRST116") {
                 console.error("Error loading settings:", error);
-                toast.error("Failed to load settings");
+                toast.error(t("inactivity.loadFailed"));
                 return;
             }
 
@@ -60,7 +61,6 @@ const InactivityTriggers = () => {
                 });
             }
 
-            // Get days since last activity
             const days = await getDaysSinceActivity(user.id);
             setDaysSinceActivity(days);
         } catch (err) {
@@ -72,17 +72,16 @@ const InactivityTriggers = () => {
 
     const handleSave = async () => {
         if (!user) {
-            toast.error("You must be logged in");
+            toast.error(t("auth.signIn"));
             return;
         }
 
         if (settings.inactiveDays < 1 || settings.inactiveDays > 365) {
-            toast.error("Inactivity threshold must be between 1 and 365 days");
+            toast.error(t("inactivity.thresholdError"));
             return;
         }
 
         try {
-            // Save to database
             const { error } = await supabase.from("inactivity_triggers").upsert(
                 {
                     user_id: user.id,
@@ -100,18 +99,17 @@ const InactivityTriggers = () => {
 
             if (error) {
                 console.error("Error saving settings:", error);
-                toast.error("Failed to save settings");
+                toast.error(t("inactivity.saveFailed"));
                 return;
             }
 
-            // Dispatch custom event to update dashboard
             window.dispatchEvent(new CustomEvent("inactivityTriggerUpdated"));
 
-            toast.success("Inactivity trigger settings saved successfully");
-            await loadSettings(); // Reload to get updated data
+            toast.success(t("inactivity.settingsSaved"));
+            await loadSettings();
         } catch (error) {
             console.error("Error saving settings:", error);
-            toast.error("Failed to save settings");
+            toast.error(t("inactivity.saveFailed"));
         }
     };
 
@@ -122,8 +120,8 @@ const InactivityTriggers = () => {
                 <div className="flex items-center gap-4 mb-4">
                     <BackButton />
                     <div className="flex-1">
-                        <h1 className="text-2xl font-bold text-foreground">Inactivity Trigger</h1>
-                        <p className="text-sm text-muted-foreground mt-1">Set up emergency monitoring</p>
+                        <h1 className="text-2xl font-bold text-foreground">{t("inactivity.title")}</h1>
+                        <p className="text-sm text-muted-foreground mt-1">{t("inactivity.subtitle")}</p>
                     </div>
                 </div>
             </div>
@@ -138,23 +136,23 @@ const InactivityTriggers = () => {
                             </div>
                             <div className="flex-1">
                                 <h3 className="font-semibold text-lg mb-1">
-                                    Trigger Status: {settings.isActive ? "Active" : "Inactive"}
+                                    {t("inactivity.triggerStatus")}: {settings.isActive ? t("inactivity.active") : t("inactivity.inactive")}
                                 </h3>
                                 <p className="text-sm text-muted-foreground mb-2">
                                     {settings.isActive
-                                        ? `Your account is being monitored. Alerts will be sent after ${settings.inactiveDays} days of inactivity.`
-                                        : "Monitoring is currently disabled. Enable it to activate emergency protocols."}
+                                        ? t("inactivity.accountMonitored", { days: settings.inactiveDays.toString() })
+                                        : t("inactivity.monitoringDisabled")}
                                 </p>
                                 {settings.isActive && (
                                     <div className="mt-3 p-3 bg-background rounded-lg border">
                                         <p className="text-sm font-medium">
-                                            Last activity: {daysSinceActivity === 0 ? "Today" : `${daysSinceActivity} days ago`}
+                                            {t("inactivity.lastActivity")}: {daysSinceActivity === 0 ? t("inactivity.today") : `${daysSinceActivity} ${t("inactivity.days")}`}
                                         </p>
                                         {daysSinceActivity > 0 && (
                                             <p className="text-xs text-muted-foreground mt-1">
                                                 {daysSinceActivity >= settings.inactiveDays
-                                                    ? "⚠️ Emergency protocols may be activated"
-                                                    : `${settings.inactiveDays - daysSinceActivity} days until alert`}
+                                                    ? t("inactivity.emergencyMayActivate")
+                                                    : `${settings.inactiveDays - daysSinceActivity} ${t("inactivity.daysUntilAlert")}`}
                                             </p>
                                         )}
                                     </div>
@@ -167,21 +165,21 @@ const InactivityTriggers = () => {
                 {/* Settings Form */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Trigger Settings</CardTitle>
-                        <CardDescription>Configure your emergency monitoring system</CardDescription>
+                        <CardTitle>{t("inactivity.triggerSettings")}</CardTitle>
+                        <CardDescription>{t("inactivity.configureMonitoring")}</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <div className="flex items-center justify-between">
                             <div className="space-y-0.5">
-                                <Label>Enable Monitoring</Label>
-                                <p className="text-sm text-muted-foreground">Activate inactivity tracking</p>
+                                <Label>{t("inactivity.enableMonitoring")}</Label>
+                                <p className="text-sm text-muted-foreground">{t("inactivity.activateTracking")}</p>
                             </div>
                             <Switch
                                 checked={settings.isActive}
                                 onCheckedChange={(checked) => {
                                     setSettings((prev) => ({ ...prev, isActive: checked }));
                                     toast.success(
-                                        checked ? "Inactivity trigger turned on" : "Inactivity trigger turned off",
+                                        checked ? t("dashboard.triggerEnabled") : t("dashboard.triggerDisabled"),
                                         { duration: 2000 }
                                     );
                                 }}
@@ -189,7 +187,7 @@ const InactivityTriggers = () => {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="days">Inactive Days Threshold</Label>
+                            <Label htmlFor="days">{t("inactivity.inactiveDaysThreshold")}</Label>
                             <Input
                                 id="days"
                                 type="number"
@@ -205,15 +203,15 @@ const InactivityTriggers = () => {
                                 disabled={!settings.isActive}
                             />
                             <p className="text-xs text-muted-foreground">
-                                Days of inactivity before emergency protocols begin (1-365)
+                                {t("inactivity.daysDescription")}
                             </p>
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="message">Custom Alert Message</Label>
+                            <Label htmlFor="message">{t("inactivity.customAlertMessage")}</Label>
                             <Textarea
                                 id="message"
-                                placeholder="Enter a custom message for your alerts..."
+                                placeholder={t("inactivity.alertPlaceholder")}
                                 value={settings.customMessage}
                                 onChange={(e) =>
                                     setSettings((prev) => ({ ...prev, customMessage: e.target.value }))
@@ -224,14 +222,14 @@ const InactivityTriggers = () => {
                         </div>
 
                         <div className="space-y-3">
-                            <Label>Notification Methods</Label>
+                            <Label>{t("inactivity.notificationMethods")}</Label>
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
                                         <Mail className="h-4 w-4 text-muted-foreground" />
                                         <div>
-                                            <p className="text-sm font-medium">Email Notifications</p>
-                                            <p className="text-xs text-muted-foreground">Receive alerts via email</p>
+                                            <p className="text-sm font-medium">{t("inactivity.emailNotifications")}</p>
+                                            <p className="text-xs text-muted-foreground">{t("inactivity.emailDescription")}</p>
                                         </div>
                                     </div>
                                     <Switch
@@ -247,8 +245,8 @@ const InactivityTriggers = () => {
                                     <div className="flex items-center gap-2">
                                         <MessageSquare className="h-4 w-4 text-muted-foreground" />
                                         <div>
-                                            <p className="text-sm font-medium">SMS Notifications</p>
-                                            <p className="text-xs text-muted-foreground">Receive alerts via SMS</p>
+                                            <p className="text-sm font-medium">{t("inactivity.smsNotifications")}</p>
+                                            <p className="text-xs text-muted-foreground">{t("inactivity.smsDescription")}</p>
                                         </div>
                                     </div>
                                     <Switch
@@ -263,7 +261,7 @@ const InactivityTriggers = () => {
                         </div>
 
                         <Button onClick={handleSave} disabled={loading} className="w-full">
-                            {loading ? "Saving..." : "Save Settings"}
+                            {loading ? t("common.loading") : t("inactivity.saveSettings")}
                         </Button>
                     </CardContent>
                 </Card>
@@ -273,7 +271,7 @@ const InactivityTriggers = () => {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Shield className="h-5 w-5 text-primary" />
-                            How Inactivity Trigger Works
+                            {t("inactivity.howItWorks")}
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -282,9 +280,9 @@ const InactivityTriggers = () => {
                                 1
                             </div>
                             <div>
-                                <p className="font-medium">Days 1-3: User Alerts</p>
+                                <p className="font-medium">{t("inactivity.step1Title")}</p>
                                 <p className="text-sm text-muted-foreground">
-                                    You'll receive daily alerts to check in
+                                    {t("inactivity.step1Desc")}
                                 </p>
                             </div>
                         </div>
@@ -294,9 +292,9 @@ const InactivityTriggers = () => {
                                 2
                             </div>
                             <div>
-                                <p className="font-medium">Days 4-6: Nominee Alerts</p>
+                                <p className="font-medium">{t("inactivity.step2Title")}</p>
                                 <p className="text-sm text-muted-foreground">
-                                    Your nominees will be notified if you don't respond
+                                    {t("inactivity.step2Desc")}
                                 </p>
                             </div>
                         </div>
@@ -306,9 +304,9 @@ const InactivityTriggers = () => {
                                 3
                             </div>
                             <div>
-                                <p className="font-medium">Day 7+: Emergency Access</p>
+                                <p className="font-medium">{t("inactivity.step3Title")}</p>
                                 <p className="text-sm text-muted-foreground">
-                                    Verified nominees gain access to shared documents via OTP
+                                    {t("inactivity.step3Desc")}
                                 </p>
                             </div>
                         </div>
@@ -319,10 +317,9 @@ const InactivityTriggers = () => {
                 <div className="p-4 rounded-lg bg-muted border flex gap-3">
                     <Info className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                     <div>
-                        <p className="text-sm font-medium mb-1">Important Note</p>
+                        <p className="text-sm font-medium mb-1">{t("inactivity.importantNote")}</p>
                         <p className="text-sm text-muted-foreground">
-                            This system automatically monitors your activity. Make sure you have verified nominees
-                            and have granted them access to specific documents.
+                            {t("inactivity.noteDescription")}
                         </p>
                     </div>
                 </div>
@@ -336,21 +333,21 @@ const InactivityTriggers = () => {
                         className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
                     >
                         <Home className="w-6 h-6" />
-                        <span className="text-xs font-medium">Home</span>
+                        <span className="text-xs font-medium">{t("nav.home")}</span>
                     </button>
                     <button
                         onClick={() => navigate("/vault")}
                         className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
                     >
                         <Vault className="w-6 h-6" />
-                        <span className="text-xs font-medium">Vault</span>
+                        <span className="text-xs font-medium">{t("nav.vault")}</span>
                     </button>
                     <button
                         onClick={() => navigate("/settings")}
                         className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
                     >
                         <Settings className="w-6 h-6" />
-                        <span className="text-xs font-medium">Settings</span>
+                        <span className="text-xs font-medium">{t("nav.settings")}</span>
                     </button>
                 </div>
             </div>

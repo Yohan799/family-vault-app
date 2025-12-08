@@ -4,12 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { format } from "date-fns";
 import { ProfileSkeleton } from "@/components/skeletons";
 
 const Profile = () => {
   const navigate = useNavigate();
   const { profile, user } = useAuth();
+  const { t } = useLanguage();
 
   if (!profile || !user) {
     return <ProfileSkeleton />;
@@ -31,7 +33,7 @@ const Profile = () => {
       <div className="bg-primary/20 text-foreground p-6 rounded-b-3xl">
         <div className="flex items-center gap-4 mb-8">
           <BackButton to="/settings" />
-          <h1 className="text-2xl font-bold">Profile</h1>
+          <h1 className="text-2xl font-bold">{t("profile.title")}</h1>
         </div>
 
         {/* Profile Avatar */}
@@ -55,7 +57,7 @@ const Profile = () => {
               <User className="w-5 h-5 text-primary" />
             </div>
             <div className="flex-1">
-              <p className="text-xs text-muted-foreground">Full Name</p>
+              <p className="text-xs text-muted-foreground">{t("profile.fullName")}</p>
               <p className="font-medium text-foreground">{displayName}</p>
             </div>
           </div>
@@ -65,7 +67,7 @@ const Profile = () => {
               <Mail className="w-5 h-5 text-primary" />
             </div>
             <div className="flex-1">
-              <p className="text-xs text-muted-foreground">Email</p>
+              <p className="text-xs text-muted-foreground">{t("profile.email")}</p>
               <p className="font-medium text-foreground">{profile.email}</p>
             </div>
           </div>
@@ -75,8 +77,8 @@ const Profile = () => {
               <Phone className="w-5 h-5 text-primary" />
             </div>
             <div className="flex-1">
-              <p className="text-xs text-muted-foreground">Phone</p>
-              <p className="font-medium text-foreground">{profile.phone || "Not set"}</p>
+              <p className="text-xs text-muted-foreground">{t("profile.phone")}</p>
+              <p className="font-medium text-foreground">{profile.phone || t("profile.notSet")}</p>
             </div>
           </div>
 
@@ -85,7 +87,7 @@ const Profile = () => {
               <Calendar className="w-5 h-5 text-primary" />
             </div>
             <div className="flex-1">
-              <p className="text-xs text-muted-foreground">Member Since</p>
+              <p className="text-xs text-muted-foreground">{t("profile.memberSince")}</p>
               <p className="font-medium text-foreground">{memberSince}</p>
             </div>
           </div>
@@ -96,7 +98,7 @@ const Profile = () => {
                 <Calendar className="w-5 h-5 text-primary" />
               </div>
               <div className="flex-1">
-                <p className="text-xs text-muted-foreground">Date of Birth</p>
+                <p className="text-xs text-muted-foreground">{t("profile.dateOfBirth")}</p>
                 <p className="font-medium text-foreground">
                   {(() => {
                     const [year, month, day] = profile.date_of_birth.split('-').map(Number);
@@ -113,7 +115,7 @@ const Profile = () => {
           onClick={() => navigate("/edit-profile")}
           className="w-full bg-primary/20 hover:bg-primary/30 text-primary rounded-xl h-12"
         >
-          Edit Profile
+          {t("profile.edit")}
         </Button>
       </div>
     </div>
