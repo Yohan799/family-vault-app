@@ -120,7 +120,7 @@ const HelpCenter = () => {
 
         {/* Contact Form */}
         <div className="bg-card rounded-2xl p-5 space-y-4">
-          <h2 className="text-lg font-semibold text-foreground">{t("help.sendMessage")}</h2>
+          <h2 className="text-lg font-semibold text-foreground">{t("help.sendMessageTitle")}</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
               placeholder={t("help.subject")}
