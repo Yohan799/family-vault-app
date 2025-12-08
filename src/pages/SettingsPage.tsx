@@ -1,5 +1,6 @@
-import { Lock, Mail, Shield, Bell, HelpCircle, LogOut, Trash2, LockKeyhole, Home, ChevronRight, Vault, Settings, Smartphone } from "lucide-react";
+import { Lock, Mail, Shield, Bell, HelpCircle, LogOut, Trash2, LockKeyhole, Home, ChevronRight, Vault, Settings, Smartphone, Globe } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
@@ -15,6 +16,7 @@ const SettingsPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { profile, user, signOut, updateProfile } = useAuth();
+  const { t, currentLanguage } = useLanguage();
   const [toggleStates, setToggleStates] = useState({
     pushNotifications: false,
   });
@@ -108,12 +110,12 @@ const SettingsPage = () => {
         await unregisterDevice(user.id);
       }
       await signOut();
-      toast({ title: "Signed out", description: "See you soon!" });
+      toast({ title: t("toast.signedOut"), description: t("toast.signedOut.description") });
       navigate("/signin");
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error",
+        title: t("toast.error"),
         description: error.message || "Failed to sign out",
       });
     }
@@ -133,14 +135,14 @@ const SettingsPage = () => {
       if (error) throw error;
 
       toast({
-        title: "Account Deleted",
-        description: "Your account has been permanently deleted",
+        title: t("toast.accountDeleted"),
+        description: t("toast.accountDeleted.description"),
       });
       navigate("/welcome");
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Delete Failed",
+        title: t("toast.deleteFailed"),
         description: error.message || "Failed to delete account",
       });
     } finally {
@@ -152,23 +154,26 @@ const SettingsPage = () => {
   // Flattened list of settings
   const settings = [
     // Account
-    { icon: Lock, title: "Change Password", subtitle: "Update your password", path: "/change-password", color: "bg-blue-100" },
-    { icon: Mail, title: "Email Preferences", subtitle: "Manage email settings", path: "/email-preferences", color: "bg-indigo-100" },
+    { icon: Lock, title: t("settings.changePassword"), subtitle: t("settings.changePassword.subtitle"), path: "/change-password", color: "bg-blue-100" },
+    { icon: Mail, title: t("settings.emailPreferences"), subtitle: t("settings.emailPreferences.subtitle"), path: "/email-preferences", color: "bg-indigo-100" },
 
     // Security
-    { icon: Shield, title: "Two-Factor Auth", subtitle: profile?.two_factor_enabled ? "Enabled" : "Extra security layer", path: "/two-factor-setup", color: "bg-purple-100" },
-    { icon: Smartphone, title: "App Lock", subtitle: profile?.app_lock_type ? `Active (${profile.app_lock_type})` : "PIN or Biometric", path: "/app-lock-setup", color: "bg-violet-100" },
-    { icon: Smartphone, title: "Active Sessions", subtitle: "Manage logged-in devices", path: "/active-sessions", color: "bg-rose-100" },
+    { icon: Shield, title: t("settings.twoFactorAuth"), subtitle: profile?.two_factor_enabled ? t("settings.twoFactorAuth.enabled") : t("settings.twoFactorAuth.subtitle"), path: "/two-factor-setup", color: "bg-purple-100" },
+    { icon: Smartphone, title: t("settings.appLock"), subtitle: profile?.app_lock_type ? `${t("settings.appLock.active")} (${profile.app_lock_type})` : t("settings.appLock.subtitle"), path: "/app-lock-setup", color: "bg-violet-100" },
+    { icon: Smartphone, title: t("settings.activeSessions"), subtitle: t("settings.activeSessions.subtitle"), path: "/active-sessions", color: "bg-rose-100" },
 
     // Notifications
-    { icon: Bell, title: "Push Notifications", subtitle: isPushAvailable() ? "Get mobile alerts" : "Only available on mobile app", toggle: "pushNotifications", color: "bg-amber-100" },
+    { icon: Bell, title: t("settings.pushNotifications"), subtitle: isPushAvailable() ? t("settings.pushNotifications.subtitle") : t("settings.pushNotifications.mobileOnly"), toggle: "pushNotifications", color: "bg-amber-100" },
 
     // Vault
-    { icon: LockKeyhole, title: "Auto Lock Timeout", subtitle: getAutoLockLabel(profile?.auto_lock_minutes), path: "/auto-lock-timeout", color: "bg-emerald-100" },
-    { icon: Shield, title: "Backup & Restore", subtitle: "Export or restore your vault", path: "/backup-restore", color: "bg-teal-100" },
+    { icon: LockKeyhole, title: t("settings.autoLockTimeout"), subtitle: getAutoLockLabel(profile?.auto_lock_minutes), path: "/auto-lock-timeout", color: "bg-emerald-100" },
+    { icon: Shield, title: t("settings.backupRestore"), subtitle: t("settings.backupRestore.subtitle"), path: "/backup-restore", color: "bg-teal-100" },
+
+    // Language
+    { icon: Globe, title: t("settings.language"), subtitle: currentLanguage.nativeName, path: "/language-settings", color: "bg-orange-100" },
 
     // Support
-    { icon: HelpCircle, title: "Help & Support", subtitle: "FAQs, guides & contact", path: "/help-center", color: "bg-cyan-100" },
+    { icon: HelpCircle, title: t("settings.helpSupport"), subtitle: t("settings.helpSupport.subtitle"), path: "/help-center", color: "bg-cyan-100" },
   ];
 
   if (!profile) {
@@ -188,8 +193,8 @@ const SettingsPage = () => {
       {/* Header */}
       <div className="bg-primary/20 text-foreground p-6 rounded-b-3xl mb-4">
         <div className="text-center">
-          <h1 className="text-2xl font-bold">Settings</h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage your preferences</p>
+          <h1 className="text-2xl font-bold">{t("settings.title")}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{t("settings.subtitle")}</p>
         </div>
       </div>
 
@@ -255,7 +260,7 @@ const SettingsPage = () => {
             <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
               <LogOut className="w-5 h-5 text-gray-600" />
             </div>
-            <span className="font-semibold text-sm">Sign Out</span>
+            <span className="font-semibold text-sm">{t("settings.signOut")}</span>
           </button>
 
           <button
@@ -267,7 +272,7 @@ const SettingsPage = () => {
               <Trash2 className="w-5 h-5 text-destructive" />
             </div>
             <span className="font-semibold text-sm">
-              {isDeleting ? "Deleting..." : "Delete Account"}
+              {isDeleting ? t("settings.deleting") : t("settings.deleteAccount")}
             </span>
           </button>
         </div>
@@ -277,14 +282,14 @@ const SettingsPage = () => {
           open={showDeleteDialog}
           onOpenChange={setShowDeleteDialog}
           onConfirm={handleDeleteAccount}
-          title="Delete Account"
-          description="Are you sure you want to delete your account? This action cannot be undone. All your data, documents, and settings will be permanently deleted."
-          confirmText="Delete Account"
+          title={t("settings.deleteAccount.title")}
+          description={t("settings.deleteAccount.description")}
+          confirmText={t("settings.deleteAccount.confirm")}
           variant="destructive"
         />
 
         <div className="text-center text-xs text-muted-foreground pt-4 pb-2">
-          App Version 2.0.0
+          {t("settings.appVersion")}
         </div>
       </div>
 
@@ -296,18 +301,18 @@ const SettingsPage = () => {
             className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
           >
             <Home className="w-6 h-6" />
-            <span className="text-xs font-medium">Home</span>
+            <span className="text-xs font-medium">{t("nav.home")}</span>
           </button>
           <button
             onClick={() => navigate("/vault")}
             className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
           >
             <Vault className="w-6 h-6" />
-            <span className="text-xs font-medium">Vault</span>
+            <span className="text-xs font-medium">{t("nav.vault")}</span>
           </button>
           <button className="flex flex-col items-center gap-1 text-primary relative">
             <Settings className="w-6 h-6" />
-            <span className="text-xs font-medium">Settings</span>
+            <span className="text-xs font-medium">{t("nav.settings")}</span>
             <div className="absolute -bottom-2 w-12 h-1 bg-primary rounded-full" />
           </button>
         </div>
