@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -156,6 +157,46 @@ async function sendFcmNotification(
   return true;
 }
 
+// Validate authorization - returns user_id if authorized, null otherwise
+async function validateAuthorization(req: Request, targetUserId: string): Promise<{ authorized: boolean; reason?: string }> {
+  const authHeader = req.headers.get("Authorization");
+  
+  if (!authHeader) {
+    return { authorized: false, reason: "Missing authorization header" };
+  }
+
+  const token = authHeader.replace("Bearer ", "");
+
+  // Check if it's the service role key (internal server-to-server call)
+  if (token === supabaseServiceKey) {
+    console.log("Authorized via service role key (internal call)");
+    return { authorized: true };
+  }
+
+  // Otherwise, validate as a user JWT token
+  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    global: {
+      headers: { Authorization: authHeader }
+    }
+  });
+
+  const { data: { user }, error } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    console.error("JWT validation failed:", error?.message);
+    return { authorized: false, reason: "Invalid or expired token" };
+  }
+
+  // User can only send notifications to themselves
+  if (user.id !== targetUserId) {
+    console.error(`User ${user.id} attempted to send notification to ${targetUserId}`);
+    return { authorized: false, reason: "Cannot send notifications to other users" };
+  }
+
+  console.log(`Authorized via user JWT for user ${user.id}`);
+  return { authorized: true };
+}
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
@@ -163,10 +204,29 @@ serve(async (req) => {
   }
 
   try {
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
     const { user_id, title, body, data }: PushNotificationRequest = await req.json();
 
+    // Validate required fields
+    if (!user_id || !title || !body) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Missing required fields: user_id, title, body" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate authorization
+    const authResult = await validateAuthorization(req, user_id);
+    if (!authResult.authorized) {
+      console.error("Authorization failed:", authResult.reason);
+      return new Response(
+        JSON.stringify({ success: false, error: authResult.reason || "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     console.log(`Sending push notification to user ${user_id}: ${title}`);
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Save notification to database for in-app notification history
     const { error: insertError } = await supabase
