@@ -1,4 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -36,6 +40,31 @@ const GOOGLE_DOCS_EXPORT_TYPES: Record<string, string> = {
   'application/vnd.google-apps.drawing': 'application/pdf',
 };
 
+// Validate user JWT and return user info
+async function validateUser(req: Request): Promise<{ userId: string; email: string } | null> {
+  const authHeader = req.headers.get("Authorization");
+  
+  if (!authHeader) {
+    console.error("[Google Drive Proxy] Missing authorization header");
+    return null;
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    global: {
+      headers: { Authorization: authHeader }
+    }
+  });
+
+  const { data: { user }, error } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    console.error("[Google Drive Proxy] JWT validation failed:", error?.message);
+    return null;
+  }
+
+  return { userId: user.id, email: user.email || "unknown" };
+}
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -43,8 +72,19 @@ serve(async (req) => {
   }
 
   try {
+    // Validate user authentication first
+    const user = await validateUser(req);
+    if (!user) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - valid authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const body: RequestBody = await req.json();
-    console.log('[Google Drive Proxy] Action:', body.action);
+    
+    // Security audit logging with user context
+    console.log(`[Google Drive Proxy] User: ${user.userId} (${user.email}), Action: ${body.action}`);
 
     if (!body.accessToken) {
       return new Response(
@@ -64,7 +104,7 @@ serve(async (req) => {
           url += `&pageToken=${pageToken}`;
         }
 
-        console.log('[Google Drive Proxy] Listing files in folder:', parentId);
+        console.log(`[Google Drive Proxy] User ${user.userId} listing files in folder: ${parentId}`);
         
         const response = await fetch(url, {
           headers: { 'Authorization': `Bearer ${accessToken}` },
@@ -72,7 +112,7 @@ serve(async (req) => {
 
         if (!response.ok) {
           const error = await response.text();
-          console.error('[Google Drive Proxy] List error:', error);
+          console.error(`[Google Drive Proxy] User ${user.userId} list error:`, error);
           return new Response(
             JSON.stringify({ error: 'Failed to list files', details: error }),
             { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -80,7 +120,7 @@ serve(async (req) => {
         }
 
         const data = await response.json();
-        console.log('[Google Drive Proxy] Found', data.files?.length || 0, 'files');
+        console.log(`[Google Drive Proxy] User ${user.userId} found ${data.files?.length || 0} files`);
         
         return new Response(
           JSON.stringify(data),
@@ -98,7 +138,7 @@ serve(async (req) => {
           url += `&pageToken=${pageToken}`;
         }
 
-        console.log('[Google Drive Proxy] Searching for:', query);
+        console.log(`[Google Drive Proxy] User ${user.userId} searching for: ${query}`);
         
         const response = await fetch(url, {
           headers: { 'Authorization': `Bearer ${accessToken}` },
@@ -106,7 +146,7 @@ serve(async (req) => {
 
         if (!response.ok) {
           const error = await response.text();
-          console.error('[Google Drive Proxy] Search error:', error);
+          console.error(`[Google Drive Proxy] User ${user.userId} search error:`, error);
           return new Response(
             JSON.stringify({ error: 'Failed to search files', details: error }),
             { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -114,7 +154,7 @@ serve(async (req) => {
         }
 
         const data = await response.json();
-        console.log('[Google Drive Proxy] Found', data.files?.length || 0, 'files');
+        console.log(`[Google Drive Proxy] User ${user.userId} found ${data.files?.length || 0} files`);
         
         return new Response(
           JSON.stringify(data),
@@ -133,10 +173,10 @@ serve(async (req) => {
           const exportMimeType = GOOGLE_DOCS_EXPORT_TYPES[mimeType];
           downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileId}/export?mimeType=${encodeURIComponent(exportMimeType)}`;
           finalMimeType = exportMimeType;
-          console.log('[Google Drive Proxy] Exporting Google Docs file as:', exportMimeType);
+          console.log(`[Google Drive Proxy] User ${user.userId} exporting file ${fileId} as: ${exportMimeType}`);
         } else {
           downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
-          console.log('[Google Drive Proxy] Downloading file directly');
+          console.log(`[Google Drive Proxy] User ${user.userId} downloading file ${fileId} directly`);
         }
 
         const response = await fetch(downloadUrl, {
@@ -145,7 +185,7 @@ serve(async (req) => {
 
         if (!response.ok) {
           const error = await response.text();
-          console.error('[Google Drive Proxy] Download error:', error);
+          console.error(`[Google Drive Proxy] User ${user.userId} download error for file ${fileId}:`, error);
           return new Response(
             JSON.stringify({ error: 'Failed to download file', details: error }),
             { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -156,7 +196,7 @@ serve(async (req) => {
         const arrayBuffer = await blob.arrayBuffer();
         const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
         
-        console.log('[Google Drive Proxy] File downloaded, size:', blob.size);
+        console.log(`[Google Drive Proxy] User ${user.userId} downloaded file ${fileId}, size: ${blob.size}`);
         
         return new Response(
           JSON.stringify({ data: base64, mimeType: finalMimeType, size: blob.size }),
