@@ -474,6 +474,18 @@ const translations: Record<Language, Record<string, string>> = {
     "access.accessLevel": "Access Level",
     "access.noAccess": "No access granted",
     
+    // Google Drive Modal
+    "googleDrive.connectTitle": "Connect Google Drive",
+    "googleDrive.connectDescription": "To browse and import files from Google Drive, you need to connect your Google account.",
+    "googleDrive.connectionFailed": "Connection failed",
+    "googleDrive.failedAccess": "Failed to get Google Drive access",
+    "googleDrive.failedConnect": "Failed to connect Google account",
+    "googleDrive.connecting": "Connecting...",
+    "googleDrive.signIn": "Sign in with Google",
+    "googleDrive.or": "Or",
+    "googleDrive.useDevicePicker": "Use Device File Picker",
+    "googleDrive.devicePickerNote": "The device file picker can access Google Drive if the app is installed on your device.",
+    
     // Quick Action translations (for dashboard)
     "quickAction.vault.title": "Digital Vault",
     "quickAction.vault.subtitle": "Manage your secure documents",
@@ -963,7 +975,17 @@ const translations: Record<Language, Record<string, string>> = {
     "access.accessLevel": "యాక్సెస్ స్థాయి",
     "access.noAccess": "యాక్సెస్ ఇవ్వలేదు",
     
-    // Quick Action translations
+    // Google Drive Modal
+    "googleDrive.connectTitle": "Google Drive కనెక్ట్ చేయండి",
+    "googleDrive.connectDescription": "Google Drive నుండి ఫైల్స్ బ్రౌజ్ చేయడానికి మీ Google ఖాతాను కనెక్ట్ చేయాలి.",
+    "googleDrive.connectionFailed": "కనెక్షన్ విఫలమైంది",
+    "googleDrive.failedAccess": "Google Drive యాక్సెస్ పొందడంలో విఫలమైంది",
+    "googleDrive.failedConnect": "Google ఖాతా కనెక్ట్ చేయడంలో విఫలమైంది",
+    "googleDrive.connecting": "కనెక్ట్ చేస్తోంది...",
+    "googleDrive.signIn": "Google తో సైన్ ఇన్",
+    "googleDrive.or": "లేదా",
+    "googleDrive.useDevicePicker": "డివైస్ ఫైల్ పికర్ ఉపయోగించండి",
+    "googleDrive.devicePickerNote": "మీ డివైస్‌లో యాప్ ఇన్‌స్టాల్ చేయబడితే డివైస్ ఫైల్ పికర్ Google Drive ను యాక్సెస్ చేయగలదు.",
     "quickAction.vault.title": "డిజిటల్ వాల్ట్",
     "quickAction.vault.subtitle": "మీ సురక్షిత డాక్యుమెంట్లను నిర్వహించండి",
     "quickAction.nominees.title": "నామినీ సెంటర్",
@@ -1452,7 +1474,17 @@ const translations: Record<Language, Record<string, string>> = {
     "access.accessLevel": "ಪ್ರವೇಶ ಹಂತ",
     "access.noAccess": "ಪ್ರವೇಶ ನೀಡಿಲ್ಲ",
     
-    // Quick Action translations
+    // Google Drive Modal
+    "googleDrive.connectTitle": "Google Drive ಸಂಪರ್ಕಿಸಿ",
+    "googleDrive.connectDescription": "Google Drive ನಿಂದ ಫೈಲ್‌ಗಳನ್ನು ಬ್ರೌಸ್ ಮಾಡಲು ನಿಮ್ಮ Google ಖಾತೆಯನ್ನು ಸಂಪರ್ಕಿಸಬೇಕು.",
+    "googleDrive.connectionFailed": "ಸಂಪರ್ಕ ವಿಫಲವಾಯಿತು",
+    "googleDrive.failedAccess": "Google Drive ಪ್ರವೇಶ ಪಡೆಯಲು ವಿಫಲವಾಯಿತು",
+    "googleDrive.failedConnect": "Google ಖಾತೆ ಸಂಪರ್ಕಿಸಲು ವಿಫಲವಾಯಿತು",
+    "googleDrive.connecting": "ಸಂಪರ್ಕಿಸುತ್ತಿದೆ...",
+    "googleDrive.signIn": "Google ನೊಂದಿಗೆ ಸೈನ್ ಇನ್",
+    "googleDrive.or": "ಅಥವಾ",
+    "googleDrive.useDevicePicker": "ಸಾಧನ ಫೈಲ್ ಪಿಕರ್ ಬಳಸಿ",
+    "googleDrive.devicePickerNote": "ನಿಮ್ಮ ಸಾಧನದಲ್ಲಿ ಆಪ್ ಸ್ಥಾಪಿಸಿದ್ದರೆ ಸಾಧನ ಫೈಲ್ ಪಿಕರ್ Google Drive ಅನ್ನು ಪ್ರವೇಶಿಸಬಹುದು.",
     "quickAction.vault.title": "ಡಿಜಿಟಲ್ ವಾಲ್ಟ್",
     "quickAction.vault.subtitle": "ನಿಮ್ಮ ಸುರಕ್ಷಿತ ಡಾಕ್ಯುಮೆಂಟ್‌ಗಳನ್ನು ನಿರ್ವಹಿಸಿ",
     "quickAction.nominees.title": "ನಾಮಿನಿ ಕೇಂದ್ರ",
@@ -1788,7 +1820,17 @@ const translations: Record<Language, Record<string, string>> = {
     "access.accessLevel": "पहुंच स्तर",
     "access.noAccess": "पहुंच नहीं दी गई",
     
-    // Quick Action translations
+    // Google Drive Modal
+    "googleDrive.connectTitle": "Google Drive कनेक्ट करें",
+    "googleDrive.connectDescription": "Google Drive से फ़ाइलें ब्राउज़ करने के लिए अपना Google खाता कनेक्ट करें।",
+    "googleDrive.connectionFailed": "कनेक्शन विफल",
+    "googleDrive.failedAccess": "Google Drive एक्सेस प्राप्त करने में विफल",
+    "googleDrive.failedConnect": "Google खाता कनेक्ट करने में विफल",
+    "googleDrive.connecting": "कनेक्ट हो रहा है...",
+    "googleDrive.signIn": "Google से साइन इन करें",
+    "googleDrive.or": "या",
+    "googleDrive.useDevicePicker": "डिवाइस फ़ाइल पिकर उपयोग करें",
+    "googleDrive.devicePickerNote": "यदि आपके डिवाइस पर ऐप इंस्टॉल है तो डिवाइस फ़ाइल पिकर Google Drive एक्सेस कर सकता है।",
     "quickAction.vault.title": "डिजिटल वॉल्ट",
     "quickAction.vault.subtitle": "अपने सुरक्षित दस्तावेज़ प्रबंधित करें",
     "quickAction.nominees.title": "नामिनी केंद्र",
@@ -1931,12 +1973,14 @@ const translations: Record<Language, Record<string, string>> = {
     "document.unlock": "ஆவணம் திறக்கவும்",
     "document.password": "கடவுச்சொல்",
     "document.confirmPassword": "கடவுச்சொல்லை உறுதிப்படுத்தவும்",
-    "document.fromDevice": "சாதனத்திலிருந்து",
-    "document.fromGoogleDrive": "Google Drive இலிருந்து",
+    "document.fromDevice": "சாதனத்திலிருந்து பதிவேற்றம்",
+    "document.fromDeviceSubtitle": "உங்கள் கோப்புகளிலிருந்து தேர்வு செய்யவும்",
+    "document.fromGoogleDrive": "Google Drive",
+    "document.fromGoogleDriveSubtitle": "Drive இலிருந்து இறக்குமதி",
     "document.scanDocument": "ஆவணம் ஸ்கேன்",
+    "document.scanSubtitle": "ஆட்டோ எட்ஜ் கண்டறிதலுடன் கேமரா பயன்படுத்தவும்",
     "document.maxSize": "அதிகபட்ச கோப்பு அளவு: 20MB",
     
-    // Subcategory
     "subcategory.add": "துணைவகை சேர்க்கவும்",
     "subcategory.name": "துணைவகை பெயர்",
     "subcategory.namePlaceholder": "எ.கா. வீடு 1, சொத்து A, போன்றவை.",
@@ -2165,7 +2209,17 @@ const translations: Record<Language, Record<string, string>> = {
     "access.accessLevel": "அணுகல் நிலை",
     "access.noAccess": "அணுகல் வழங்கப்படவில்லை",
     
-    // Quick Action translations
+    // Google Drive Modal
+    "googleDrive.connectTitle": "Google Drive இணைக்கவும்",
+    "googleDrive.connectDescription": "Google Drive இலிருந்து கோப்புகளை உலாவ உங்கள் Google கணக்கை இணைக்கவும்.",
+    "googleDrive.connectionFailed": "இணைப்பு தோல்வியடைந்தது",
+    "googleDrive.failedAccess": "Google Drive அணுகல் பெறுவதில் தோல்வி",
+    "googleDrive.failedConnect": "Google கணக்கை இணைக்க முடியவில்லை",
+    "googleDrive.connecting": "இணைக்கிறது...",
+    "googleDrive.signIn": "Google மூலம் உள்நுழைக",
+    "googleDrive.or": "அல்லது",
+    "googleDrive.useDevicePicker": "சாதன கோப்பு தேர்வியைப் பயன்படுத்தவும்",
+    "googleDrive.devicePickerNote": "உங்கள் சாதனத்தில் ஆப்ஸ் நிறுவப்பட்டிருந்தால் சாதன கோப்பு தேர்வி Google Drive ஐ அணுகலாம்.",
     "quickAction.vault.title": "டிஜிட்டல் வால்ட்",
     "quickAction.vault.subtitle": "உங்கள் பாதுகாப்பான ஆவணங்களை நிர்வகிக்கவும்",
     "quickAction.nominees.title": "நியமனதாரர் மையம்",

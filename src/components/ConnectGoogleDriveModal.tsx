@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { linkGoogleAccount } from '@/services/googleDriveService';
 import { useAuth } from '@/contexts/AuthContext';
 import { Capacitor } from '@capacitor/core';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ConnectGoogleDriveModalProps {
   open: boolean;
@@ -28,6 +29,7 @@ export const ConnectGoogleDriveModal = ({
 }: ConnectGoogleDriveModalProps) => {
   const { toast } = useToast();
   const { authenticateGoogleForDrive } = useAuth();
+  const { t } = useLanguage();
   const [isConnecting, setIsConnecting] = useState(false);
 
   const handleConnectGoogle = async () => {
@@ -47,8 +49,8 @@ export const ConnectGoogleDriveModal = ({
           onClose();
         } else {
           toast({
-            title: 'Connection failed',
-            description: 'Failed to get Google Drive access',
+            title: t("googleDrive.connectionFailed"),
+            description: t("googleDrive.failedAccess"),
             variant: 'destructive',
           });
         }
@@ -59,8 +61,8 @@ export const ConnectGoogleDriveModal = ({
         
         if (!result.success) {
           toast({
-            title: 'Connection failed',
-            description: result.error || 'Failed to connect Google account',
+            title: t("googleDrive.connectionFailed"),
+            description: result.error || t("googleDrive.failedConnect"),
             variant: 'destructive',
           });
         }
@@ -69,8 +71,8 @@ export const ConnectGoogleDriveModal = ({
     } catch (error) {
       console.error('[ConnectGoogle] Error:', error);
       toast({
-        title: 'Connection failed',
-        description: error instanceof Error ? error.message : 'Failed to connect Google account',
+        title: t("googleDrive.connectionFailed"),
+        description: error instanceof Error ? error.message : t("googleDrive.failedConnect"),
         variant: 'destructive',
       });
     } finally {
@@ -89,10 +91,10 @@ export const ConnectGoogleDriveModal = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Cloud className="w-5 h-5 text-primary" />
-            Connect Google Drive
+            {t("googleDrive.connectTitle")}
           </DialogTitle>
           <DialogDescription>
-            To browse and import files from Google Drive, you need to connect your Google account.
+            {t("googleDrive.connectDescription")}
           </DialogDescription>
         </DialogHeader>
 
@@ -109,7 +111,7 @@ export const ConnectGoogleDriveModal = ({
                 <path d="M12.545 10.239v3.821h5.445c-.712 2.315-2.647 3.972-5.445 3.972a6.033 6.033 0 110-12.064c1.498 0 2.866.549 3.921 1.453l2.814-2.814A9.969 9.969 0 0012.545 2C7.021 2 2.543 6.477 2.543 12s4.478 10 10.002 10c8.396 0 10.249-7.85 9.426-11.748l-9.426-.013z" />
               </svg>
             )}
-            {isConnecting ? 'Connecting...' : 'Sign in with Google'}
+            {isConnecting ? t("googleDrive.connecting") : t("googleDrive.signIn")}
           </Button>
 
           <div className="relative">
@@ -117,7 +119,7 @@ export const ConnectGoogleDriveModal = ({
               <span className="w-full border-t border-border" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">Or</span>
+              <span className="bg-background px-2 text-muted-foreground">{t("googleDrive.or")}</span>
             </div>
           </div>
 
@@ -127,11 +129,11 @@ export const ConnectGoogleDriveModal = ({
             className="w-full h-12 gap-3"
           >
             <Smartphone className="w-5 h-5" />
-            Use Device File Picker
+            {t("googleDrive.useDevicePicker")}
           </Button>
 
           <p className="text-xs text-muted-foreground text-center">
-            The device file picker can access Google Drive if the app is installed on your device.
+            {t("googleDrive.devicePickerNote")}
           </p>
         </div>
       </DialogContent>
