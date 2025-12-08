@@ -38,7 +38,12 @@ interface Nominee {
 }
 
 // Helper function to send push notification
-async function sendPushNotification(userId: string, title: string, body: string) {
+async function sendPushNotification(
+  userId: string, 
+  title: string, 
+  body: string,
+  data?: Record<string, string>
+) {
   try {
     const response = await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
       method: "POST",
@@ -46,7 +51,7 @@ async function sendPushNotification(userId: string, title: string, body: string)
         "Content-Type": "application/json",
         "Authorization": `Bearer ${supabaseServiceKey}`,
       },
-      body: JSON.stringify({ user_id: userId, title, body }),
+      body: JSON.stringify({ user_id: userId, title, body, data }),
     });
     
     if (!response.ok) {
@@ -96,9 +101,17 @@ serve(async (req: Request) => {
         (now.getTime() - lastActivity.getTime()) / (1000 * 60 * 60 * 24)
       );
 
-      console.log(`User ${trigger.user_id}: ${daysSinceActivity} days inactive`);
+      console.log(`User ${trigger.user_id}: ${daysSinceActivity} days inactive, threshold: ${trigger.inactive_days_threshold}`);
 
-      // Stage 1: Days 1-3 - Alert user
+      const daysUntilTrigger = trigger.inactive_days_threshold - daysSinceActivity;
+
+      // Early warning push notifications at 7, 3, and 1 days before threshold
+      if (daysUntilTrigger === 7 || daysUntilTrigger === 3 || daysUntilTrigger === 1) {
+        await sendInactivityWarningPush(trigger, daysSinceActivity, daysUntilTrigger);
+        processedUsers.push(trigger.user_id);
+      }
+
+      // Stage 1: Days 1-3 - Alert user via email
       if (daysSinceActivity >= 1 && daysSinceActivity <= 3 && trigger.email_enabled) {
         await sendUserWarning(trigger, daysSinceActivity);
         processedUsers.push(trigger.user_id);
@@ -138,6 +151,36 @@ serve(async (req: Request) => {
   }
 });
 
+// Send push notification warning at specific intervals before threshold
+async function sendInactivityWarningPush(
+  trigger: InactivityTrigger, 
+  inactiveDays: number, 
+  daysUntilTrigger: number
+) {
+  console.log(`📲 Sending inactivity warning push for ${trigger.user_id} (${daysUntilTrigger} days until trigger)`);
+
+  // Get user profile
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("push_notifications_enabled")
+    .eq("id", trigger.user_id)
+    .single() as { data: { push_notifications_enabled: boolean | null } | null };
+
+  if (!profile?.push_notifications_enabled) {
+    console.log("Push notifications not enabled for user");
+    return;
+  }
+
+  await sendPushNotification(
+    trigger.user_id,
+    "⚠️ Inactivity Alert",
+    `You haven't logged in for ${inactiveDays} days. Your inactivity trigger will activate in ${daysUntilTrigger} day${daysUntilTrigger === 1 ? '' : 's'}.`,
+    { type: "inactivity_warning" }
+  );
+
+  console.log(`✅ Inactivity warning push sent to user ${trigger.user_id}`);
+}
+
 async function sendUserWarning(trigger: InactivityTrigger, inactiveDays: number) {
   console.log(`📧 Sending user warning for ${trigger.user_id}`);
 
@@ -174,8 +217,9 @@ async function sendUserWarning(trigger: InactivityTrigger, inactiveDays: number)
     if (profile.push_notifications_enabled) {
       await sendPushNotification(
         trigger.user_id,
-        "Inactivity Alert",
-        `You've been inactive for ${inactiveDays} days. Log in to keep your account active.`
+        "⚠️ Inactivity Alert",
+        `You've been inactive for ${inactiveDays} days. Log in to keep your account active.`,
+        { type: "inactivity_warning" }
       );
     }
 
@@ -255,8 +299,9 @@ async function sendNomineeWarnings(trigger: InactivityTrigger, inactiveDays: num
   if (profile.push_notifications_enabled) {
     await sendPushNotification(
       trigger.user_id,
-      "Nominees Notified",
-      `Your nominees have been notified about your ${inactiveDays} days of inactivity.`
+      "👥 Nominees Notified",
+      `Your nominees have been notified about your ${inactiveDays} days of inactivity.`,
+      { type: "nominee_warning" }
     );
   }
 }
@@ -337,8 +382,9 @@ async function grantEmergencyAccess(trigger: InactivityTrigger, inactiveDays: nu
   if (profile.push_notifications_enabled) {
     await sendPushNotification(
       trigger.user_id,
-      "Emergency Access Granted",
-      "Emergency access has been granted to your nominees due to prolonged inactivity."
+      "🚨 Emergency Access Granted",
+      "Emergency access has been granted to your nominees due to prolonged inactivity.",
+      { type: "emergency_access" }
     );
   }
 
