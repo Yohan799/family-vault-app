@@ -734,7 +734,7 @@ const translations: Record<Language, Record<string, string>> = {
     "help.messageSent": "Message Sent",
     "help.weWillGetBack": "We'll get back to you soon!",
     "help.failedToSend": "Failed to Send",
-    "help.sendMessage": "Send us a message",
+    "help.sendMessageTitle": "Send us a message",
     "help.subject": "Subject",
     "help.describeIssue": "Describe your issue or question...",
     "help.sending": "Sending...",
@@ -789,8 +789,6 @@ const translations: Record<Language, Record<string, string>> = {
     "inactivity.configureMonitoring": "Configure your emergency monitoring system",
     "inactivity.enableMonitoring": "Enable Monitoring",
     "inactivity.activateTracking": "Activate inactivity tracking",
-    "inactivity.step3Title": "Day 7+: Emergency Access",
-    "inactivity.step3Desc": "Verified nominees gain access to shared documents via OTP",
   },
   te: {
     // Common
