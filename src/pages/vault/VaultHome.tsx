@@ -505,7 +505,7 @@ const VaultHome = () => {
                 <div className="w-14 h-14 bg-white/60 rounded-full flex items-center justify-center mb-3">
                   <Plus className="w-7 h-7 text-[#6D28D9]" />
                 </div>
-                <h3 className="font-semibold text-[#1F2121]">Add Category</h3>
+                <h3 className="font-semibold text-[#1F2121]">{t("vault.addCategory")}</h3>
               </button>
             )}
           </div>
@@ -519,18 +519,18 @@ const VaultHome = () => {
               <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
                 <AlertTriangle className="w-6 h-6 text-purple-600" />
               </div>
-              <h2 className="text-xl font-bold text-foreground">Delete Category?</h2>
+              <h2 className="text-xl font-bold text-foreground">{t("vault.deleteTitle")}</h2>
             </div>
 
             <p className="text-foreground mb-2">
-              Are you sure you want to delete <span className="font-semibold">{deleteConfirm.category.name}</span>?
+              {t("vault.deleteConfirm")} <span className="font-semibold">{deleteConfirm.category.name}</span>?
             </p>
 
             <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-6">
               <p className="text-sm text-purple-800 font-medium">
-                {deleteConfirm.category.documentCount} {deleteConfirm.category.documentCount === 1 ? 'document' : 'documents'} will be deleted
+                {deleteConfirm.category.documentCount} {t("common.documents")} {t("vault.willBeDeleted")}
               </p>
-              <p className="text-xs text-purple-600 mt-1">This action cannot be undone</p>
+              <p className="text-xs text-purple-600 mt-1">{t("vault.cannotUndo")}</p>
             </div>
 
             <div className="flex gap-3">
@@ -539,13 +539,13 @@ const VaultHome = () => {
                 onClick={() => setDeleteConfirm({ show: false, category: null })}
                 className="flex-1"
               >
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button
                 onClick={confirmDelete}
                 className="flex-1 bg-purple-500 hover:bg-purple-600 text-white"
               >
-                Delete
+                {t("common.delete")}
               </Button>
             </div>
           </div>
@@ -562,15 +562,15 @@ const VaultHome = () => {
               <X className="w-6 h-6" />
             </button>
 
-            <h2 className="text-2xl font-bold text-foreground mb-6">Add Category</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-6">{t("vault.addCategory")}</h2>
 
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium text-foreground mb-2 block">
-                  Category Name
+                  {t("vault.categoryName")}
                 </label>
                 <Input
-                  placeholder="e.g. Vehicles, Investments, etc."
+                  placeholder={t("vault.categoryPlaceholder")}
                   value={categoryName}
                   onChange={(e) => setCategoryName(e.target.value)}
                   className="bg-background border-border"
@@ -584,13 +584,13 @@ const VaultHome = () => {
                   onClick={() => setShowAddDialog(false)}
                   className="flex-1"
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </Button>
                 <Button
                   onClick={handleAddCategory}
                   className="flex-1"
                 >
-                  Add
+                  {t("common.add")}
                 </Button>
               </div>
             </div>
@@ -614,11 +614,11 @@ const VaultHome = () => {
             className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
           >
             <Home className="w-6 h-6" />
-            <span className="text-xs font-medium">Home</span>
+            <span className="text-xs font-medium">{t("nav.home")}</span>
           </button>
           <button className="flex flex-col items-center gap-1 text-primary relative">
             <Vault className="w-6 h-6" />
-            <span className="text-xs font-medium">Vault</span>
+            <span className="text-xs font-medium">{t("nav.vault")}</span>
             <div className="absolute -bottom-2 w-12 h-1 bg-primary rounded-full" />
           </button>
           <button
@@ -626,7 +626,7 @@ const VaultHome = () => {
             className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
           >
             <Settings className="w-6 h-6" />
-            <span className="text-xs font-medium">Settings</span>
+            <span className="text-xs font-medium">{t("nav.settings")}</span>
           </button>
         </div>
       </div>

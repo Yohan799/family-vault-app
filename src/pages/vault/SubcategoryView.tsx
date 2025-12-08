@@ -505,7 +505,7 @@ const SubcategoryView = () => {
                     </div>
                     <h3 className="font-semibold text-[#1F2121] text-center mb-1 line-clamp-2">{folder.name}</h3>
                   </div>
-                  <p className="text-sm text-[#626C71]">{folder.documentCount || 0} Documents</p>
+                  <p className="text-sm text-[#626C71]">{folder.documentCount || 0} {t("common.documents")}</p>
                 </button>
 
                 {folder.isCustom && (
@@ -528,7 +528,7 @@ const SubcategoryView = () => {
                 <div className="w-14 h-14 bg-white/60 rounded-full flex items-center justify-center mb-3">
                   <Plus className="w-7 h-7 text-[#6D28D9]" />
                 </div>
-                <h3 className="font-semibold text-[#1F2121]">Add Folder</h3>
+                <h3 className="font-semibold text-[#1F2121]">{t("folder.addFolder")}</h3>
               </button>
             )}
           </div>
@@ -544,8 +544,8 @@ const SubcategoryView = () => {
             <div className="w-16 h-16 bg-white/60 rounded-full flex items-center justify-center mb-3">
               <Plus className="w-8 h-8 text-[#6D28D9]" />
             </div>
-            <h3 className="font-semibold text-[#1F2121] mb-1">Create Folder</h3>
-            <p className="text-sm text-[#626C71]">Organize documents into folders</p>
+            <h3 className="font-semibold text-[#1F2121] mb-1">{t("folder.createFolder")}</h3>
+            <p className="text-sm text-[#626C71]">{t("folder.organizeDocuments")}</p>
           </button>
         </div>
       )}
@@ -553,14 +553,14 @@ const SubcategoryView = () => {
       {!showNoResults && (
         <div className="px-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-[#1F2121]">Documents</h2>
+            <h2 className="text-lg font-semibold text-[#1F2121]">{t("common.documents")}</h2>
             {filteredDocuments.length > 0 && (
               <Button
                 onClick={() => setUploadOpen(true)}
                 className="bg-primary hover:bg-primary/90 text-primary-foreground min-h-[44px]"
               >
                 <Upload className="w-4 h-4 mr-2" />
-                Upload
+                {t("folder.upload")}
               </Button>
             )}
           </div>
@@ -568,14 +568,14 @@ const SubcategoryView = () => {
           {filteredDocuments.length === 0 && !debouncedQuery ? (
             <div className="bg-card rounded-2xl p-8 text-center">
               <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-              <p className="text-muted-foreground mb-4">No documents yet</p>
+              <p className="text-muted-foreground mb-4">{t("folder.noDocuments")}</p>
               <Button
                 onClick={() => setUploadOpen(true)}
                 variant="outline"
                 className="min-h-[44px]"
               >
                 <Upload className="w-4 h-4 mr-2" />
-                Upload Document
+                {t("folder.uploadDocument")}
               </Button>
             </div>
           ) : filteredDocuments.length > 0 ? (
@@ -619,18 +619,18 @@ const SubcategoryView = () => {
               <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
                 <AlertTriangle className="w-6 h-6 text-red-600" />
               </div>
-              <h2 className="text-xl font-bold text-foreground">Delete Folder?</h2>
+              <h2 className="text-xl font-bold text-foreground">{t("folder.deleteTitle")}</h2>
             </div>
 
             <p className="text-foreground mb-2">
-              Are you sure you want to delete <span className="font-semibold">{deleteConfirm.folder.name}</span>?
+              {t("folder.deleteConfirm")} <span className="font-semibold">{deleteConfirm.folder.name}</span>?
             </p>
 
             <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-6">
               <p className="text-sm text-red-800 font-medium">
-                {deleteConfirm.folder.documentCount || 0} {deleteConfirm.folder.documentCount === 1 ? 'document' : 'documents'} will be deleted
+                {deleteConfirm.folder.documentCount || 0} {t("common.documents")} {t("folder.willBeDeleted")}
               </p>
-              <p className="text-xs text-red-600 mt-1">This action cannot be undone</p>
+              <p className="text-xs text-red-600 mt-1">{t("folder.cannotUndo")}</p>
             </div>
 
             <div className="flex gap-3">
@@ -639,13 +639,13 @@ const SubcategoryView = () => {
                 onClick={() => setDeleteConfirm({ show: false, folder: null })}
                 className="flex-1"
               >
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button
                 onClick={confirmDelete}
                 className="flex-1 bg-red-500 hover:bg-red-600 text-white"
               >
-                Delete
+                {t("common.delete")}
               </Button>
             </div>
           </div>
@@ -660,14 +660,14 @@ const SubcategoryView = () => {
               <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
                 <AlertTriangle className="w-6 h-6 text-red-600" />
               </div>
-              <h2 className="text-xl font-bold text-foreground">Delete Document?</h2>
+              <h2 className="text-xl font-bold text-foreground">{t("folder.deleteDocTitle")}</h2>
             </div>
 
             <p className="text-foreground mb-4">
-              Are you sure you want to delete <span className="font-semibold">{deleteDocConfirm.doc.name}</span>?
+              {t("folder.deleteDocConfirm")} <span className="font-semibold">{deleteDocConfirm.doc.name}</span>?
             </p>
 
-            <p className="text-sm text-red-600 mb-6">This action cannot be undone</p>
+            <p className="text-sm text-red-600 mb-6">{t("folder.cannotUndo")}</p>
 
             <div className="flex gap-3">
               <Button
@@ -675,13 +675,13 @@ const SubcategoryView = () => {
                 onClick={() => setDeleteDocConfirm({ show: false, doc: null })}
                 className="flex-1"
               >
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button
                 onClick={confirmDeleteDocument}
                 className="flex-1 bg-red-500 hover:bg-red-600 text-white"
               >
-                Delete
+                {t("common.delete")}
               </Button>
             </div>
           </div>
@@ -699,15 +699,15 @@ const SubcategoryView = () => {
               <X className="w-6 h-6" />
             </button>
 
-            <h2 className="text-2xl font-bold text-foreground mb-6">Add Folder</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-6">{t("folder.addFolder")}</h2>
 
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium text-foreground mb-2 block">
-                  Folder Name
+                  {t("folder.folderName")}
                 </label>
                 <Input
-                  placeholder="e.g. Tax Documents, Receipts, etc."
+                  placeholder={t("folder.folderPlaceholder")}
                   value={folderName}
                   onChange={(e) => setFolderName(e.target.value)}
                   className="bg-background border-border"
@@ -721,13 +721,13 @@ const SubcategoryView = () => {
                   onClick={() => setShowAddFolderDialog(false)}
                   className="flex-1"
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </Button>
                 <Button
                   onClick={handleAddFolder}
                   className="flex-1"
                 >
-                  Add
+                  {t("common.add")}
                 </Button>
               </div>
             </div>
@@ -791,11 +791,11 @@ const SubcategoryView = () => {
             className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
           >
             <Home className="w-6 h-6" />
-            <span className="text-xs font-medium">Home</span>
+            <span className="text-xs font-medium">{t("nav.home")}</span>
           </button>
           <button className="flex flex-col items-center gap-1 text-primary relative">
             <VaultIcon className="w-6 h-6" />
-            <span className="text-xs font-medium">Vault</span>
+            <span className="text-xs font-medium">{t("nav.vault")}</span>
             <div className="absolute -bottom-2 w-12 h-1 bg-primary rounded-full" />
           </button>
           <button
@@ -803,7 +803,7 @@ const SubcategoryView = () => {
             className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
           >
             <Settings className="w-6 h-6" />
-            <span className="text-xs font-medium">Settings</span>
+            <span className="text-xs font-medium">{t("nav.settings")}</span>
           </button>
         </div>
       </div>

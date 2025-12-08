@@ -139,13 +139,33 @@ const translations: Record<Language, Record<string, string>> = {
     
     // Folder
     "folder.add": "Add Folder",
+    "folder.addFolder": "Add Folder",
+    "folder.createFolder": "Create Folder",
+    "folder.organizeDocuments": "Organize documents into folders",
     "folder.name": "Folder Name",
+    "folder.folderName": "Folder Name",
+    "folder.folderPlaceholder": "e.g. Tax Documents, Receipts, etc.",
     "folder.namePlaceholder": "Enter folder name",
     "folder.searchPlaceholder": "Search folders and documents...",
     "folder.noResults": "No matching documents found",
+    "folder.noDocuments": "No documents yet",
     "folder.tryDifferent": "Try a different search term",
     "folder.folders": "Folders",
     "folder.uploadDocument": "Upload Document",
+    "folder.upload": "Upload",
+    "folder.deleteTitle": "Delete Folder?",
+    "folder.deleteConfirm": "Are you sure you want to delete",
+    "folder.willBeDeleted": "will be deleted",
+    "folder.cannotUndo": "This action cannot be undone",
+    "folder.deleteDocTitle": "Delete Document?",
+    "folder.deleteDocConfirm": "Are you sure you want to delete",
+    
+    // Vault additional
+    "vault.deleteTitle": "Delete Category?",
+    "vault.deleteConfirm": "Are you sure you want to delete",
+    "vault.willBeDeleted": "will be deleted",
+    "vault.cannotUndo": "This action cannot be undone",
+    "vault.categoryPlaceholder": "e.g. Vehicles, Investments, etc.",
     
     // Nominees
     "nominee.title": "Nominees",
@@ -728,13 +748,32 @@ const translations: Record<Language, Record<string, string>> = {
     
     // Folder
     "folder.add": "ఫోల్డర్ జోడించు",
+    "folder.addFolder": "ఫోల్డర్ జోడించు",
+    "folder.createFolder": "ఫోల్డర్ సృష్టించు",
+    "folder.organizeDocuments": "డాక్యుమెంట్లను ఫోల్డర్లలో నిర్వహించండి",
     "folder.name": "ఫోల్డర్ పేరు",
+    "folder.folderName": "ఫోల్డర్ పేరు",
+    "folder.folderPlaceholder": "ఉదా. ట్యాక్స్ డాక్యుమెంట్లు, రసీదులు మొదలైనవి.",
     "folder.namePlaceholder": "ఫోల్డర్ పేరు నమోదు చేయండి",
     "folder.searchPlaceholder": "ఫోల్డర్లు మరియు డాక్యుమెంట్లు శోధించండి...",
     "folder.noResults": "సరిపోలే డాక్యుమెంట్లు కనుగొనబడలేదు",
+    "folder.noDocuments": "డాక్యుమెంట్లు ఇంకా లేవు",
     "folder.tryDifferent": "వేరే శోధన పదం ప్రయత్నించండి",
     "folder.folders": "ఫోల్డర్లు",
     "folder.uploadDocument": "డాక్యుమెంట్ అప్లోడ్",
+    "folder.upload": "అప్లోడ్",
+    "folder.deleteTitle": "ఫోల్డర్ తొలగించాలా?",
+    "folder.deleteConfirm": "మీరు తొలగించాలనుకుంటున్నారా",
+    "folder.willBeDeleted": "తొలగించబడతాయి",
+    "folder.cannotUndo": "ఈ చర్య రద్దు చేయబడదు",
+    "folder.deleteDocTitle": "డాక్యుమెంట్ తొలగించాలా?",
+    "folder.deleteDocConfirm": "మీరు తొలగించాలనుకుంటున్నారా",
+    
+    // Vault additional
+    "vault.deleteTitle": "కేటగిరీ తొలగించాలా?",
+    "vault.deleteConfirm": "మీరు తొలగించాలనుకుంటున్నారా",
+    "vault.willBeDeleted": "తొలగించబడతాయి",
+    "vault.categoryPlaceholder": "ఉదా. వాహనాలు, పెట్టుబడులు మొదలైనవి.",
     
     // Nominees
     "nominee.title": "నామినీలు",
@@ -1198,13 +1237,32 @@ const translations: Record<Language, Record<string, string>> = {
     
     // Folder
     "folder.add": "ಫೋಲ್ಡರ್ ಸೇರಿಸಿ",
+    "folder.addFolder": "ಫೋಲ್ಡರ್ ಸೇರಿಸಿ",
+    "folder.createFolder": "ಫೋಲ್ಡರ್ ರಚಿಸಿ",
+    "folder.organizeDocuments": "ಡಾಕ್ಯುಮೆಂಟ್‌ಗಳನ್ನು ಫೋಲ್ಡರ್‌ಗಳಲ್ಲಿ ಸಂಘಟಿಸಿ",
     "folder.name": "ಫೋಲ್ಡರ್ ಹೆಸರು",
+    "folder.folderName": "ಫೋಲ್ಡರ್ ಹೆಸರು",
+    "folder.folderPlaceholder": "ಉದಾ. ತೆರಿಗೆ ಡಾಕ್ಯುಮೆಂಟ್‌ಗಳು, ರಸೀದಿಗಳು, ಇತ್ಯಾದಿ.",
     "folder.namePlaceholder": "ಫೋಲ್ಡರ್ ಹೆಸರು ನಮೂದಿಸಿ",
     "folder.searchPlaceholder": "ಫೋಲ್ಡರ್‌ಗಳು ಮತ್ತು ಡಾಕ್ಯುಮೆಂಟ್‌ಗಳನ್ನು ಹುಡುಕಿ...",
     "folder.noResults": "ಹೊಂದಾಣಿಕೆಯ ಡಾಕ್ಯುಮೆಂಟ್‌ಗಳು ಕಂಡುಬಂದಿಲ್ಲ",
+    "folder.noDocuments": "ಇನ್ನೂ ಡಾಕ್ಯುಮೆಂಟ್‌ಗಳಿಲ್ಲ",
     "folder.tryDifferent": "ಬೇರೆ ಹುಡುಕಾಟ ಪದ ಪ್ರಯತ್ನಿಸಿ",
     "folder.folders": "ಫೋಲ್ಡರ್‌ಗಳು",
     "folder.uploadDocument": "ಡಾಕ್ಯುಮೆಂಟ್ ಅಪ್‌ಲೋಡ್",
+    "folder.upload": "ಅಪ್‌ಲೋಡ್",
+    "folder.deleteTitle": "ಫೋಲ್ಡರ್ ಅಳಿಸಬೇಕೆ?",
+    "folder.deleteConfirm": "ನೀವು ಅಳಿಸಲು ಖಚಿತವಾಗಿದ್ದೀರಾ",
+    "folder.willBeDeleted": "ಅಳಿಸಲಾಗುತ್ತದೆ",
+    "folder.cannotUndo": "ಈ ಕ್ರಿಯೆಯನ್ನು ರದ್ದುಗೊಳಿಸಲಾಗುವುದಿಲ್ಲ",
+    "folder.deleteDocTitle": "ಡಾಕ್ಯುಮೆಂಟ್ ಅಳಿಸಬೇಕೆ?",
+    "folder.deleteDocConfirm": "ನೀವು ಅಳಿಸಲು ಖಚಿತವಾಗಿದ್ದೀರಾ",
+    
+    // Vault additional
+    "vault.deleteTitle": "ವರ್ಗ ಅಳಿಸಬೇಕೆ?",
+    "vault.deleteConfirm": "ನೀವು ಅಳಿಸಲು ಖಚಿತವಾಗಿದ್ದೀರಾ",
+    "vault.willBeDeleted": "ಅಳಿಸಲಾಗುತ್ತದೆ",
+    "vault.categoryPlaceholder": "ಉದಾ. ವಾಹನಗಳು, ಹೂಡಿಕೆಗಳು, ಇತ್ಯಾದಿ.",
     
     // Nominees
     "nominee.title": "ನಾಮಿನಿಗಳು",
@@ -1515,13 +1573,32 @@ const translations: Record<Language, Record<string, string>> = {
     
     // Folder
     "folder.add": "फ़ोल्डर जोड़ें",
+    "folder.addFolder": "फ़ोल्डर जोड़ें",
+    "folder.createFolder": "फ़ोल्डर बनाएं",
+    "folder.organizeDocuments": "दस्तावेज़ों को फ़ोल्डर में व्यवस्थित करें",
     "folder.name": "फ़ोल्डर नाम",
+    "folder.folderName": "फ़ोल्डर नाम",
+    "folder.folderPlaceholder": "जैसे टैक्स डॉक्यूमेंट्स, रसीदें, आदि।",
     "folder.namePlaceholder": "फ़ोल्डर नाम दर्ज करें",
     "folder.searchPlaceholder": "फ़ोल्डर और दस्तावेज़ खोजें...",
     "folder.noResults": "कोई मेल खाते दस्तावेज़ नहीं मिले",
+    "folder.noDocuments": "अभी तक कोई दस्तावेज़ नहीं",
     "folder.tryDifferent": "अलग खोज शब्द आज़माएं",
     "folder.folders": "फ़ोल्डर",
     "folder.uploadDocument": "दस्तावेज़ अपलोड",
+    "folder.upload": "अपलोड",
+    "folder.deleteTitle": "फ़ोल्डर हटाएं?",
+    "folder.deleteConfirm": "क्या आप वाकई हटाना चाहते हैं",
+    "folder.willBeDeleted": "हटा दिए जाएंगे",
+    "folder.cannotUndo": "यह क्रिया पूर्ववत नहीं की जा सकती",
+    "folder.deleteDocTitle": "दस्तावेज़ हटाएं?",
+    "folder.deleteDocConfirm": "क्या आप वाकई हटाना चाहते हैं",
+    
+    // Vault additional
+    "vault.deleteTitle": "श्रेणी हटाएं?",
+    "vault.deleteConfirm": "क्या आप वाकई हटाना चाहते हैं",
+    "vault.willBeDeleted": "हटा दिए जाएंगे",
+    "vault.categoryPlaceholder": "जैसे वाहन, निवेश, आदि।",
     
     // Nominees
     "nominee.title": "नामिनी",
@@ -1870,6 +1947,35 @@ const translations: Record<Language, Record<string, string>> = {
     "subcategory.deleteConfirm": "நீக்க விரும்புகிறீர்களா",
     "subcategory.willBeDeleted": "நீக்கப்படும்",
     "subcategory.cannotUndo": "இந்த செயலை செயல்தவிர்க்க முடியாது",
+    
+    // Folder
+    "folder.add": "கோப்புறை சேர்க்கவும்",
+    "folder.addFolder": "கோப்புறை சேர்க்கவும்",
+    "folder.createFolder": "கோப்புறை உருவாக்கவும்",
+    "folder.organizeDocuments": "ஆவணங்களை கோப்புறைகளில் ஒழுங்கமைக்கவும்",
+    "folder.name": "கோப்புறை பெயர்",
+    "folder.folderName": "கோப்புறை பெயர்",
+    "folder.folderPlaceholder": "எ.கா. வரி ஆவணங்கள், ரசீதுகள், போன்றவை.",
+    "folder.namePlaceholder": "கோப்புறை பெயரை உள்ளிடவும்",
+    "folder.searchPlaceholder": "கோப்புறைகள் மற்றும் ஆவணங்களைத் தேடுங்கள்...",
+    "folder.noResults": "பொருத்தமான ஆவணங்கள் இல்லை",
+    "folder.noDocuments": "இன்னும் ஆவணங்கள் இல்லை",
+    "folder.tryDifferent": "வேறு தேடல் சொல்லை முயற்சிக்கவும்",
+    "folder.folders": "கோப்புறைகள்",
+    "folder.uploadDocument": "ஆவணம் பதிவேற்றம்",
+    "folder.upload": "பதிவேற்றம்",
+    "folder.deleteTitle": "கோப்புறையை நீக்கவா?",
+    "folder.deleteConfirm": "நீக்க விரும்புகிறீர்களா",
+    "folder.willBeDeleted": "நீக்கப்படும்",
+    "folder.cannotUndo": "இந்த செயலை செயல்தவிர்க்க முடியாது",
+    "folder.deleteDocTitle": "ஆவணத்தை நீக்கவா?",
+    "folder.deleteDocConfirm": "நீக்க விரும்புகிறீர்களா",
+    
+    // Vault additional
+    "vault.deleteTitle": "வகையை நீக்கவா?",
+    "vault.deleteConfirm": "நீக்க விரும்புகிறீர்களா",
+    "vault.willBeDeleted": "நீக்கப்படும்",
+    "vault.categoryPlaceholder": "எ.கா. வாகனங்கள், முதலீடுகள், போன்றவை.",
     
     // Nominees
     "nominee.title": "நியமனதாரர்கள்",
