@@ -44,7 +44,6 @@ import TwoFactorSetup from "./pages/TwoFactorSetup";
 import TwoFactorVerify from "./pages/TwoFactorVerify";
 import AppLockSetup from "./pages/AppLockSetup";
 import SetupPIN from "./pages/SetupPIN";
-import BackupRestore from "./pages/BackupRestore";
 import LanguageSettings from "./pages/LanguageSettings";
 import NotFound from "./pages/NotFound";
 import { Capacitor } from "@capacitor/core";
@@ -136,7 +135,6 @@ const App = () => (
                 <Route path="/two-factor-verify" element={<ProtectedRoute><TwoFactorVerify /></ProtectedRoute>} />
                 <Route path="/app-lock-setup" element={<ProtectedRoute><AppLockSetup /></ProtectedRoute>} />
                 <Route path="/setup-pin" element={<ProtectedRoute><SetupPIN /></ProtectedRoute>} />
-                <Route path="/backup-restore" element={<ProtectedRoute><BackupRestore /></ProtectedRoute>} />
                 <Route path="/language-settings" element={<ProtectedRoute><LanguageSettings /></ProtectedRoute>} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />

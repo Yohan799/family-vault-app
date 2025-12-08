@@ -1,5 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications, Token, PushNotificationSchema, ActionPerformed } from '@capacitor/push-notifications';
+import { LocalNotifications } from '@capacitor/local-notifications';
 import { supabase } from '@/integrations/supabase/client';
 
 // Check if push notifications are available (native platform only)
@@ -16,16 +17,16 @@ export const requestPushPermission = async (): Promise<boolean> => {
 
   try {
     const permissionStatus = await PushNotifications.checkPermissions();
-    
+
     if (permissionStatus.receive === 'granted') {
       return true;
     }
-    
+
     if (permissionStatus.receive === 'prompt') {
       const result = await PushNotifications.requestPermissions();
       return result.receive === 'granted';
     }
-    
+
     return false;
   } catch (error) {
     console.error('Error requesting push permission:', error);
@@ -60,7 +61,7 @@ export const registerDevice = async (userId: string): Promise<boolean> => {
 export const saveDeviceToken = async (userId: string, token: string): Promise<boolean> => {
   try {
     const deviceName = Capacitor.getPlatform();
-    
+
     const { error } = await supabase
       .from('device_tokens')
       .upsert({
@@ -119,7 +120,7 @@ export const initializePushNotifications = (
   // Listen for registration success
   PushNotifications.addListener('registration', async (token: Token) => {
     console.log('Push registration success, token:', token.value);
-    
+
     // Get current user and save token
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
@@ -133,8 +134,27 @@ export const initializePushNotifications = (
   });
 
   // Listen for push notifications received while app is in foreground
-  PushNotifications.addListener('pushNotificationReceived', (notification: PushNotificationSchema) => {
+  PushNotifications.addListener('pushNotificationReceived', async (notification: PushNotificationSchema) => {
     console.log('Push notification received:', notification);
+
+    // Show local notification for foreground pushes on Android
+    if (Capacitor.getPlatform() === 'android') {
+      try {
+        await LocalNotifications.schedule({
+          notifications: [{
+            title: notification.title || 'Notification',
+            body: notification.body || '',
+            id: Math.floor(Math.random() * 1000000),
+            schedule: { at: new Date(Date.now() + 100) },
+            extra: notification.data,
+          }]
+        });
+        console.log('Local notification scheduled for foreground push');
+      } catch (err) {
+        console.error('Error scheduling local notification:', err);
+      }
+    }
+
     onNotificationReceived?.(notification);
   });
 
@@ -150,6 +170,6 @@ export const removePushListeners = async (): Promise<void> => {
   if (!isPushAvailable()) {
     return;
   }
-  
+
   await PushNotifications.removeAllListeners();
 };

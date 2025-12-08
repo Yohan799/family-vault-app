@@ -167,7 +167,6 @@ const SettingsPage = () => {
 
     // Vault
     { icon: LockKeyhole, title: t("settings.autoLockTimeout"), subtitle: getAutoLockLabel(profile?.auto_lock_minutes), path: "/auto-lock-timeout", color: "bg-emerald-100" },
-    { icon: CloudUpload, title: t("settings.backupRestore"), subtitle: t("settings.backupRestore.subtitle"), path: "/backup-restore", color: "bg-teal-100" },
 
     // Language
     { icon: Globe, title: t("settings.language"), subtitle: currentLanguage.nativeName, path: "/language-settings", color: "bg-orange-100" },

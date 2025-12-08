@@ -103,18 +103,40 @@ export const createSession = async (userId: string): Promise<void> => {
     .update({ is_current: false })
     .eq('user_id', userId);
 
-  // Create new session
-  const { error } = await supabase
+  // Check if session already exists for this device
+  const { data: existingSession } = await supabase
     .from('user_sessions')
-    .insert({
-      user_id: userId,
-      device_name: deviceName,
-      device_type: deviceType,
-      is_current: true,
-      last_active_at: new Date().toISOString(),
-    });
+    .select('id')
+    .eq('user_id', userId)
+    .eq('device_name', deviceName)
+    .eq('device_type', deviceType)
+    .single();
 
-  if (error) throw error;
+  if (existingSession) {
+    // Update existing session instead of creating new
+    const { error } = await supabase
+      .from('user_sessions')
+      .update({
+        is_current: true,
+        last_active_at: new Date().toISOString(),
+      })
+      .eq('id', existingSession.id);
+
+    if (error) throw error;
+  } else {
+    // Create new session only if device doesn't exist
+    const { error } = await supabase
+      .from('user_sessions')
+      .insert({
+        user_id: userId,
+        device_name: deviceName,
+        device_type: deviceType,
+        is_current: true,
+        last_active_at: new Date().toISOString(),
+      });
+
+    if (error) throw error;
+  }
 
   // Send notification if new device (after successful session creation)
   if (newDevice) {
@@ -160,4 +182,52 @@ export const endAllOtherSessions = async (userId: string, currentSessionId: stri
     .neq('id', currentSessionId);
 
   if (error) throw error;
+};
+
+// Clean up duplicate sessions (keep only one per device)
+export const cleanupDuplicateSessions = async (userId: string): Promise<number> => {
+  try {
+    // Get all sessions grouped by device
+    const { data: sessions } = await supabase
+      .from('user_sessions')
+      .select('*')
+      .eq('user_id', userId)
+      .order('last_active_at', { ascending: false });
+
+    if (!sessions || sessions.length === 0) return 0;
+
+    // Group by device
+    const deviceMap = new Map<string, typeof sessions>();
+    for (const session of sessions) {
+      const key = `${session.device_name}-${session.device_type}`;
+      if (!deviceMap.has(key)) {
+        deviceMap.set(key, []);
+      }
+      deviceMap.get(key)!.push(session);
+    }
+
+    // Find duplicates to delete (keep the newest one per device)
+    const toDelete: string[] = [];
+    for (const [, deviceSessions] of deviceMap) {
+      if (deviceSessions.length > 1) {
+        // Skip the first one (newest), mark rest for deletion
+        for (let i = 1; i < deviceSessions.length; i++) {
+          toDelete.push(deviceSessions[i].id);
+        }
+      }
+    }
+
+    // Delete duplicates
+    if (toDelete.length > 0) {
+      await supabase
+        .from('user_sessions')
+        .delete()
+        .in('id', toDelete);
+    }
+
+    return toDelete.length;
+  } catch (error) {
+    console.error('Error cleaning up sessions:', error);
+    return 0;
+  }
 };

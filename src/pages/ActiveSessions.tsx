@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { fetchSessions, endSession, endAllOtherSessions, type UserSession } from "@/services/sessionService";
+import { fetchSessions, endSession, endAllOtherSessions, cleanupDuplicateSessions, type UserSession } from "@/services/sessionService";
 import { format } from "date-fns";
 
 const ActiveSessions = () => {
@@ -28,6 +28,11 @@ const ActiveSessions = () => {
 
     try {
       setIsLoading(true);
+      // Clean up duplicates first
+      const cleaned = await cleanupDuplicateSessions(user.id);
+      if (cleaned > 0) {
+        console.log(`Cleaned up ${cleaned} duplicate sessions`);
+      }
       const data = await fetchSessions(user.id);
       setSessions(data);
     } catch (error) {
