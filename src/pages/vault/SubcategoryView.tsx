@@ -18,6 +18,7 @@ import { filterItems, debounce } from "@/lib/searchUtils";
 import { SubcategoryViewSkeleton } from "@/components/skeletons";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { getSubcategoryName } from "@/lib/categoryTranslations";
 
 const SubcategoryView = () => {
   const navigate = useNavigate();
@@ -456,7 +457,7 @@ const SubcategoryView = () => {
           <div className="flex-1 text-center -ml-10">
             <div className="flex items-center justify-center gap-2">
               <SubcategoryIcon className="w-6 h-6 text-[#1F2121]" />
-              <h1 className="text-2xl font-bold text-[#1F2121]">{subcategory.name}</h1>
+              <h1 className="text-2xl font-bold text-[#1F2121]">{getSubcategoryName(subcategory.id, subcategory.name, t)}</h1>
             </div>
             <p className="text-[#626C71] text-sm mt-1">{documents.length} {t("common.documents")}</p>
           </div>
