@@ -5,6 +5,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { NotificationTemplates } from "@/services/pushNotificationHelper";
 
@@ -12,6 +13,7 @@ const TwoFactorVerify = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, profile, updateProfile } = useAuth();
+  const { t } = useLanguage();
   const [otp, setOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isResending, setIsResending] = useState(false);
@@ -36,14 +38,14 @@ const TwoFactorVerify = () => {
         NotificationTemplates.twoFactorEnabled(user.id);
 
         toast({
-          title: "2FA Enabled",
-          description: "Two-factor authentication is now active",
+          title: t("twoFactor.enabled"),
+          description: t("twoFactor.nowActive"),
         });
         navigate("/settings");
       } else {
         toast({
-          title: "Invalid Code",
-          description: data.error || "Please check your code and try again",
+          title: t("twoFactor.invalidCode"),
+          description: data.error || t("twoFactor.checkCode"),
           variant: "destructive",
         });
         setOtp("");
@@ -51,8 +53,8 @@ const TwoFactorVerify = () => {
     } catch (error: any) {
       console.error("OTP verification error:", error);
       toast({
-        title: "Verification Failed",
-        description: error.message || "Please try again",
+        title: t("twoFactor.verificationFailed"),
+        description: error.message || t("common.tryAgain"),
         variant: "destructive",
       });
       setOtp("");
@@ -73,12 +75,12 @@ const TwoFactorVerify = () => {
       if (error) throw error;
 
       toast({
-        title: "Code Resent",
-        description: "A new verification code has been sent to your email",
+        title: t("twoFactor.codeResent"),
+        description: t("twoFactor.newCodeSent"),
       });
     } catch (error: any) {
       toast({
-        title: "Failed to Resend",
+        title: t("twoFactor.failedToResend"),
         description: error.message,
         variant: "destructive",
       });
@@ -97,9 +99,9 @@ const TwoFactorVerify = () => {
                 <Shield className="w-10 h-10 text-primary" />
               </div>
             </div>
-            <h1 className="text-3xl font-bold text-foreground">Enter Verification Code</h1>
+            <h1 className="text-3xl font-bold text-foreground">{t("twoFactor.enterCode")}</h1>
             <p className="text-muted-foreground">
-              We've sent a 6-digit code to<br />
+              {t("twoFactor.codeSent")}<br />
               <strong>{profile?.email}</strong>
             </p>
           </div>
@@ -123,18 +125,18 @@ const TwoFactorVerify = () => {
               disabled={otp.length !== 6 || isLoading}
               className="w-full h-14 text-base font-semibold rounded-2xl"
             >
-              {isLoading ? "Verifying..." : "Verify Code"}
+              {isLoading ? t("twoFactor.verifying") : t("twoFactor.verifyCode")}
             </Button>
 
             <div className="text-center space-y-2">
-              <p className="text-sm text-muted-foreground">Didn't receive the code?</p>
+              <p className="text-sm text-muted-foreground">{t("twoFactor.didntReceive")}</p>
               <Button
                 variant="ghost"
                 onClick={handleResendCode}
                 disabled={isResending}
                 className="text-primary hover:text-primary/80 font-medium"
               >
-                {isResending ? "Sending..." : "Resend Code"}
+                {isResending ? t("twoFactor.sending") : t("twoFactor.resendCode")}
               </Button>
             </div>
 
@@ -143,7 +145,7 @@ const TwoFactorVerify = () => {
               onClick={() => navigate("/settings")}
               className="w-full"
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
           </div>
         </div>

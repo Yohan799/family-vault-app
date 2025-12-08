@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { 
   getQuickActions, 
   initializeDefaultActions, 
@@ -24,6 +25,7 @@ const CustomizeQuickActions = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newActionTitle, setNewActionTitle] = useState("");
   const [newActionSubtitle, setNewActionSubtitle] = useState("");
@@ -87,8 +89,8 @@ const CustomizeQuickActions = () => {
     try {
       await updateQuickAction(id, { is_enabled: newEnabled });
       toast({
-        title: "Quick action updated",
-        description: `${action.title} ${newEnabled ? 'enabled' : 'disabled'}`,
+        title: t("quickActions.updated"),
+        description: `${action.title} ${newEnabled ? t("common.enabled") : t("common.disabled")}`,
       });
     } catch (error) {
       console.error('Error updating action:', error);
@@ -97,7 +99,7 @@ const CustomizeQuickActions = () => {
         a.id === id ? { ...a, is_enabled: !newEnabled } : a
       ));
       toast({
-        title: "Failed to update",
+        title: t("toast.error"),
         variant: "destructive",
       });
     }
@@ -113,15 +115,15 @@ const CustomizeQuickActions = () => {
     try {
       await deleteQuickAction(id);
       toast({
-        title: "Action removed",
-        description: `${action.title} has been deleted`,
+        title: t("quickActions.actionRemoved"),
+        description: `${action.title} ${t("quickActions.hasBeenDeleted")}`,
       });
     } catch (error) {
       console.error('Error deleting action:', error);
       // Revert on error
       await loadActions();
       toast({
-        title: "Failed to delete",
+        title: t("toast.error"),
         variant: "destructive",
       });
     }
@@ -132,8 +134,8 @@ const CustomizeQuickActions = () => {
     
     if (!newActionTitle.trim()) {
       toast({
-        title: "Title required",
-        description: "Please enter a title for your quick action",
+        title: t("quickActions.titleRequired"),
+        description: t("quickActions.enterTitleDesc"),
         variant: "destructive"
       });
       return;
@@ -157,13 +159,13 @@ const CustomizeQuickActions = () => {
       setShowAddDialog(false);
       
       toast({
-        title: "Action added!",
-        description: "New quick action has been created",
+        title: t("quickActions.actionAdded"),
+        description: t("quickActions.newActionCreated"),
       });
     } catch (error) {
       console.error('Error adding action:', error);
       toast({
-        title: "Failed to add action",
+        title: t("toast.error"),
         variant: "destructive",
       });
     }
@@ -171,8 +173,8 @@ const CustomizeQuickActions = () => {
 
   const handleSave = () => {
     toast({
-      title: "Quick actions updated!",
-      description: "Your changes have been saved successfully",
+      title: t("quickActions.updated"),
+      description: t("quickActions.changesSaved"),
     });
     navigate("/dashboard");
   };
@@ -185,16 +187,16 @@ const CustomizeQuickActions = () => {
           <button onClick={() => navigate("/dashboard")} className="p-2 hover:bg-accent rounded-full transition-colors">
             <ArrowLeft className="w-5 h-5 text-primary-foreground" />
           </button>
-          <h1 className="text-2xl font-bold">Customize Quick Actions</h1>
+          <h1 className="text-2xl font-bold">{t("quickActions.title")}</h1>
         </div>
       </div>
 
       <div className="p-6 space-y-6">
-        <p className="text-muted-foreground">Drag to reorder, toggle to enable/disable. Add custom shortcuts to personalize your dashboard.</p>
+        <p className="text-muted-foreground">{t("quickActions.subtitle")}</p>
 
         {/* Current Actions */}
         {isLoading ? (
-          <p className="text-center text-muted-foreground py-4">Loading actions...</p>
+          <p className="text-center text-muted-foreground py-4">{t("quickActions.loading")}</p>
         ) : (
           <div className="space-y-3">
             {actions.map((action) => {
@@ -239,27 +241,27 @@ const CustomizeQuickActions = () => {
               className="w-full rounded-xl h-14 border-dashed border-2 gap-2"
             >
               <Plus className="w-5 h-5" />
-              Add New Action
+              {t("quickActions.addNew")}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add New Quick Action</DialogTitle>
+              <DialogTitle>{t("quickActions.addNewTitle")}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 pt-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Action Title *</label>
+                <label className="text-sm font-medium text-foreground">{t("quickActions.actionTitle")}</label>
                 <Input
-                  placeholder="Enter action title"
+                  placeholder={t("quickActions.enterTitle")}
                   value={newActionTitle}
                   onChange={(e) => setNewActionTitle(e.target.value)}
                   className="bg-background"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Subtitle</label>
+                <label className="text-sm font-medium text-foreground">{t("quickActions.subtitleLabel")}</label>
                 <Input
-                  placeholder="Enter subtitle (optional)"
+                  placeholder={t("quickActions.enterSubtitle")}
                   value={newActionSubtitle}
                   onChange={(e) => setNewActionSubtitle(e.target.value)}
                   className="bg-background"
@@ -267,7 +269,7 @@ const CustomizeQuickActions = () => {
               </div>
               <div className="flex gap-3 pt-2">
                 <Button onClick={handleAddNew} className="flex-1 bg-primary hover:bg-primary/90">
-                  Add Action
+                  {t("quickActions.addAction")}
                 </Button>
                 <Button 
                   variant="outline" 
@@ -278,7 +280,7 @@ const CustomizeQuickActions = () => {
                   }}
                   className="flex-1"
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </Button>
               </div>
             </div>
@@ -290,7 +292,7 @@ const CustomizeQuickActions = () => {
           onClick={handleSave}
           className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12"
         >
-          Save Changes
+          {t("quickActions.saveChanges")}
         </Button>
       </div>
 
@@ -302,21 +304,21 @@ const CustomizeQuickActions = () => {
             className="flex flex-col items-center gap-0.5 text-muted-foreground hover:text-foreground"
           >
             <Home className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Home</span>
+            <span className="text-[10px] font-medium">{t("nav.home")}</span>
           </button>
           <button
             onClick={() => navigate("/vault")}
             className="flex flex-col items-center gap-0.5 text-muted-foreground hover:text-foreground"
           >
             <LockIcon className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Vault</span>
+            <span className="text-[10px] font-medium">{t("nav.vault")}</span>
           </button>
           <button
             onClick={() => navigate("/settings")}
             className="flex flex-col items-center gap-0.5 text-muted-foreground hover:text-foreground"
           >
             <Settings className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Settings</span>
+            <span className="text-[10px] font-medium">{t("nav.settings")}</span>
           </button>
         </div>
       </div>
