@@ -5,6 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { fetchDashboardStats, calculateReadinessScore, updateInactivityTrigger, type DashboardStats } from "@/services/dashboardService";
 import FeatureTour from "@/components/FeatureTour";
 import { useToast } from "@/hooks/use-toast";
@@ -15,6 +16,7 @@ import { getUnreadCount } from "@/services/notificationService";
 const Dashboard = () => {
   const navigate = useNavigate();
   const { profile, user } = useAuth();
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [showTour, setShowTour] = useState(false);
   const [stats, setStats] = useState<DashboardStats>({
@@ -117,7 +119,7 @@ const Dashboard = () => {
 
     // Show toast immediately
     toast({
-      title: checked ? "Trigger is enabled" : "Trigger is disabled",
+      title: checked ? t("dashboard.triggerEnabled") : t("dashboard.triggerDisabled"),
       duration: 2000,
     });
 
@@ -128,7 +130,7 @@ const Dashboard = () => {
       // Revert on error
       setStats(prev => ({ ...prev, inactivityTriggerActive: previousState }));
       toast({
-        title: "Failed to update trigger",
+        title: t("toast.error"),
         variant: "destructive",
       });
     }
@@ -153,7 +155,7 @@ const Dashboard = () => {
       <div className="bg-primary/20 text-foreground p-4 rounded-b-3xl">
         <div className="flex justify-between items-start mb-3">
           <div>
-            <p className="text-xs text-muted-foreground mb-0.5">Welcome,</p>
+            <p className="text-xs text-muted-foreground mb-0.5">{t("dashboard.welcome")}</p>
             <h1 className="text-xl font-bold text-foreground">{firstName}</h1>
           </div>
           <div className="flex gap-2">
@@ -187,7 +189,7 @@ const Dashboard = () => {
             </svg>
             <span className="absolute text-lg font-bold text-blue-500">{readinessScore}</span>
           </div>
-          <p className="text-foreground font-medium text-xs">Security Score</p>
+          <p className="text-foreground font-medium text-xs">{t("dashboard.securityScore")}</p>
         </div>
       </div>
 
@@ -195,22 +197,22 @@ const Dashboard = () => {
         <div className="grid grid-cols-2 gap-2">
           <div className="bg-card rounded-lg p-2.5 text-center flex flex-col items-center justify-center h-20">
             <FileText className="w-5 h-5 text-primary mb-1.5" />
-            <span className="text-xs font-medium text-foreground truncate">{stats.documents} Docs</span>
+            <span className="text-xs font-medium text-foreground truncate">{stats.documents} {t("dashboard.docs")}</span>
           </div>
 
           <div className="bg-card rounded-lg p-2.5 text-center flex flex-col items-center justify-center h-20">
             <Users className="w-5 h-5 text-primary mb-1.5" />
-            <span className="text-xs font-medium text-foreground truncate">{stats.nominees} Nominees</span>
+            <span className="text-xs font-medium text-foreground truncate">{stats.nominees} {t("dashboard.nominees")}</span>
           </div>
 
           <div className="bg-card rounded-lg p-2.5 text-center flex flex-col items-center justify-center h-20">
             <Clock className="w-5 h-5 text-primary mb-1.5" />
-            <span className="text-xs font-medium text-foreground truncate">{stats.timeCapsules} Capsules</span>
+            <span className="text-xs font-medium text-foreground truncate">{stats.timeCapsules} {t("dashboard.capsules")}</span>
           </div>
 
           <div className="bg-card rounded-lg p-2.5 text-center flex flex-col items-center justify-center h-20">
             <Shield className="w-5 h-5 text-primary mb-0.5" />
-            <span className="text-[10px] font-medium text-foreground truncate mb-0.5">Trigger</span>
+            <span className="text-[10px] font-medium text-foreground truncate mb-0.5">{t("dashboard.trigger")}</span>
             <Switch
               checked={stats.inactivityTriggerActive}
               onCheckedChange={handleInactivityToggle}
@@ -220,10 +222,10 @@ const Dashboard = () => {
         </div>
 
         <div>
-          <h2 className="text-base font-bold text-foreground mb-2">Quick Actions</h2>
+          <h2 className="text-base font-bold text-foreground mb-2">{t("dashboard.quickActions")}</h2>
           <div className="space-y-1.5">
             {quickActions.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">No quick actions enabled</p>
+              <p className="text-sm text-muted-foreground text-center py-4">{t("dashboard.noQuickActions")}</p>
             ) : (
               quickActions.map((action) => {
                 const Icon = iconMap[action.icon || 'Plus'] || Plus;
@@ -260,16 +262,16 @@ const Dashboard = () => {
         <div className="flex justify-around items-center h-16 max-w-md mx-auto">
           <button className="flex flex-col items-center gap-1 text-primary relative">
             <Home className="w-6 h-6" />
-            <span className="text-xs font-medium">Home</span>
+            <span className="text-xs font-medium">{t("nav.home")}</span>
             <div className="absolute -bottom-2 w-12 h-1 bg-primary rounded-full" />
           </button>
           <button onClick={() => navigate("/vault")} className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
             <Vault className="w-6 h-6" />
-            <span className="text-xs font-medium">Vault</span>
+            <span className="text-xs font-medium">{t("nav.vault")}</span>
           </button>
           <button onClick={() => navigate("/settings")} className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
             <Settings className="w-6 h-6" />
-            <span className="text-xs font-medium">Settings</span>
+            <span className="text-xs font-medium">{t("nav.settings")}</span>
           </button>
         </div>
       </div>
