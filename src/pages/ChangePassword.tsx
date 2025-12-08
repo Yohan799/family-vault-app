@@ -7,12 +7,14 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { NotificationTemplates } from "@/services/pushNotificationHelper";
 
 const ChangePassword = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -26,16 +28,16 @@ const ChangePassword = () => {
   const handleSave = async () => {
     if (!formData.currentPassword || !formData.newPassword || !formData.confirmPassword) {
       toast({
-        title: "All fields required",
-        description: "Please fill in all password fields",
+        title: t("toast.allFieldsRequired"),
+        description: t("toast.fillAllFields"),
         variant: "destructive"
       });
       return;
     }
     if (formData.newPassword !== formData.confirmPassword) {
       toast({
-        title: "Passwords don't match",
-        description: "New password and confirmation must match",
+        title: t("toast.passwordsDontMatch"),
+        description: t("toast.passwordsMustMatch"),
         variant: "destructive"
       });
       return;
@@ -43,8 +45,8 @@ const ChangePassword = () => {
 
     if (formData.newPassword.length < 8) {
       toast({
-        title: "Password too short",
-        description: "Password must be at least 8 characters long",
+        title: t("toast.passwordTooShort"),
+        description: t("toast.passwordMinLength"),
         variant: "destructive"
       });
       return;
@@ -62,8 +64,8 @@ const ChangePassword = () => {
 
         if (signInError) {
           toast({
-            title: "Current password incorrect",
-            description: "Please check your current password and try again",
+            title: t("toast.currentPasswordIncorrect"),
+            description: t("toast.checkCurrentPassword"),
             variant: "destructive"
           });
           setIsLoading(false);
@@ -79,8 +81,8 @@ const ChangePassword = () => {
       if (error) throw error;
 
       toast({
-        title: "Password changed!",
-        description: "Your password has been updated successfully",
+        title: t("toast.passwordChanged"),
+        description: t("toast.passwordUpdated"),
       });
 
       // Send push notification about password change
@@ -91,8 +93,8 @@ const ChangePassword = () => {
       navigate("/settings");
     } catch (error: any) {
       toast({
-        title: "Error changing password",
-        description: error.message || "An error occurred while changing your password",
+        title: t("toast.errorChangingPassword"),
+        description: error.message || t("toast.error"),
         variant: "destructive"
       });
     } finally {
@@ -105,18 +107,18 @@ const ChangePassword = () => {
       <div className="bg-primary/20 text-foreground p-6 rounded-b-3xl">
         <div className="flex items-center gap-4">
           <BackButton to="/settings" />
-          <h1 className="text-2xl font-bold">Change Password</h1>
+          <h1 className="text-2xl font-bold">{t("changePassword.title")}</h1>
         </div>
       </div>
 
       <div className="p-6 space-y-6">
         <div className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Current Password</label>
+            <label className="text-sm font-medium text-foreground">{t("changePassword.currentPassword")}</label>
             <div className="relative">
               <Input
                 type={showCurrentPassword ? "text" : "password"}
-                placeholder="Enter current password"
+                placeholder={t("changePassword.enterCurrent")}
                 value={formData.currentPassword}
                 onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
                 className="bg-card border-border pr-12"
@@ -132,11 +134,11 @@ const ChangePassword = () => {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">New Password</label>
+            <label className="text-sm font-medium text-foreground">{t("changePassword.newPassword")}</label>
             <div className="relative">
               <Input
                 type={showNewPassword ? "text" : "password"}
-                placeholder="Enter new password"
+                placeholder={t("changePassword.enterNew")}
                 value={formData.newPassword}
                 onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
                 className="bg-card border-border pr-12"
@@ -152,11 +154,11 @@ const ChangePassword = () => {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Confirm New Password</label>
+            <label className="text-sm font-medium text-foreground">{t("changePassword.confirmPassword")}</label>
             <div className="relative">
               <Input
                 type={showConfirmPassword ? "text" : "password"}
-                placeholder="Confirm new password"
+                placeholder={t("changePassword.confirmNew")}
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                 className="bg-card border-border pr-12"
@@ -174,7 +176,7 @@ const ChangePassword = () => {
 
         <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4">
           <p className="text-sm text-muted-foreground">
-            Password must be at least 8 characters long and contain uppercase, lowercase, numbers, and special characters.
+            {t("changePassword.requirements")}
           </p>
         </div>
 
@@ -183,7 +185,7 @@ const ChangePassword = () => {
           disabled={isLoading}
           className="w-full bg-primary/20 hover:bg-primary/30 text-primary rounded-xl h-12"
         >
-          {isLoading ? "Updating..." : "Update Password"}
+          {isLoading ? t("changePassword.updating") : t("changePassword.updatePassword")}
         </Button>
       </div>
     </div>

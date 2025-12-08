@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { fetchSessions, endSession, endAllOtherSessions, type UserSession } from "@/services/sessionService";
 import { format } from "date-fns";
 
@@ -12,6 +13,7 @@ const ActiveSessions = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [sessions, setSessions] = useState<UserSession[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -32,8 +34,8 @@ const ActiveSessions = () => {
       console.error('Error loading sessions:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to load active sessions",
+        title: t("toast.error"),
+        description: t("sessions.loading"),
       });
     } finally {
       setIsLoading(false);
@@ -45,15 +47,15 @@ const ActiveSessions = () => {
       await endSession(sessionId);
       setSessions(sessions.filter(s => s.id !== sessionId));
       toast({
-        title: "Session ended",
-        description: `${deviceName} has been logged out`,
+        title: t("sessions.ended"),
+        description: `${deviceName} ${t("sessions.loggedOut")}`,
       });
     } catch (error) {
       console.error('Error ending session:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to end session",
+        title: t("toast.error"),
+        description: t("sessions.ended"),
       });
     }
   };
@@ -68,15 +70,15 @@ const ActiveSessions = () => {
       await endAllOtherSessions(user.id, currentSession.id);
       setSessions(sessions.filter(s => s.is_current));
       toast({
-        title: "All sessions ended",
-        description: "You've been logged out from all other devices",
+        title: t("sessions.allEnded"),
+        description: t("sessions.allLoggedOut"),
       });
     } catch (error) {
       console.error('Error ending sessions:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to end sessions",
+        title: t("toast.error"),
+        description: t("sessions.allEnded"),
       });
     }
   };
@@ -97,18 +99,18 @@ const ActiveSessions = () => {
       <div className="bg-primary/20 text-foreground p-4 rounded-b-3xl">
         <div className="flex items-center gap-3">
           <BackButton to="/settings" />
-          <h1 className="text-xl font-bold text-foreground">Active Sessions</h1>
+          <h1 className="text-xl font-bold text-foreground">{t("sessions.title")}</h1>
         </div>
       </div>
 
       <div className="p-4 space-y-4">
         <p className="text-muted-foreground text-sm">
-          Manage devices where you're currently logged in. End sessions you don't recognize.
+          {t("sessions.subtitle")}
         </p>
 
         {isLoading ? (
           <div className="text-center py-8 text-muted-foreground">
-            Loading sessions...
+            {t("sessions.loading")}
           </div>
         ) : sessions.length > 0 ? (
           <div className="space-y-3">
@@ -125,7 +127,7 @@ const ActiveSessions = () => {
                         <h3 className="font-semibold text-foreground text-sm">{session.device_name}</h3>
                         {session.is_current && (
                           <span className="text-xs px-2 py-0.5 bg-green-500/20 text-green-600 rounded-full">
-                            Current
+                            {t("sessions.current")}
                           </span>
                         )}
                       </div>
@@ -148,7 +150,7 @@ const ActiveSessions = () => {
                           className="mt-2 h-8 text-xs"
                           onClick={() => handleEndSession(session.id, session.device_name)}
                         >
-                          End Session
+                          {t("sessions.endSession")}
                         </Button>
                       )}
                     </div>
@@ -162,9 +164,9 @@ const ActiveSessions = () => {
             <div className="w-14 h-14 mx-auto mb-3 bg-muted rounded-full flex items-center justify-center">
               <Smartphone className="w-7 h-7 text-muted-foreground" />
             </div>
-            <h3 className="font-semibold text-foreground mb-1 text-sm">No Active Sessions</h3>
+            <h3 className="font-semibold text-foreground mb-1 text-sm">{t("sessions.noSessions")}</h3>
             <p className="text-xs text-muted-foreground">
-              You don't have any active sessions yet. Sessions will appear here after you log in.
+              {t("sessions.noSessionsDesc")}
             </p>
           </div>
         )}
@@ -175,7 +177,7 @@ const ActiveSessions = () => {
             className="w-full h-10 rounded-lg text-sm"
             onClick={handleEndAllOtherSessions}
           >
-            End All Other Sessions
+            {t("sessions.endAllOther")}
           </Button>
         )}
       </div>

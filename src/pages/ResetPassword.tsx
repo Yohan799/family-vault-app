@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { passwordSchema } from "@/lib/validation";
 
@@ -11,6 +12,7 @@ const ResetPassword = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -36,8 +38,8 @@ const ResetPassword = () => {
     // Validate passwords match
     if (formData.password !== formData.confirmPassword) {
       toast({
-        title: "Passwords Don't Match",
-        description: "Please make sure both passwords are identical",
+        title: t("toast.passwordsDontMatch"),
+        description: t("toast.passwordsMustMatch"),
         variant: "destructive",
       });
       return;
@@ -47,7 +49,7 @@ const ResetPassword = () => {
     const passwordValidation = passwordSchema.safeParse(formData.password);
     if (!passwordValidation.success) {
       toast({
-        title: "Invalid Password",
+        title: t("toast.error"),
         description: passwordValidation.error.errors[0].message,
         variant: "destructive",
       });
@@ -65,20 +67,20 @@ const ResetPassword = () => {
       });
 
       if (error || !data?.success) {
-        throw new Error(data?.error || "Failed to reset password");
+        throw new Error(data?.error || t("resetPassword.failed"));
       }
 
       toast({
-        title: "Password Reset Successful",
-        description: "You can now sign in with your new password",
+        title: t("resetPassword.success"),
+        description: t("resetPassword.successDesc"),
       });
       navigate("/signin");
     } catch (error: any) {
-      const errorMessage = error.message || "Failed to reset password";
+      const errorMessage = error.message || t("resetPassword.failed");
       toast({
-        title: "Reset Failed",
+        title: t("resetPassword.failed"),
         description: errorMessage.includes("token")
-          ? "Reset session expired. Please restart the process."
+          ? t("resetPassword.sessionExpired")
           : errorMessage,
         variant: "destructive",
       });
@@ -97,7 +99,7 @@ const ResetPassword = () => {
         <div className="space-y-6">
           <div className="text-center space-y-4">
             <h1 className="text-3xl font-bold text-foreground">
-              Reset Password
+              {t("resetPassword.title")}
             </h1>
             <div className="flex justify-center">
               <div className="w-20 h-20 bg-accent rounded-full flex items-center justify-center">
@@ -105,7 +107,7 @@ const ResetPassword = () => {
               </div>
             </div>
             <p className="text-muted-foreground text-base">
-              Enter your new password below
+              {t("resetPassword.enterNew")}
             </p>
           </div>
 
@@ -114,7 +116,7 @@ const ResetPassword = () => {
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
                 type={showPassword ? "text" : "password"}
-                placeholder="New password"
+                placeholder={t("resetPassword.newPassword")}
                 value={formData.password}
                 onChange={(e) =>
                   setFormData({ ...formData, password: e.target.value })
@@ -139,7 +141,7 @@ const ResetPassword = () => {
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
                 type={showConfirmPassword ? "text" : "password"}
-                placeholder="Confirm new password"
+                placeholder={t("resetPassword.confirmNew")}
                 value={formData.confirmPassword}
                 onChange={(e) =>
                   setFormData({ ...formData, confirmPassword: e.target.value })
@@ -161,13 +163,13 @@ const ResetPassword = () => {
             </div>
 
             <div className="bg-accent/50 border border-border rounded-2xl p-3 text-xs text-muted-foreground space-y-1">
-              <p className="font-medium text-foreground">Password must contain:</p>
+              <p className="font-medium text-foreground">{t("resetPassword.requirements.title")}</p>
               <ul className="list-disc list-inside space-y-0.5">
-                <li>At least 8 characters</li>
-                <li>One uppercase letter</li>
-                <li>One lowercase letter</li>
-                <li>One number</li>
-                <li>One special character</li>
+                <li>{t("resetPassword.requirements.length")}</li>
+                <li>{t("resetPassword.requirements.uppercase")}</li>
+                <li>{t("resetPassword.requirements.lowercase")}</li>
+                <li>{t("resetPassword.requirements.number")}</li>
+                <li>{t("resetPassword.requirements.special")}</li>
               </ul>
             </div>
 
@@ -176,17 +178,17 @@ const ResetPassword = () => {
               className="w-full h-14 text-base font-semibold rounded-2xl"
               disabled={isLoading}
             >
-              {isLoading ? "Resetting..." : "Reset Password"}
+              {isLoading ? t("resetPassword.resetting") : t("resetPassword.reset")}
             </Button>
 
             <p className="text-center text-sm text-muted-foreground">
-              Remember your password?{" "}
+              {t("resetPassword.rememberPassword")}{" "}
               <button
                 type="button"
                 onClick={() => navigate("/signin")}
                 className="text-primary hover:underline font-medium"
               >
-                Sign In
+                {t("auth.signIn")}
               </button>
             </p>
           </form>

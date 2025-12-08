@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   fetchNotifications,
   markAsRead,
@@ -16,6 +17,7 @@ import { format, formatDistanceToNow } from "date-fns";
 const Notifications = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -62,9 +64,9 @@ const Notifications = () => {
               <ArrowLeft className="w-6 h-6" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold">Notifications</h1>
+              <h1 className="text-2xl font-bold">{t("notifications.title")}</h1>
               {unreadCount > 0 && (
-                <p className="text-sm opacity-80">{unreadCount} unread</p>
+                <p className="text-sm opacity-80">{unreadCount} {t("notifications.unread")}</p>
               )}
             </div>
           </div>
@@ -95,14 +97,14 @@ const Notifications = () => {
         {isLoading ? (
           <div className="bg-card rounded-2xl p-8 text-center">
             <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading notifications...</p>
+            <p className="text-muted-foreground">{t("notifications.loading")}</p>
           </div>
         ) : notifications.length === 0 ? (
           <div className="bg-card rounded-2xl p-8 text-center">
             <Bell className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-            <p className="text-muted-foreground">No notifications yet</p>
+            <p className="text-muted-foreground">{t("notifications.noNotificationsYet")}</p>
             <p className="text-sm text-muted-foreground mt-1">
-              You'll see security alerts and updates here
+              {t("notifications.securityAlerts")}
             </p>
           </div>
         ) : (
