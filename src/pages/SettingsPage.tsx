@@ -1,4 +1,4 @@
-import { Lock, Mail, Shield, Bell, HelpCircle, LogOut, Trash2, LockKeyhole, Home, ChevronRight, Vault, Settings, Smartphone, Globe } from "lucide-react";
+import { Lock, Mail, Shield, Bell, HelpCircle, LogOut, Trash2, LockKeyhole, Home, ChevronRight, Vault, Settings, Globe, Fingerprint, KeyRound, MonitorSmartphone, CloudUpload } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Switch } from "@/components/ui/switch";
@@ -158,16 +158,16 @@ const SettingsPage = () => {
     { icon: Mail, title: t("settings.emailPreferences"), subtitle: t("settings.emailPreferences.subtitle"), path: "/email-preferences", color: "bg-indigo-100" },
 
     // Security
-    { icon: Shield, title: t("settings.twoFactorAuth"), subtitle: profile?.two_factor_enabled ? t("settings.twoFactorAuth.enabled") : t("settings.twoFactorAuth.subtitle"), path: "/two-factor-setup", color: "bg-purple-100" },
-    { icon: Smartphone, title: t("settings.appLock"), subtitle: profile?.app_lock_type ? `${t("settings.appLock.active")} (${profile.app_lock_type})` : t("settings.appLock.subtitle"), path: "/app-lock-setup", color: "bg-violet-100" },
-    { icon: Smartphone, title: t("settings.activeSessions"), subtitle: t("settings.activeSessions.subtitle"), path: "/active-sessions", color: "bg-rose-100" },
+    { icon: KeyRound, title: t("settings.twoFactorAuth"), subtitle: profile?.two_factor_enabled ? t("settings.twoFactorAuth.enabled") : t("settings.twoFactorAuth.subtitle"), path: "/two-factor-setup", color: "bg-purple-100" },
+    { icon: Fingerprint, title: t("settings.appLock"), subtitle: profile?.app_lock_type ? `${t("settings.appLock.active")} (${profile.app_lock_type})` : t("settings.appLock.subtitle"), path: "/app-lock-setup", color: "bg-violet-100" },
+    { icon: MonitorSmartphone, title: t("settings.activeSessions"), subtitle: t("settings.activeSessions.subtitle"), path: "/active-sessions", color: "bg-rose-100" },
 
     // Notifications
     { icon: Bell, title: t("settings.pushNotifications"), subtitle: isPushAvailable() ? t("settings.pushNotifications.subtitle") : t("settings.pushNotifications.mobileOnly"), toggle: "pushNotifications", color: "bg-amber-100" },
 
     // Vault
     { icon: LockKeyhole, title: t("settings.autoLockTimeout"), subtitle: getAutoLockLabel(profile?.auto_lock_minutes), path: "/auto-lock-timeout", color: "bg-emerald-100" },
-    { icon: Shield, title: t("settings.backupRestore"), subtitle: t("settings.backupRestore.subtitle"), path: "/backup-restore", color: "bg-teal-100" },
+    { icon: CloudUpload, title: t("settings.backupRestore"), subtitle: t("settings.backupRestore.subtitle"), path: "/backup-restore", color: "bg-teal-100" },
 
     // Language
     { icon: Globe, title: t("settings.language"), subtitle: currentLanguage.nativeName, path: "/language-settings", color: "bg-orange-100" },
