@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { z } from "zod";
 import { passwordSchema, sanitizeInput } from "@/lib/validation";
 
@@ -12,6 +13,7 @@ const SignUp = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { signUp, signInWithGoogle, user, isLoading: authLoading } = useAuth();
+  const { t } = useLanguage();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isEmailLoading, setIsEmailLoading] = useState(false);
@@ -36,14 +38,14 @@ const SignUp = () => {
     // Validate name
     const nameValidation = z
       .string()
-      .min(2, "Name must be at least 2 characters")
-      .max(100, "Name must be less than 100 characters")
-      .regex(/^[a-zA-Z\s]+$/, "Name can only contain letters and spaces")
+      .min(2, t("auth.name"))
+      .max(100, t("auth.name"))
+      .regex(/^[a-zA-Z\s]+$/, t("auth.name"))
       .safeParse(sanitizeInput(formData.name));
 
     if (!nameValidation.success) {
       toast({
-        title: "Invalid Name",
+        title: t("toast.error"),
         description: nameValidation.error.errors[0].message,
         variant: "destructive",
       });
@@ -53,12 +55,12 @@ const SignUp = () => {
     // Validate email
     const emailValidation = z
       .string()
-      .email("Invalid email address")
+      .email(t("auth.email"))
       .safeParse(formData.email.toLowerCase());
 
     if (!emailValidation.success) {
       toast({
-        title: "Invalid Email",
+        title: t("toast.error"),
         description: emailValidation.error.errors[0].message,
         variant: "destructive",
       });
@@ -70,7 +72,7 @@ const SignUp = () => {
 
     if (!passwordValidation.success) {
       toast({
-        title: "Weak Password",
+        title: t("toast.error"),
         description: passwordValidation.error.errors[0].message,
         variant: "destructive",
       });
@@ -80,8 +82,8 @@ const SignUp = () => {
     // Check password match
     if (formData.password !== formData.confirmPassword) {
       toast({
-        title: "Error",
-        description: "Passwords do not match",
+        title: t("toast.error"),
+        description: t("security.pinMismatch"),
         variant: "destructive",
       });
       return;
@@ -91,14 +93,14 @@ const SignUp = () => {
     try {
       await signUp(formData.email.toLowerCase(), formData.password, formData.name);
       toast({
-        title: "Success",
-        description: "Account created successfully!",
+        title: t("toast.success"),
+        description: t("auth.createAccount"),
       });
       navigate("/dashboard");
     } catch (error: any) {
-      const errorMessage = error.message || "Unable to create account";
+      const errorMessage = error.message || t("toast.error");
       toast({
-        title: "Sign up failed",
+        title: t("toast.error"),
         description: errorMessage,
         variant: "destructive",
       });
@@ -112,13 +114,13 @@ const SignUp = () => {
     try {
       await signInWithGoogle();
       toast({
-        title: "Success",
-        description: "Signed up with Google!",
+        title: t("toast.success"),
+        description: t("auth.signUpWithGoogle"),
       });
       navigate("/dashboard");
     } catch (error: any) {
       toast({
-        title: "Google sign up failed",
+        title: t("toast.error"),
         description: error.message,
         variant: "destructive",
       });
@@ -139,13 +141,13 @@ const SignUp = () => {
       <div className="w-full max-w-md bg-card rounded-3xl shadow-xl p-6">
         <div className="space-y-4">
           <div className="text-center space-y-2">
-            <h1 className="text-2xl font-bold text-foreground">Sign Up</h1>
+            <h1 className="text-2xl font-bold text-foreground">{t("auth.signUp")}</h1>
             <div className="flex justify-center">
               <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center">
                 <Shield className="w-8 h-8 text-primary" strokeWidth={2.5} />
               </div>
             </div>
-            <p className="text-muted-foreground text-sm">Create Your Family Vault</p>
+            <p className="text-muted-foreground text-sm">{t("auth.createFamily")}</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-3">
@@ -153,7 +155,7 @@ const SignUp = () => {
               <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
                 type="text"
-                placeholder="Name"
+                placeholder={t("auth.name")}
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className="pl-12 bg-input border-0 h-12 rounded-2xl text-base"
@@ -166,7 +168,7 @@ const SignUp = () => {
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
                 type="email"
-                placeholder="Email"
+                placeholder={t("auth.email")}
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="pl-12 bg-input border-0 h-12 rounded-2xl text-base"
@@ -179,7 +181,7 @@ const SignUp = () => {
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
                 type={showPassword ? "text" : "password"}
-                placeholder="Password"
+                placeholder={t("auth.password")}
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 className="pl-12 pr-12 bg-input border-0 h-12 rounded-2xl text-base"
@@ -199,7 +201,7 @@ const SignUp = () => {
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
                 type={showConfirmPassword ? "text" : "password"}
-                placeholder="Confirm Password"
+                placeholder={t("auth.confirmPassword")}
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                 className="pl-12 pr-12 bg-input border-0 h-12 rounded-2xl text-base"
@@ -216,7 +218,7 @@ const SignUp = () => {
             </div>
 
             <Button type="submit" className="w-full h-12 text-base font-semibold rounded-2xl" disabled={isAnyLoading}>
-              {isEmailLoading ? "Creating account..." : "SIGN UP"}
+              {isEmailLoading ? t("auth.creatingAccount") : t("auth.signUp")}
             </Button>
 
             <div className="relative">
@@ -224,7 +226,7 @@ const SignUp = () => {
                 <div className="w-full border-t border-border"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="bg-card px-3 text-muted-foreground">OR</span>
+                <span className="bg-card px-3 text-muted-foreground">{t("auth.or")}</span>
               </div>
             </div>
 
@@ -238,7 +240,7 @@ const SignUp = () => {
               {isGoogleLoading ? (
                 <>
                   <div className="w-5 h-5 mr-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-                  Signing up...
+                  {t("auth.signingUp")}
                 </>
               ) : (
                 <>
@@ -260,19 +262,19 @@ const SignUp = () => {
                       d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                     />
                   </svg>
-                  Sign up with Google
+                  {t("auth.signUpWithGoogle")}
                 </>
               )}
             </Button>
 
             <p className="text-center text-sm text-muted-foreground">
-              Already have an account?{" "}
+              {t("auth.alreadyHaveAccount")}{" "}
               <button
                 type="button"
                 onClick={() => navigate("/signin")}
                 className="text-primary hover:underline font-medium"
               >
-                Sign In
+                {t("auth.signIn")}
               </button>
             </p>
           </form>

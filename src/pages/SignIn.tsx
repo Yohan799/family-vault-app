@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 
@@ -12,6 +13,7 @@ const SignIn = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { signIn, signInWithGoogle, user, isLoading: authLoading } = useAuth();
+  const { t } = useLanguage();
   const [showPassword, setShowPassword] = useState(false);
   const [isEmailLoading, setIsEmailLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -32,13 +34,13 @@ const SignIn = () => {
 
     const emailValidation = z
       .string()
-      .min(1, "Email is required")
-      .email("Invalid email address")
+      .min(1, t("auth.email"))
+      .email(t("auth.email"))
       .safeParse(formData.email.toLowerCase());
 
     if (!emailValidation.success) {
       toast({
-        title: "Invalid Email",
+        title: t("toast.error"),
         description: emailValidation.error.errors[0].message,
         variant: "destructive",
       });
@@ -47,8 +49,8 @@ const SignIn = () => {
 
     if (!formData.password || formData.password.length < 1) {
       toast({
-        title: "Password Required",
-        description: "Please enter your password",
+        title: t("toast.error"),
+        description: t("auth.password"),
         variant: "destructive",
       });
       return;
@@ -70,15 +72,15 @@ const SignIn = () => {
         navigate("/two-factor-verify");
       } else {
         toast({
-          title: "Welcome back!",
-          description: "Successfully signed in",
+          title: t("auth.welcomeBack"),
+          description: t("auth.successSignedIn"),
         });
         navigate("/dashboard");
       }
     } catch (error: any) {
-      const errorMessage = error.message || "Invalid email or password";
+      const errorMessage = error.message || t("toast.error");
       toast({
-        title: "Sign in failed",
+        title: t("toast.error"),
         description: errorMessage,
         variant: "destructive",
       });
@@ -92,13 +94,13 @@ const SignIn = () => {
     try {
       await signInWithGoogle();
       toast({
-        title: "Welcome back!",
-        description: "Signed in with Google",
+        title: t("auth.welcomeBack"),
+        description: t("auth.signInWithGoogle"),
       });
       navigate("/dashboard");
     } catch (error: any) {
       toast({
-        title: "Google sign in failed",
+        title: t("toast.error"),
         description: error.message,
         variant: "destructive",
       });
@@ -120,14 +122,14 @@ const SignIn = () => {
         <div className="space-y-6">
           <div className="text-center space-y-4">
             <h1 className="text-3xl font-bold text-foreground">
-              Sign In
+              {t("auth.signIn")}
             </h1>
             <div className="flex justify-center">
               <div className="w-20 h-20 bg-accent rounded-full flex items-center justify-center">
                 <Shield className="w-10 h-10 text-primary" strokeWidth={2.5} />
               </div>
             </div>
-            <p className="text-muted-foreground text-base">Secure Your Family's Legacy</p>
+            <p className="text-muted-foreground text-base">{t("auth.secureFamily")}</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -135,7 +137,7 @@ const SignIn = () => {
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
                 type="email"
-                placeholder="Enter your email"
+                placeholder={t("auth.email")}
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="pl-12 bg-input border-0 h-14 rounded-2xl text-base"
@@ -148,7 +150,7 @@ const SignIn = () => {
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
                 type={showPassword ? "text" : "password"}
-                placeholder="Enter your password"
+                placeholder={t("auth.password")}
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 className="pl-12 pr-12 bg-input border-0 h-14 rounded-2xl text-base"
@@ -170,12 +172,12 @@ const SignIn = () => {
                 onClick={() => navigate("/forgot-password")}
                 className="text-sm text-primary hover:underline font-medium"
               >
-                Forgot Password?
+                {t("auth.forgotPassword")}
               </button>
             </div>
 
             <Button type="submit" className="w-full h-14 text-base font-semibold rounded-2xl" disabled={isAnyLoading}>
-              {isEmailLoading ? "Signing in..." : "Sign In"}
+              {isEmailLoading ? t("auth.signingIn") : t("auth.signIn")}
             </Button>
 
             <div className="relative">
@@ -183,7 +185,7 @@ const SignIn = () => {
                 <div className="w-full border-t border-border"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="bg-card px-3 text-muted-foreground">OR</span>
+                <span className="bg-card px-3 text-muted-foreground">{t("auth.or")}</span>
               </div>
             </div>
 
@@ -197,7 +199,7 @@ const SignIn = () => {
               {isGoogleLoading ? (
                 <>
                   <div className="w-5 h-5 mr-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-                  Signing in...
+                  {t("auth.signingIn")}
                 </>
               ) : (
                 <>
@@ -219,19 +221,19 @@ const SignIn = () => {
                       d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                     />
                   </svg>
-                  Sign in with Google
+                  {t("auth.signInWithGoogle")}
                 </>
               )}
             </Button>
 
             <p className="text-center text-sm text-muted-foreground">
-              Don't have an account?{" "}
+              {t("auth.dontHaveAccount")}{" "}
               <button
                 type="button"
                 onClick={() => navigate("/signup")}
                 className="text-primary hover:underline font-medium"
               >
-                Create an account
+                {t("auth.createAccount")}
               </button>
             </p>
           </form>
