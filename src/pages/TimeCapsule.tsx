@@ -1,4 +1,5 @@
-import { ArrowLeft, Clock, Home, Vault, Settings, Info, Send, Edit2, Trash2, Camera } from "lucide-react";
+import { Clock, Home, Vault, Settings, Info, Send, Edit2, Trash2, Camera } from "lucide-react";
+import BackButton from "@/components/BackButton";
 import { validateGmailOnly, validatePhoneExact10 } from "@/lib/validation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -283,9 +284,7 @@ const TimeCapsule = () => {
       {/* Header */}
       <div className="bg-primary/20 text-foreground p-6 rounded-b-3xl">
         <div className="flex items-center gap-4 mb-6">
-          <button onClick={() => navigate(-1)} className="p-2 hover:bg-accent rounded-full transition-colors">
-            <ArrowLeft className="w-5 h-5 text-foreground" />
-          </button>
+          <BackButton />
           <div className="flex-1 text-center -ml-10">
             <h1 className="text-2xl font-bold">Time Capsule</h1>
             <p className="text-sm text-muted-foreground mt-1">Create messages for the future</p>

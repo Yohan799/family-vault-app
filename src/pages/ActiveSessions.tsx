@@ -1,4 +1,5 @@
-import { ArrowLeft, Smartphone, Monitor, Tablet, MapPin, Clock } from "lucide-react";
+import { Smartphone, Monitor, Tablet, MapPin, Clock } from "lucide-react";
+import BackButton from "@/components/BackButton";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -95,9 +96,7 @@ const ActiveSessions = () => {
     <div className="min-h-screen bg-background pb-16">
       <div className="bg-primary/20 text-foreground p-4 rounded-b-3xl">
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate("/settings")} className="p-2 hover:bg-accent rounded-full transition-colors">
-            <ArrowLeft className="w-5 h-5 text-foreground" />
-          </button>
+          <BackButton to="/settings" />
           <h1 className="text-xl font-bold text-foreground">Active Sessions</h1>
         </div>
       </div>

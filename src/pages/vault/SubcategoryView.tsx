@@ -1,4 +1,5 @@
-import { ArrowLeft, Search, Filter, Upload, FileText, Home, Settings, Folder, Plus, X, AlertTriangle } from "lucide-react";
+import { Search, Filter, Upload, FileText, Home, Settings, Folder, Plus, X, AlertTriangle } from "lucide-react";
+import BackButton from "@/components/BackButton";
 import { Vault as VaultIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -451,9 +452,7 @@ const SubcategoryView = () => {
     <div className="min-h-screen bg-[#FCFCF9] pb-20">
       <div className="bg-[#FCFCF9] p-6">
         <div className="flex items-center gap-4 mb-4">
-          <button onClick={() => navigate(-1)} className="p-2 hover:bg-accent rounded-full transition-colors">
-            <ArrowLeft className="w-5 h-5 text-[#1F2121]" />
-          </button>
+          <BackButton />
           <div className="flex-1 text-center -ml-10">
             <div className="flex items-center justify-center gap-2">
               <SubcategoryIcon className="w-6 h-6 text-[#1F2121]" />

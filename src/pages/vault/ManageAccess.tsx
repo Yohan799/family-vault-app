@@ -1,4 +1,5 @@
-import { ArrowLeft, Search, Info, Eye, Download, UserPlus, Home, Settings } from "lucide-react";
+import { Search, Info, Eye, Download, UserPlus, Home, Settings } from "lucide-react";
+import BackButton from "@/components/BackButton";
 import { Vault as VaultIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -122,9 +123,7 @@ const ManageAccess = () => {
         {/* Header */}
         <div className="bg-[#FCFCF9] p-6 border-b">
           <div className="flex items-center justify-between">
-            <button onClick={() => navigate(-1)} className="p-1">
-              <ArrowLeft className="w-6 h-6 text-[#1F2121]" />
-            </button>
+            <BackButton />
             <h1 className="text-xl font-bold text-[#1F2121]">Manage Access</h1>
             <button className="p-1">
               <Info className="w-6 h-6 text-[#1F2121]" />

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { ArrowLeft, Lock } from "lucide-react";
+import { Lock } from "lucide-react";
+import BackButton from "@/components/BackButton";
 import { Button } from "@/components/ui/button";
 import { PinPad } from "@/components/PinPad";
 import { useNavigate } from "react-router-dom";
@@ -87,9 +88,7 @@ const SetupPIN = () => {
       <div className="max-w-md mx-auto w-full flex-1 flex flex-col">
         {/* Header */}
         <div className="flex items-center gap-3 pt-2">
-          <button onClick={() => step === "confirm" ? setStep("create") : navigate("/app-lock-setup")} className="p-2 hover:bg-accent rounded-full transition-colors">
-            <ArrowLeft className="w-5 h-5 text-foreground" />
-          </button>
+          <BackButton to={step === "confirm" ? undefined : "/app-lock-setup"} />
           <h1 className="text-2xl font-bold text-foreground">
             {step === "create" ? "Create PIN" : "Confirm PIN"}
           </h1>
