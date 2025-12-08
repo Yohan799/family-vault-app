@@ -13,6 +13,7 @@ import { openGoogleDrivePicker, downloadFileFromGoogleDrive } from "@/lib/google
 import { scanDocument } from "@/lib/documentScanner";
 import { TimeCapsuleSkeleton } from "@/components/skeletons";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { GoogleDriveBrowser } from "@/components/GoogleDriveBrowser";
 import { ConnectGoogleDriveModal } from "@/components/ConnectGoogleDriveModal";
 import { Capacitor } from "@capacitor/core";
@@ -20,6 +21,7 @@ import { Capacitor } from "@capacitor/core";
 const TimeCapsule = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const { hasGoogleIdentity, getGoogleAccessToken } = useAuth();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -51,8 +53,8 @@ const TimeCapsule = () => {
     } catch (error) {
       console.error("Error loading capsules:", error);
       toast({
-        title: "Error",
-        description: "Failed to load time capsules",
+        title: t("common.error"),
+        description: t("toast.error"),
         variant: "destructive"
       });
     } finally {
@@ -71,23 +73,23 @@ const TimeCapsule = () => {
         const maxSize = 20 * 1024 * 1024;
         if (result.file.size > maxSize) {
           toast({
-            title: "File too large",
-            description: "Maximum file size is 20MB",
+            title: t("toast.uploadFailed"),
+            description: t("document.maxSize"),
             variant: "destructive"
           });
           return;
         }
         setFormData({ ...formData, attachmentFile: result.file });
         toast({
-          title: "Document scanned",
-          description: `${result.file.name} has been attached`,
+          title: t("toast.uploadSuccess"),
+          description: result.file.name,
         });
       }
     } catch (error) {
       console.error('Error scanning document:', error);
       toast({
-        title: "Scan Failed",
-        description: error instanceof Error ? error.message : "Failed to scan document",
+        title: t("common.error"),
+        description: error instanceof Error ? error.message : t("toast.uploadFailed"),
         variant: "destructive"
       });
     }
@@ -124,16 +126,16 @@ const TimeCapsule = () => {
     const maxSize = 20 * 1024 * 1024;
     if (file.size > maxSize) {
       toast({
-        title: "File too large",
-        description: "Maximum file size is 20MB",
+        title: t("toast.uploadFailed"),
+        description: t("document.maxSize"),
         variant: "destructive"
       });
       return;
     }
     setFormData({ ...formData, attachmentFile: file });
     toast({
-      title: "File attached",
-      description: `${file.name} has been attached`,
+      title: t("toast.uploadSuccess"),
+      description: file.name,
     });
   };
 
@@ -142,8 +144,7 @@ const TimeCapsule = () => {
       const file = await openGoogleDrivePicker();
       if (file) {
         toast({
-          title: "Downloading file",
-          description: "Please wait...",
+          title: t("common.loading"),
         });
 
         const blob = await downloadFileFromGoogleDrive(file);
@@ -153,8 +154,8 @@ const TimeCapsule = () => {
     } catch (error) {
       console.error('Error with native picker:', error);
       toast({
-        title: "Import Error",
-        description: error instanceof Error ? error.message : "Failed to import file",
+        title: t("common.error"),
+        description: error instanceof Error ? error.message : t("toast.uploadFailed"),
         variant: "destructive",
       });
     }
@@ -163,8 +164,8 @@ const TimeCapsule = () => {
   const handleCreateCapsule = async () => {
     if (!formData.title || !formData.releaseDate || !formData.recipientEmail) {
       toast({
-        title: "Missing fields",
-        description: "Please fill in all required fields",
+        title: t("toast.allFieldsRequired"),
+        description: t("toast.fillAllFields"),
         variant: "destructive"
       });
       return;
@@ -173,8 +174,8 @@ const TimeCapsule = () => {
     // Gmail-only validation
     if (!validateGmailOnly(formData.recipientEmail)) {
       toast({
-        title: "Invalid email",
-        description: "Only Gmail addresses are allowed (example@gmail.com)",
+        title: t("common.error"),
+        description: t("nominee.gmailOnly"),
         variant: "destructive"
       });
       return;
@@ -183,8 +184,8 @@ const TimeCapsule = () => {
     // Phone validation (if provided)
     if (formData.phone && !validatePhoneExact10(formData.phone)) {
       toast({
-        title: "Invalid phone number",
-        description: "Phone number must be exactly 10 digits",
+        title: t("common.error"),
+        description: t("nominee.digitsOnly"),
         variant: "destructive"
       });
       return;
@@ -211,8 +212,8 @@ const TimeCapsule = () => {
         });
 
         toast({
-          title: "Time capsule updated!",
-          description: `${formData.title} has been updated successfully`,
+          title: t("timeCapsule.capsuleUpdated"),
+          description: formData.title,
         });
       } else {
         // Create new capsule
@@ -226,8 +227,8 @@ const TimeCapsule = () => {
         });
 
         toast({
-          title: "Time capsule created!",
-          description: `${formData.title} will be released on ${formData.releaseDate}`,
+          title: t("timeCapsule.capsuleCreated"),
+          description: `${formData.title} - ${t("timeCapsule.releasesOn")} ${formData.releaseDate}`,
         });
       }
 
@@ -238,8 +239,8 @@ const TimeCapsule = () => {
     } catch (error) {
       console.error("Error saving capsule:", error);
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to save time capsule",
+        title: t("common.error"),
+        description: error instanceof Error ? error.message : t("toast.error"),
         variant: "destructive"
       });
     } finally {
@@ -259,8 +260,8 @@ const TimeCapsule = () => {
     try {
       await timeCapsuleService.delete(capsuleToDelete.id);
       toast({
-        title: 'Time Capsule Deleted',
-        description: `"${capsuleToDelete.title}" has been deleted.`
+        title: t("timeCapsule.capsuleDeleted"),
+        description: capsuleToDelete.title
       });
     } catch (error) {
       console.error("Error deleting capsule:", error);
@@ -269,8 +270,8 @@ const TimeCapsule = () => {
       await loadCapsules();
 
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to delete time capsule",
+        title: t("common.error"),
+        description: error instanceof Error ? error.message : t("toast.error"),
         variant: "destructive"
       });
     }
@@ -286,8 +287,8 @@ const TimeCapsule = () => {
         <div className="flex items-center gap-4 mb-6">
           <BackButton />
           <div className="flex-1 text-center -ml-10">
-            <h1 className="text-2xl font-bold">Time Capsule</h1>
-            <p className="text-sm text-muted-foreground mt-1">Create messages for the future</p>
+            <h1 className="text-2xl font-bold">{t("timeCapsule.title")}</h1>
+            <p className="text-sm text-muted-foreground mt-1">{t("timeCapsule.subtitle")}</p>
           </div>
         </div>
 
@@ -295,11 +296,11 @@ const TimeCapsule = () => {
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-card/50 rounded-xl p-4 text-center backdrop-blur-sm">
             <div className="text-3xl font-bold mb-1 text-blue-600">{scheduledCount}</div>
-            <div className="text-sm text-muted-foreground">Scheduled</div>
+            <div className="text-sm text-muted-foreground">{t("timeCapsule.scheduled")}</div>
           </div>
           <div className="bg-card/50 rounded-xl p-4 text-center backdrop-blur-sm">
             <div className="text-3xl font-bold mb-1 text-green-600">{releasedCount}</div>
-            <div className="text-sm text-muted-foreground">Released</div>
+            <div className="text-sm text-muted-foreground">{t("timeCapsule.released")}</div>
           </div>
         </div>
       </div>
@@ -309,13 +310,13 @@ const TimeCapsule = () => {
         {showCreateForm && (
           <div className="bg-card rounded-2xl p-6 space-y-4">
             <h2 className="text-lg font-bold text-foreground mb-4">
-              {editingId ? '✏️ Edit Time Capsule' : '+ Create New Time Capsule'}
+              {editingId ? `✏️ ${t("timeCapsule.editCapsule")}` : `+ ${t("timeCapsule.createNew")}`}
             </h2>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Title *</label>
+              <label className="text-sm font-medium text-foreground">{t("timeCapsule.titleRequired")}</label>
               <Input
-                placeholder="Enter capsule title"
+                placeholder={t("timeCapsule.enterTitle")}
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 className="bg-background border-border"
@@ -323,9 +324,9 @@ const TimeCapsule = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Message</label>
+              <label className="text-sm font-medium text-foreground">{t("timeCapsule.message")}</label>
               <Textarea
-                placeholder="Write your message for the future..."
+                placeholder={t("timeCapsule.writeMessage")}
                 value={formData.message}
                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                 className="bg-background border-border min-h-[120px]"
@@ -333,7 +334,7 @@ const TimeCapsule = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Release Date *</label>
+              <label className="text-sm font-medium text-foreground">{t("timeCapsule.releaseDateRequired")}</label>
               <Input
                 type="date"
                 value={formData.releaseDate}
@@ -343,7 +344,7 @@ const TimeCapsule = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Recipient Email *</label>
+              <label className="text-sm font-medium text-foreground">{t("timeCapsule.recipientEmailRequired")}</label>
               <Input
                 type="email"
                 placeholder="example@gmail.com"
@@ -351,11 +352,11 @@ const TimeCapsule = () => {
                 onChange={(e) => setFormData({ ...formData, recipientEmail: e.target.value })}
                 className="bg-background border-border"
               />
-              <p className="text-xs text-muted-foreground">Only Gmail addresses are accepted</p>
+              <p className="text-xs text-muted-foreground">{t("nominee.gmailOnly")}</p>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Phone Number</label>
+              <label className="text-sm font-medium text-foreground">{t("nominee.phoneOptional")}</label>
               <Input
                 type="tel"
                 placeholder="9876543210"
@@ -367,11 +368,11 @@ const TimeCapsule = () => {
                 maxLength={10}
                 className="bg-background border-border"
               />
-              <p className="text-xs text-muted-foreground">10 digits only</p>
+              <p className="text-xs text-muted-foreground">{t("nominee.digitsOnly")}</p>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Attachment (Optional)</label>
+              <label className="text-sm font-medium text-foreground">{t("timeCapsule.attachmentOptional")}</label>
               <div className="border-2 border-dashed border-border rounded-xl p-6">
                 {formData.attachmentFile ? (
                   <div className="text-center">
@@ -388,7 +389,7 @@ const TimeCapsule = () => {
                 ) : (
                   <>
                     <Camera className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-                    <p className="text-sm text-muted-foreground mb-3">Scan, upload from device, or import from Google Drive</p>
+                    <p className="text-sm text-muted-foreground mb-3">{t("timeCapsule.scanUploadImport")}</p>
                     <div className="flex gap-3 justify-center flex-wrap">
                       <Button
                         type="button"
@@ -397,7 +398,7 @@ const TimeCapsule = () => {
                         onClick={handleScanDocument}
                       >
                         <Camera className="w-4 h-4" />
-                        Scan
+                        {t("timeCapsule.scan")}
                       </Button>
                       <Button
                         type="button"
@@ -413,23 +414,23 @@ const TimeCapsule = () => {
                               const maxSize = 20 * 1024 * 1024;
                               if (file.size > maxSize) {
                                 toast({
-                                  title: "File too large",
-                                  description: "Maximum file size is 20MB",
+                                  title: t("toast.uploadFailed"),
+                                  description: t("document.maxSize"),
                                   variant: "destructive"
                                 });
                                 return;
                               }
                               setFormData({ ...formData, attachmentFile: file });
                               toast({
-                                title: "File attached",
-                                description: `${file.name} has been attached`,
+                                title: t("toast.uploadSuccess"),
+                                description: file.name,
                               });
                             }
                           };
                           input.click();
                         }}
                       >
-                        📁 Device
+                        📁 {t("timeCapsule.device")}
                       </Button>
                       <Button
                         type="button"
@@ -440,10 +441,10 @@ const TimeCapsule = () => {
                         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                           <path d="M12.545 10.239v3.821h5.445c-.712 2.315-2.647 3.972-5.445 3.972a6.033 6.033 0 110-12.064c1.498 0 2.866.549 3.921 1.453l2.814-2.814A9.969 9.969 0 0012.545 2C7.021 2 2.543 6.477 2.543 12s4.478 10 10.002 10c8.396 0 10.249-7.85 9.426-11.748l-9.426-.013z" />
                         </svg>
-                        Drive
+                        {t("timeCapsule.drive")}
                       </Button>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-3">Maximum file size: 20MB</p>
+                    <p className="text-xs text-muted-foreground mt-3">{t("document.maxSize")}</p>
                   </>
                 )}
               </div>
@@ -456,7 +457,7 @@ const TimeCapsule = () => {
                 disabled={loading}
               >
                 <Send className="w-4 h-4" />
-                {loading ? "Saving..." : editingId ? "Update Capsule" : "Create Capsule"}
+                {loading ? t("timeCapsule.saving") : editingId ? t("timeCapsule.updateCapsule") : t("timeCapsule.createCapsule")}
               </Button>
               <Button
                 variant="outline"
