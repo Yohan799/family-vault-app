@@ -670,6 +670,7 @@ export type Database = {
       }
       two_fa_verifications: {
         Row: {
+          attempt_count: number | null
           created_at: string | null
           email: string
           expires_at: string
@@ -679,6 +680,7 @@ export type Database = {
           verified_at: string | null
         }
         Insert: {
+          attempt_count?: number | null
           created_at?: string | null
           email: string
           expires_at: string
@@ -688,6 +690,7 @@ export type Database = {
           verified_at?: string | null
         }
         Update: {
+          attempt_count?: number | null
           created_at?: string | null
           email?: string
           expires_at?: string
