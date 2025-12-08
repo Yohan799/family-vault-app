@@ -30,7 +30,12 @@ interface Profile {
 }
 
 // Helper function to send push notification
-async function sendPushNotification(userId: string, title: string, body: string) {
+async function sendPushNotification(
+  userId: string, 
+  title: string, 
+  body: string, 
+  data?: Record<string, string>
+) {
   try {
     const response = await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
       method: "POST",
@@ -38,7 +43,7 @@ async function sendPushNotification(userId: string, title: string, body: string)
         "Content-Type": "application/json",
         "Authorization": `Bearer ${supabaseServiceKey}`,
       },
-      body: JSON.stringify({ user_id: userId, title, body }),
+      body: JSON.stringify({ user_id: userId, title, body, data }),
     });
     
     if (!response.ok) {
@@ -162,8 +167,9 @@ serve(async (req) => {
         if (profile.push_notifications_enabled) {
           await sendPushNotification(
             capsule.user_id,
-            "Time Capsule Delivered! 🎁",
-            `Your time capsule "${capsule.title}" has been delivered to ${capsule.recipient_email}.`
+            "📦 Time Capsule Released",
+            `"${capsule.title}" is now available to view`,
+            { type: "time_capsule_released", capsule_id: capsule.id }
           );
         }
 
