@@ -1,4 +1,5 @@
-import { ArrowLeft, Check } from "lucide-react";
+import { Check } from "lucide-react";
+import BackButton from "@/components/BackButton";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -49,9 +50,7 @@ const BackupFrequency = () => {
     <div className="min-h-screen bg-background">
       <div className="bg-primary/20 text-foreground p-6 rounded-b-3xl">
         <div className="flex items-center gap-4">
-          <button onClick={() => navigate("/settings")} className="p-2 hover:bg-accent rounded-full transition-colors">
-            <ArrowLeft className="w-5 h-5 text-foreground" />
-          </button>
+          <BackButton to="/settings" />
           <h1 className="text-2xl font-bold">Backup Frequency</h1>
         </div>
       </div>

@@ -1,4 +1,5 @@
-import { ArrowLeft, Check, Globe } from "lucide-react";
+import { Check, Globe } from "lucide-react";
+import BackButton from "@/components/BackButton";
 import { useNavigate } from "react-router-dom";
 import { useLanguage, languages, Language } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
@@ -23,12 +24,7 @@ const LanguageSettings = () => {
       {/* Header */}
       <div className="bg-primary/20 text-foreground p-6 rounded-b-3xl">
         <div className="flex items-center gap-4">
-          <button
-            onClick={() => navigate(-1)}
-            className="p-2 hover:bg-background/20 rounded-full transition-colors"
-          >
-            <ArrowLeft className="w-6 h-6" />
-          </button>
+          <BackButton />
           <div>
             <h1 className="text-2xl font-bold">{t("language.title")}</h1>
             <p className="text-sm text-muted-foreground mt-1">

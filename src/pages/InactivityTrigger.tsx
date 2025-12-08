@@ -1,4 +1,5 @@
-import { ArrowLeft, Shield, Clock, Mail, Phone, MessageSquare, Home, Lock, Settings } from "lucide-react";
+import { Shield, Clock, Mail, Phone, MessageSquare, Home, Lock, Settings } from "lucide-react";
+import BackButton from "@/components/BackButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -89,9 +90,7 @@ const InactivityTrigger = () => {
             {/* Header */}
             <div className="bg-primary/10 p-6 rounded-b-3xl">
                 <div className="flex items-center gap-4 mb-4">
-                    <button onClick={() => navigate("/dashboard")} className="p-2 hover:bg-accent rounded-full transition-colors">
-                        <ArrowLeft className="w-5 h-5 text-foreground" />
-                    </button>
+                    <BackButton to="/dashboard" />
                     <div className="flex-1">
                         <h1 className="text-2xl font-bold text-foreground">{t("inactivity.title")}</h1>
                         <p className="text-sm text-muted-foreground mt-1">{t("inactivity.subtitle")}</p>

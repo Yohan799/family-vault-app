@@ -1,4 +1,5 @@
-import { ArrowLeft, Download, Shield, Home, Vault, Settings, FileText, Users, Clock, FolderOpen } from "lucide-react";
+import { Download, Shield, Home, Vault, Settings, FileText, Users, Clock, FolderOpen } from "lucide-react";
+import BackButton from "@/components/BackButton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
@@ -61,9 +62,7 @@ const BackupRestore = () => {
             {/* Header */}
             <div className="bg-primary/20 text-foreground p-6 rounded-b-3xl">
                 <div className="flex items-center gap-4">
-                    <button onClick={() => navigate("/settings")} className="p-2 -ml-2">
-                        <ArrowLeft className="w-5 h-5" />
-                    </button>
+                    <BackButton to="/settings" />
                     <div>
                         <h1 className="text-xl font-bold">Backup Data</h1>
                         <p className="text-sm text-muted-foreground">Export your vault as JSON</p>

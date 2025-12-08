@@ -1,4 +1,5 @@
-import { ArrowLeft, CalendarIcon, ChevronRight } from "lucide-react";
+import { CalendarIcon, ChevronRight } from "lucide-react";
+import BackButton from "@/components/BackButton";
 import { validatePhoneExact10 } from "@/lib/validation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -173,9 +174,7 @@ const EditProfile = () => {
       {/* Header */}
       <div className="bg-primary/20 text-foreground p-6 rounded-b-3xl">
         <div className="flex items-center gap-4 mb-8">
-          <button onClick={() => navigate("/profile")} className="p-2 hover:bg-accent rounded-full transition-colors">
-            <ArrowLeft className="w-5 h-5 text-foreground" />
-          </button>
+          <BackButton to="/profile" />
           <h1 className="text-2xl font-bold">Edit Profile</h1>
         </div>
 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Fingerprint, KeyRound } from "lucide-react";
+import { Fingerprint, KeyRound } from "lucide-react";
+import BackButton from "@/components/BackButton";
 import { Switch } from "@/components/ui/switch";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -113,9 +114,7 @@ const AppLockSetup = () => {
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center gap-3 pt-4">
-          <button onClick={() => navigate("/settings")} className="p-2 hover:bg-accent rounded-full transition-colors">
-            <ArrowLeft className="w-5 h-5 text-foreground" />
-          </button>
+          <BackButton to="/settings" />
           <h1 className="text-2xl font-bold text-foreground">App Lock</h1>
         </div>
 

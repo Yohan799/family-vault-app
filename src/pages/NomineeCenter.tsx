@@ -1,4 +1,5 @@
-import { ArrowLeft, Users, Home, Vault, Settings, Mail, Phone, CheckCircle, Clock, Edit2, Trash2, RefreshCw } from "lucide-react";
+import { Users, Home, Vault, Settings, Mail, Phone, CheckCircle, Clock, Edit2, Trash2, RefreshCw } from "lucide-react";
+import BackButton from "@/components/BackButton";
 import { validateGmailOnly, validatePhoneExact10 } from "@/lib/validation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -321,9 +322,7 @@ const NomineeCenter = () => {
       {/* Header */}
       <div className="bg-primary/20 text-foreground p-4 sm:p-6 rounded-b-3xl">
         <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
-          <button onClick={() => navigate(-1)} className="p-2 hover:bg-accent rounded-full transition-colors">
-            <ArrowLeft className="w-5 h-5 text-foreground" />
-          </button>
+          <BackButton />
           <div className="flex-1 text-center -ml-9 sm:-ml-10">
             <h1 className="text-xl sm:text-2xl font-bold">{t("nominee.title")}</h1>
             <p className="text-xs sm:text-sm text-muted-foreground mt-1">{t("nominee.subtitle")}</p>

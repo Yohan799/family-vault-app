@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Shield, Mail, ArrowLeft } from "lucide-react";
+import { Shield, Mail } from "lucide-react";
+import BackButton from "@/components/BackButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
@@ -62,13 +63,10 @@ const ForgotPassword = () => {
       <div className="w-full max-w-md bg-card rounded-3xl shadow-xl p-8">
         <div className="space-y-6">
           <div className="text-center space-y-4">
-            <button
-              onClick={() => navigate("/signin")}
-              className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-2"
-            >
-              <ArrowLeft className="w-5 h-5 mr-1" />
-              Back to Sign In
-            </button>
+            <div className="flex items-center gap-2 mb-2">
+              <BackButton to="/signin" />
+              <span className="text-sm text-muted-foreground">Back to Sign In</span>
+            </div>
             <h1 className="text-3xl font-bold text-foreground">
               Forgot Password?
             </h1>

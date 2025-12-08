@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Shield, ArrowLeft } from "lucide-react";
+import { Shield } from "lucide-react";
+import BackButton from "@/components/BackButton";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -95,13 +96,10 @@ const PasswordResetOTP = () => {
       <div className="w-full max-w-md bg-card rounded-3xl shadow-xl p-8">
         <div className="space-y-6">
           <div className="text-center space-y-4">
-            <button
-              onClick={() => navigate("/forgot-password")}
-              className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-2"
-            >
-              <ArrowLeft className="w-5 h-5 mr-1" />
-              Back
-            </button>
+            <div className="flex items-center gap-2 mb-2">
+              <BackButton to="/forgot-password" />
+              <span className="text-sm text-muted-foreground">Back</span>
+            </div>
             <h1 className="text-3xl font-bold text-foreground">
               Enter OTP
             </h1>
