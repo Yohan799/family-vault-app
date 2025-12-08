@@ -1,6 +1,5 @@
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications, Token, PushNotificationSchema, ActionPerformed } from '@capacitor/push-notifications';
-import { LocalNotifications } from '@capacitor/local-notifications';
 import { supabase } from '@/integrations/supabase/client';
 
 // Check if push notifications are available (native platform only)
@@ -136,25 +135,6 @@ export const initializePushNotifications = (
   // Listen for push notifications received while app is in foreground
   PushNotifications.addListener('pushNotificationReceived', async (notification: PushNotificationSchema) => {
     console.log('Push notification received:', notification);
-
-    // Show local notification for foreground pushes on Android
-    if (Capacitor.getPlatform() === 'android') {
-      try {
-        await LocalNotifications.schedule({
-          notifications: [{
-            title: notification.title || 'Notification',
-            body: notification.body || '',
-            id: Math.floor(Math.random() * 1000000),
-            schedule: { at: new Date(Date.now() + 100) },
-            extra: notification.data,
-          }]
-        });
-        console.log('Local notification scheduled for foreground push');
-      } catch (err) {
-        console.error('Error scheduling local notification:', err);
-      }
-    }
-
     onNotificationReceived?.(notification);
   });
 
