@@ -16,11 +16,13 @@ import { DocumentViewerModal } from "@/components/vault/DocumentViewerModal";
 import { filterItems, debounce } from "@/lib/searchUtils";
 import { SubcategoryViewSkeleton } from "@/components/skeletons";
 import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const SubcategoryView = () => {
   const navigate = useNavigate();
   const { categoryId, subcategoryId } = useParams();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [uploadOpen, setUploadOpen] = useState(false);
   const [optionsOpen, setOptionsOpen] = useState(false);
   const [lockOpen, setLockOpen] = useState(false);
@@ -457,14 +459,14 @@ const SubcategoryView = () => {
               <SubcategoryIcon className="w-6 h-6 text-[#1F2121]" />
               <h1 className="text-2xl font-bold text-[#1F2121]">{subcategory.name}</h1>
             </div>
-            <p className="text-[#626C71] text-sm mt-1">{documents.length} Documents</p>
+            <p className="text-[#626C71] text-sm mt-1">{documents.length} {t("common.documents")}</p>
           </div>
         </div>
 
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <Input
-            placeholder="Search folders and documents..."
+            placeholder={t("folder.searchPlaceholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-12 pr-12 h-12 bg-[#F5F5F5] border-none rounded-xl"
@@ -483,14 +485,14 @@ const SubcategoryView = () => {
       {showNoResults && (
         <div className="px-6 text-center py-12">
           <FileText className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
-          <p className="text-muted-foreground text-lg">No matching documents found</p>
-          <p className="text-muted-foreground/60 text-sm mt-2">Try a different search term</p>
+          <p className="text-muted-foreground text-lg">{t("folder.noResults")}</p>
+          <p className="text-muted-foreground/60 text-sm mt-2">{t("folder.tryDifferent")}</p>
         </div>
       )}
 
       {filteredFolders.length > 0 && !showNoResults && (
         <div className="px-6 mb-6">
-          <h2 className="text-lg font-semibold text-[#1F2121] mb-3">Folders</h2>
+          <h2 className="text-lg font-semibold text-[#1F2121] mb-3">{t("folder.folders")}</h2>
           <div className="grid grid-cols-2 gap-3 items-stretch">
             {filteredFolders.map((folder) => (
               <div key={folder.id} className="relative h-full">

@@ -116,10 +116,31 @@ const translations: Record<Language, Record<string, string>> = {
     "document.unlock": "Unlock Document",
     "document.password": "Password",
     "document.confirmPassword": "Confirm Password",
-    "document.fromDevice": "From Device",
-    "document.fromGoogleDrive": "From Google Drive",
+    "document.fromDevice": "Upload from Device",
+    "document.fromDeviceSubtitle": "Choose from your files",
+    "document.fromGoogleDrive": "Google Drive",
+    "document.fromGoogleDriveSubtitle": "Import files from Drive",
     "document.scanDocument": "Scan Document",
+    "document.scanSubtitle": "Use camera with auto edge detection",
     "document.maxSize": "Maximum file size: 20MB",
+    
+    // Subcategory
+    "subcategory.add": "Add Subcategory",
+    "subcategory.name": "Subcategory Name",
+    "subcategory.namePlaceholder": "e.g. Home 1, Property A, etc.",
+    "subcategory.searchPlaceholder": "Search subcategories...",
+    "subcategory.noResults": "No matching subcategories found",
+    "subcategory.tryDifferent": "Try a different search term",
+    
+    // Folder
+    "folder.add": "Add Folder",
+    "folder.name": "Folder Name",
+    "folder.namePlaceholder": "Enter folder name",
+    "folder.searchPlaceholder": "Search folders and documents...",
+    "folder.noResults": "No matching documents found",
+    "folder.tryDifferent": "Try a different search term",
+    "folder.folders": "Folders",
+    "folder.uploadDocument": "Upload Document",
     
     // Nominees
     "nominee.title": "Nominees",
@@ -398,10 +419,31 @@ const translations: Record<Language, Record<string, string>> = {
     "document.unlock": "డాక్యుమెంట్ అన్‌లాక్ చేయండి",
     "document.password": "పాస్‌వర్డ్",
     "document.confirmPassword": "పాస్‌వర్డ్ నిర్ధారించండి",
-    "document.fromDevice": "పరికరం నుండి",
-    "document.fromGoogleDrive": "Google Drive నుండి",
+    "document.fromDevice": "పరికరం నుండి అప్లోడ్",
+    "document.fromDeviceSubtitle": "మీ ఫైల్స్ నుండి ఎంచుకోండి",
+    "document.fromGoogleDrive": "Google Drive",
+    "document.fromGoogleDriveSubtitle": "Drive నుండి ఇంపోర్ట్ చేయండి",
     "document.scanDocument": "డాక్యుమెంట్ స్కాన్",
+    "document.scanSubtitle": "ఆటో ఎడ్జ్ డిటెక్షన్‌తో కెమెరా ఉపయోగించండి",
     "document.maxSize": "గరిష్ట ఫైల్ సైజు: 20MB",
+    
+    // Subcategory
+    "subcategory.add": "సబ్‌కేటగిరీ జోడించు",
+    "subcategory.name": "సబ్‌కేటగిరీ పేరు",
+    "subcategory.namePlaceholder": "ఉదా. హోమ్ 1, ప్రాపర్టీ A, మొదలైనవి.",
+    "subcategory.searchPlaceholder": "సబ్‌కేటగిరీలు శోధించండి...",
+    "subcategory.noResults": "సరిపోలే సబ్‌కేటగిరీలు కనుగొనబడలేదు",
+    "subcategory.tryDifferent": "వేరే శోధన పదం ప్రయత్నించండి",
+    
+    // Folder
+    "folder.add": "ఫోల్డర్ జోడించు",
+    "folder.name": "ఫోల్డర్ పేరు",
+    "folder.namePlaceholder": "ఫోల్డర్ పేరు నమోదు చేయండి",
+    "folder.searchPlaceholder": "ఫోల్డర్లు మరియు డాక్యుమెంట్లు శోధించండి...",
+    "folder.noResults": "సరిపోలే డాక్యుమెంట్లు కనుగొనబడలేదు",
+    "folder.tryDifferent": "వేరే శోధన పదం ప్రయత్నించండి",
+    "folder.folders": "ఫోల్డర్లు",
+    "folder.uploadDocument": "డాక్యుమెంట్ అప్లోడ్",
     
     // Nominees
     "nominee.title": "నామినీలు",
@@ -680,10 +722,31 @@ const translations: Record<Language, Record<string, string>> = {
     "document.unlock": "ಡಾಕ್ಯುಮೆಂಟ್ ಅನ್‌ಲಾಕ್ ಮಾಡಿ",
     "document.password": "ಪಾಸ್‌ವರ್ಡ್",
     "document.confirmPassword": "ಪಾಸ್‌ವರ್ಡ್ ದೃಢೀಕರಿಸಿ",
-    "document.fromDevice": "ಸಾಧನದಿಂದ",
-    "document.fromGoogleDrive": "Google Drive ನಿಂದ",
+    "document.fromDevice": "ಸಾಧನದಿಂದ ಅಪ್‌ಲೋಡ್",
+    "document.fromDeviceSubtitle": "ನಿಮ್ಮ ಫೈಲ್‌ಗಳಿಂದ ಆರಿಸಿ",
+    "document.fromGoogleDrive": "Google Drive",
+    "document.fromGoogleDriveSubtitle": "Drive ನಿಂದ ಆಮದು ಮಾಡಿ",
     "document.scanDocument": "ಡಾಕ್ಯುಮೆಂಟ್ ಸ್ಕ್ಯಾನ್",
+    "document.scanSubtitle": "ಆಟೋ ಎಡ್ಜ್ ಡಿಟೆಕ್ಷನ್‌ನೊಂದಿಗೆ ಕ್ಯಾಮೆರಾ ಬಳಸಿ",
     "document.maxSize": "ಗರಿಷ್ಠ ಫೈಲ್ ಗಾತ್ರ: 20MB",
+    
+    // Subcategory
+    "subcategory.add": "ಉಪವರ್ಗ ಸೇರಿಸಿ",
+    "subcategory.name": "ಉಪವರ್ಗ ಹೆಸರು",
+    "subcategory.namePlaceholder": "ಉದಾ. ಮನೆ 1, ಆಸ್ತಿ A, ಇತ್ಯಾದಿ.",
+    "subcategory.searchPlaceholder": "ಉಪವರ್ಗಗಳನ್ನು ಹುಡುಕಿ...",
+    "subcategory.noResults": "ಹೊಂದಾಣಿಕೆಯ ಉಪವರ್ಗಗಳು ಕಂಡುಬಂದಿಲ್ಲ",
+    "subcategory.tryDifferent": "ಬೇರೆ ಹುಡುಕಾಟ ಪದ ಪ್ರಯತ್ನಿಸಿ",
+    
+    // Folder
+    "folder.add": "ಫೋಲ್ಡರ್ ಸೇರಿಸಿ",
+    "folder.name": "ಫೋಲ್ಡರ್ ಹೆಸರು",
+    "folder.namePlaceholder": "ಫೋಲ್ಡರ್ ಹೆಸರು ನಮೂದಿಸಿ",
+    "folder.searchPlaceholder": "ಫೋಲ್ಡರ್‌ಗಳು ಮತ್ತು ಡಾಕ್ಯುಮೆಂಟ್‌ಗಳನ್ನು ಹುಡುಕಿ...",
+    "folder.noResults": "ಹೊಂದಾಣಿಕೆಯ ಡಾಕ್ಯುಮೆಂಟ್‌ಗಳು ಕಂಡುಬಂದಿಲ್ಲ",
+    "folder.tryDifferent": "ಬೇರೆ ಹುಡುಕಾಟ ಪದ ಪ್ರಯತ್ನಿಸಿ",
+    "folder.folders": "ಫೋಲ್ಡರ್‌ಗಳು",
+    "folder.uploadDocument": "ಡಾಕ್ಯುಮೆಂಟ್ ಅಪ್‌ಲೋಡ್",
     
     // Nominees
     "nominee.title": "ನಾಮಿನಿಗಳು",
@@ -962,10 +1025,31 @@ const translations: Record<Language, Record<string, string>> = {
     "document.unlock": "दस्तावेज़ अनलॉक करें",
     "document.password": "पासवर्ड",
     "document.confirmPassword": "पासवर्ड पुष्टि करें",
-    "document.fromDevice": "डिवाइस से",
-    "document.fromGoogleDrive": "Google Drive से",
+    "document.fromDevice": "डिवाइस से अपलोड",
+    "document.fromDeviceSubtitle": "अपनी फ़ाइलों से चुनें",
+    "document.fromGoogleDrive": "Google Drive",
+    "document.fromGoogleDriveSubtitle": "Drive से आयात करें",
     "document.scanDocument": "दस्तावेज़ स्कैन",
+    "document.scanSubtitle": "ऑटो एज डिटेक्शन के साथ कैमरा उपयोग करें",
     "document.maxSize": "अधिकतम फ़ाइल आकार: 20MB",
+    
+    // Subcategory
+    "subcategory.add": "उप-श्रेणी जोड़ें",
+    "subcategory.name": "उप-श्रेणी नाम",
+    "subcategory.namePlaceholder": "जैसे होम 1, प्रॉपर्टी A, आदि।",
+    "subcategory.searchPlaceholder": "उप-श्रेणियां खोजें...",
+    "subcategory.noResults": "कोई मेल खाती उप-श्रेणियां नहीं मिलीं",
+    "subcategory.tryDifferent": "अलग खोज शब्द आज़माएं",
+    
+    // Folder
+    "folder.add": "फ़ोल्डर जोड़ें",
+    "folder.name": "फ़ोल्डर नाम",
+    "folder.namePlaceholder": "फ़ोल्डर नाम दर्ज करें",
+    "folder.searchPlaceholder": "फ़ोल्डर और दस्तावेज़ खोजें...",
+    "folder.noResults": "कोई मेल खाते दस्तावेज़ नहीं मिले",
+    "folder.tryDifferent": "अलग खोज शब्द आज़माएं",
+    "folder.folders": "फ़ोल्डर",
+    "folder.uploadDocument": "दस्तावेज़ अपलोड",
     
     // Nominees
     "nominee.title": "नामिनी",
