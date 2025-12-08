@@ -132,6 +132,10 @@ const translations: Record<Language, Record<string, string>> = {
     "subcategory.searchPlaceholder": "Search subcategories...",
     "subcategory.noResults": "No matching subcategories found",
     "subcategory.tryDifferent": "Try a different search term",
+    "subcategory.deleteTitle": "Delete Subcategory?",
+    "subcategory.deleteConfirm": "Are you sure you want to delete",
+    "subcategory.willBeDeleted": "will be deleted",
+    "subcategory.cannotUndo": "This action cannot be undone",
     
     // Folder
     "folder.add": "Add Folder",
@@ -717,6 +721,10 @@ const translations: Record<Language, Record<string, string>> = {
     "subcategory.searchPlaceholder": "సబ్‌కేటగిరీలు శోధించండి...",
     "subcategory.noResults": "సరిపోలే సబ్‌కేటగిరీలు కనుగొనబడలేదు",
     "subcategory.tryDifferent": "వేరే శోధన పదం ప్రయత్నించండి",
+    "subcategory.deleteTitle": "సబ్‌కేటగిరీ తొలగించాలా?",
+    "subcategory.deleteConfirm": "మీరు తొలగించాలనుకుంటున్నారా",
+    "subcategory.willBeDeleted": "తొలగించబడతాయి",
+    "subcategory.cannotUndo": "ఈ చర్య రద్దు చేయబడదు",
     
     // Folder
     "folder.add": "ఫోల్డర్ జోడించు",
@@ -1183,6 +1191,10 @@ const translations: Record<Language, Record<string, string>> = {
     "subcategory.searchPlaceholder": "ಉಪವರ್ಗಗಳನ್ನು ಹುಡುಕಿ...",
     "subcategory.noResults": "ಹೊಂದಾಣಿಕೆಯ ಉಪವರ್ಗಗಳು ಕಂಡುಬಂದಿಲ್ಲ",
     "subcategory.tryDifferent": "ಬೇರೆ ಹುಡುಕಾಟ ಪದ ಪ್ರಯತ್ನಿಸಿ",
+    "subcategory.deleteTitle": "ಉಪವರ್ಗ ಅಳಿಸಬೇಕೆ?",
+    "subcategory.deleteConfirm": "ನೀವು ಅಳಿಸಲು ಖಚಿತವಾಗಿದ್ದೀರಾ",
+    "subcategory.willBeDeleted": "ಅಳಿಸಲಾಗುತ್ತದೆ",
+    "subcategory.cannotUndo": "ಈ ಕ್ರಿಯೆಯನ್ನು ರದ್ದುಗೊಳಿಸಲಾಗುವುದಿಲ್ಲ",
     
     // Folder
     "folder.add": "ಫೋಲ್ಡರ್ ಸೇರಿಸಿ",
@@ -1496,6 +1508,10 @@ const translations: Record<Language, Record<string, string>> = {
     "subcategory.searchPlaceholder": "उप-श्रेणियां खोजें...",
     "subcategory.noResults": "कोई मेल खाती उप-श्रेणियां नहीं मिलीं",
     "subcategory.tryDifferent": "अलग खोज शब्द आज़माएं",
+    "subcategory.deleteTitle": "उप-श्रेणी हटाएं?",
+    "subcategory.deleteConfirm": "क्या आप वाकई हटाना चाहते हैं",
+    "subcategory.willBeDeleted": "हटा दिए जाएंगे",
+    "subcategory.cannotUndo": "यह क्रिया पूर्ववत नहीं की जा सकती",
     
     // Folder
     "folder.add": "फ़ोल्डर जोड़ें",
@@ -1704,6 +1720,50 @@ const translations: Record<Language, Record<string, string>> = {
     "quickAction.timeCapsule.subtitle": "भविष्य के संदेश शेड्यूल करें",
     "quickAction.inactivity.title": "निष्क्रियता ट्रिगर",
     "quickAction.inactivity.subtitle": "आपातकालीन पहुंच सेटअप करें",
+    
+    // Vault Categories
+    "category.realEstate": "रियल एस्टेट",
+    "category.medical": "चिकित्सा",
+    "category.education": "शिक्षा",
+    "category.insurance": "बीमा",
+    "category.personal": "व्यक्तिगत",
+    
+    // Vault Subcategories - Real Estate
+    "subcategory.residential": "आवासीय संपत्ति",
+    "subcategory.commercial": "व्यावसायिक संपत्ति",
+    "subcategory.land": "भूमि",
+    "subcategory.industrial": "औद्योगिक",
+    "subcategory.rental": "किराये की संपत्ति",
+    "subcategory.propertyTax": "संपत्ति कर",
+    "subcategory.saleDeeds": "बिक्री/खरीद विलेख",
+    "subcategory.propertyDocuments": "संपत्ति दस्तावेज़",
+    
+    // Vault Subcategories - Medical
+    "subcategory.prescription": "पर्चा",
+    "subcategory.testReports": "टेस्ट रिपोर्ट",
+    "subcategory.hospitalRecords": "अस्पताल रिकॉर्ड",
+    "subcategory.vaccination": "टीकाकरण रिकॉर्ड",
+    "subcategory.insuranceClaims": "बीमा दावे",
+    
+    // Vault Subcategories - Education
+    "subcategory.certificates": "प्रमाणपत्र",
+    "subcategory.transcripts": "ट्रांसक्रिप्ट",
+    "subcategory.degrees": "डिग्री",
+    "subcategory.idCards": "आईडी कार्ड",
+    "subcategory.scholarships": "छात्रवृत्ति",
+    
+    // Vault Subcategories - Insurance
+    "subcategory.health": "स्वास्थ्य",
+    "subcategory.life": "जीवन",
+    "subcategory.vehicle": "वाहन",
+    "subcategory.property": "संपत्ति",
+    "subcategory.travel": "यात्रा",
+    
+    // Vault Subcategories - Personal
+    "subcategory.identity": "पहचान",
+    "subcategory.bank": "बैंक",
+    "subcategory.tax": "कर",
+    "subcategory.legal": "कानूनी",
   },
   ta: {
     // Common
@@ -1798,6 +1858,18 @@ const translations: Record<Language, Record<string, string>> = {
     "document.fromGoogleDrive": "Google Drive இலிருந்து",
     "document.scanDocument": "ஆவணம் ஸ்கேன்",
     "document.maxSize": "அதிகபட்ச கோப்பு அளவு: 20MB",
+    
+    // Subcategory
+    "subcategory.add": "துணைவகை சேர்க்கவும்",
+    "subcategory.name": "துணைவகை பெயர்",
+    "subcategory.namePlaceholder": "எ.கா. வீடு 1, சொத்து A, போன்றவை.",
+    "subcategory.searchPlaceholder": "துணைவகைகளைத் தேடுங்கள்...",
+    "subcategory.noResults": "பொருத்தமான துணைவகைகள் இல்லை",
+    "subcategory.tryDifferent": "வேறு தேடல் சொல்லை முயற்சிக்கவும்",
+    "subcategory.deleteTitle": "துணைவகையை நீக்கவா?",
+    "subcategory.deleteConfirm": "நீக்க விரும்புகிறீர்களா",
+    "subcategory.willBeDeleted": "நீக்கப்படும்",
+    "subcategory.cannotUndo": "இந்த செயலை செயல்தவிர்க்க முடியாது",
     
     // Nominees
     "nominee.title": "நியமனதாரர்கள்",
@@ -1996,6 +2068,50 @@ const translations: Record<Language, Record<string, string>> = {
     "quickAction.timeCapsule.subtitle": "எதிர்கால செய்திகளை திட்டமிடுங்கள்",
     "quickAction.inactivity.title": "செயலற்ற தூண்டுதல்",
     "quickAction.inactivity.subtitle": "அவசர அணுகலை அமைக்கவும்",
+    
+    // Vault Categories
+    "category.realEstate": "ரியல் எஸ்டேட்",
+    "category.medical": "மருத்துவம்",
+    "category.education": "கல்வி",
+    "category.insurance": "காப்பீடு",
+    "category.personal": "தனிப்பட்ட",
+    
+    // Vault Subcategories - Real Estate
+    "subcategory.residential": "குடியிருப்பு சொத்து",
+    "subcategory.commercial": "வணிக சொத்து",
+    "subcategory.land": "நிலம்",
+    "subcategory.industrial": "தொழில்துறை",
+    "subcategory.rental": "வாடகை சொத்துக்கள்",
+    "subcategory.propertyTax": "சொத்து வரி",
+    "subcategory.saleDeeds": "விற்பனை/கொள்முதல் பத்திரங்கள்",
+    "subcategory.propertyDocuments": "சொத்து ஆவணங்கள்",
+    
+    // Vault Subcategories - Medical
+    "subcategory.prescription": "மருந்துச்சீட்டு",
+    "subcategory.testReports": "சோதனை அறிக்கைகள்",
+    "subcategory.hospitalRecords": "மருத்துவமனை பதிவுகள்",
+    "subcategory.vaccination": "தடுப்பூசி பதிவுகள்",
+    "subcategory.insuranceClaims": "காப்பீடு கோரிக்கைகள்",
+    
+    // Vault Subcategories - Education
+    "subcategory.certificates": "சான்றிதழ்கள்",
+    "subcategory.transcripts": "டிரான்ஸ்கிரிப்ட்கள்",
+    "subcategory.degrees": "பட்டங்கள்",
+    "subcategory.idCards": "அடையாள அட்டைகள்",
+    "subcategory.scholarships": "உதவித்தொகைகள்",
+    
+    // Vault Subcategories - Insurance
+    "subcategory.health": "ஆரோக்கியம்",
+    "subcategory.life": "ஆயுள்",
+    "subcategory.vehicle": "வாகனம்",
+    "subcategory.property": "சொத்து",
+    "subcategory.travel": "பயணம்",
+    
+    // Vault Subcategories - Personal
+    "subcategory.identity": "அடையாளம்",
+    "subcategory.bank": "வங்கி",
+    "subcategory.tax": "வரி",
+    "subcategory.legal": "சட்ட",
   },
 };
 

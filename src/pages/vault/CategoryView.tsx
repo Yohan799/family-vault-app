@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { filterItems, debounce } from "@/lib/searchUtils";
 import { CategoryViewSkeleton } from "@/components/skeletons";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { getCategoryName, getSubcategoryName } from "@/lib/categoryTranslations";
 
 const CategoryView = () => {
   const navigate = useNavigate();
@@ -296,10 +297,10 @@ const CategoryView = () => {
       <div className="bg-[#FCFCF9] p-6">
         <div className="flex items-center gap-4 mb-4">
           <BackButton />
-          <div className="flex-1 text-center -ml-10">
+        <div className="flex-1 text-center -ml-10">
             <div className="flex items-center justify-center gap-2">
               <CategoryIcon className="w-6 h-6 text-[#1F2121]" />
-              <h1 className="text-2xl font-bold text-[#1F2121]">{category.name}</h1>
+              <h1 className="text-2xl font-bold text-[#1F2121]">{getCategoryName(category.id, category.name, t)}</h1>
             </div>
             <p className="text-[#626C71] text-sm mt-1">{totalDocumentCount} {t("common.documents")}</p>
           </div>
@@ -345,7 +346,7 @@ const CategoryView = () => {
                       <div className="w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center mb-3">
                         <SubIcon className="w-7 h-7 text-[#6D28D9]" />
                       </div>
-                      <h3 className="font-semibold text-[#1F2121] text-center mb-1 line-clamp-2">{subcategory.name}</h3>
+                      <h3 className="font-semibold text-[#1F2121] text-center mb-1 line-clamp-2">{getSubcategoryName(subcategory.id, subcategory.name, t)}</h3>
                     </div>
                     <p className="text-sm text-[#626C71]">{subcategory.documentCount} {t("common.documents")}</p>
                   </button>
@@ -387,18 +388,18 @@ const CategoryView = () => {
                 <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
                   <AlertTriangle className="w-6 h-6 text-purple-600" />
                 </div>
-                <h2 className="text-xl font-bold text-foreground">Delete Subcategory?</h2>
+                <h2 className="text-xl font-bold text-foreground">{t("subcategory.deleteTitle")}</h2>
               </div>
 
               <p className="text-foreground mb-2">
-                Are you sure you want to delete <span className="font-semibold">{deleteConfirm.subcategory.name}</span>?
+                {t("subcategory.deleteConfirm")} <span className="font-semibold">{getSubcategoryName(deleteConfirm.subcategory.id, deleteConfirm.subcategory.name, t)}</span>?
               </p>
 
               <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-6">
                 <p className="text-sm text-purple-800 font-medium">
-                  {deleteConfirm.subcategory.documentCount} {deleteConfirm.subcategory.documentCount === 1 ? 'document' : 'documents'} will be deleted
+                  {deleteConfirm.subcategory.documentCount} {deleteConfirm.subcategory.documentCount === 1 ? t("common.document") : t("common.documents")} {t("subcategory.willBeDeleted")}
                 </p>
-                <p className="text-xs text-purple-600 mt-1">This action cannot be undone</p>
+                <p className="text-xs text-purple-600 mt-1">{t("subcategory.cannotUndo")}</p>
               </div>
 
               <div className="flex gap-3">
@@ -407,13 +408,13 @@ const CategoryView = () => {
                   onClick={() => setDeleteConfirm({ show: false, subcategory: null })}
                   className="flex-1"
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </Button>
                 <Button
                   onClick={confirmDelete}
                   className="flex-1 bg-purple-500 hover:bg-purple-600 text-white"
                 >
-                  Delete
+                  {t("common.delete")}
                 </Button>
               </div>
             </div>
