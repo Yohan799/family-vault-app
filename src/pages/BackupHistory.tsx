@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useAuth } from "@/contexts/AuthContext";
-import { fetchBackups, downloadBackup, createManualBackup, type Backup } from "@/services/backupService";
+import { fetchBackups, downloadBackupFile, createManualBackup, type Backup } from "@/services/backupService";
 import { format } from "date-fns";
 
 const BackupHistory = () => {
@@ -76,7 +76,7 @@ const BackupHistory = () => {
     if (!selectedBackup) return;
 
     try {
-      const signedUrl = await downloadBackup(selectedBackup.file_path);
+      const signedUrl = await downloadBackupFile(selectedBackup.file_path);
       
       // Download the file
       const link = document.createElement('a');
@@ -103,7 +103,7 @@ const BackupHistory = () => {
 
   const handleDownload = async (backup: Backup) => {
     try {
-      const signedUrl = await downloadBackup(backup.file_path);
+      const signedUrl = await downloadBackupFile(backup.file_path);
       
       const link = document.createElement('a');
       link.href = signedUrl;
