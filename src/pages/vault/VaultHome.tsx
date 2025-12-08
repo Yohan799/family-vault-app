@@ -11,6 +11,7 @@ import { AccessControlModal } from "@/components/vault/AccessControlModal";
 import { ActionMenu, createCategoryActionMenu } from "@/components/vault/ActionMenu";
 import { format, parse } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { getCategoryName } from "@/lib/categoryTranslations";
 
 const VaultHome = () => {
   const navigate = useNavigate();
@@ -437,14 +438,14 @@ const VaultHome = () => {
                         </div>
                         <div className={searchQuery ? "flex-1 text-left" : "w-full mt-2"}>
                           <h3 className={`font-semibold text-[#1F2121] line-clamp-2 ${searchQuery ? "text-lg" : "text-base"}`}>
-                            {category.name}
+                            {getCategoryName(category.id, category.name, t)}
                           </h3>
                         </div>
                       </div>
                       <p className="text-sm text-[#626C71] mt-1">
                         {searchQuery && result.totalMatches > 0
-                          ? `${result.totalMatches} ${result.totalMatches === 1 ? 'match' : 'matches'}`
-                          : `${category.documentCount} Documents`
+                          ? `${result.totalMatches} ${result.totalMatches === 1 ? t("vault.match") : t("vault.matches")}`
+                          : `${category.documentCount} ${t("common.documents")}`
                         }
                       </p>
                     </button>

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { languageStorage } from "@/lib/languageStorage";
 
 export type Language = "en" | "te" | "kn" | "hi" | "ta";
 
@@ -447,7 +448,17 @@ const translations: Record<Language, Record<string, string>> = {
     "access.viewAndDownload": "View and Download",
     "access.selectNominee": "Select Nominee",
     "access.accessLevel": "Access Level",
-"access.noAccess": "No access granted",
+    "access.noAccess": "No access granted",
+    
+    // Quick Action translations (for dashboard)
+    "quickAction.vault.title": "Digital Vault",
+    "quickAction.vault.subtitle": "Manage your secure documents",
+    "quickAction.nominees.title": "Nominee Center",
+    "quickAction.nominees.subtitle": "Manage trusted contacts",
+    "quickAction.timeCapsule.title": "Time Capsule",
+    "quickAction.timeCapsule.subtitle": "Schedule future messages",
+    "quickAction.inactivity.title": "Inactivity Trigger",
+    "quickAction.inactivity.subtitle": "Set up emergency access",
     
     // Vault Categories
     "category.realEstate": "Real Estate",
@@ -903,7 +914,17 @@ const translations: Record<Language, Record<string, string>> = {
     "access.viewAndDownload": "చూడటం & డౌన్లోడ్",
     "access.selectNominee": "నామినీ ఎంచుకోండి",
     "access.accessLevel": "యాక్సెస్ స్థాయి",
-"access.noAccess": "యాక్సెస్ ఇవ్వలేదు",
+    "access.noAccess": "యాక్సెస్ ఇవ్వలేదు",
+    
+    // Quick Action translations
+    "quickAction.vault.title": "డిజిటల్ వాల్ట్",
+    "quickAction.vault.subtitle": "మీ సురక్షిత డాక్యుమెంట్లను నిర్వహించండి",
+    "quickAction.nominees.title": "నామినీ సెంటర్",
+    "quickAction.nominees.subtitle": "విశ్వసనీయ పరిచయాలను నిర్వహించండి",
+    "quickAction.timeCapsule.title": "టైమ్ క్యాప్సూల్",
+    "quickAction.timeCapsule.subtitle": "భవిష్యత్తు సందేశాలను షెడ్యూల్ చేయండి",
+    "quickAction.inactivity.title": "నిష్క్రియాత్మక ట్రిగ్గర్",
+    "quickAction.inactivity.subtitle": "అత్యవసర యాక్సెస్ సెటప్ చేయండి",
     
     // Vault Categories
     "category.realEstate": "రియల్ ఎస్టేట్",
@@ -1360,6 +1381,16 @@ const translations: Record<Language, Record<string, string>> = {
     "access.selectNominee": "ನಾಮಿನಿ ಆರಿಸಿ",
     "access.accessLevel": "ಪ್ರವೇಶ ಹಂತ",
     "access.noAccess": "ಪ್ರವೇಶ ನೀಡಿಲ್ಲ",
+    
+    // Quick Action translations
+    "quickAction.vault.title": "ಡಿಜಿಟಲ್ ವಾಲ್ಟ್",
+    "quickAction.vault.subtitle": "ನಿಮ್ಮ ಸುರಕ್ಷಿತ ಡಾಕ್ಯುಮೆಂಟ್‌ಗಳನ್ನು ನಿರ್ವಹಿಸಿ",
+    "quickAction.nominees.title": "ನಾಮಿನಿ ಕೇಂದ್ರ",
+    "quickAction.nominees.subtitle": "ವಿಶ್ವಾಸಾರ್ಹ ಸಂಪರ್ಕಗಳನ್ನು ನಿರ್ವಹಿಸಿ",
+    "quickAction.timeCapsule.title": "ಟೈಮ್ ಕ್ಯಾಪ್ಸೂಲ್",
+    "quickAction.timeCapsule.subtitle": "ಭವಿಷ್ಯದ ಸಂದೇಶಗಳನ್ನು ಶೆಡ್ಯೂಲ್ ಮಾಡಿ",
+    "quickAction.inactivity.title": "ನಿಷ್ಕ್ರಿಯತೆ ಟ್ರಿಗ್ಗರ್",
+    "quickAction.inactivity.subtitle": "ತುರ್ತು ಪ್ರವೇಶ ಸೆಟಪ್ ಮಾಡಿ",
   },
   hi: {
     // Common
@@ -1663,6 +1694,16 @@ const translations: Record<Language, Record<string, string>> = {
     "access.selectNominee": "नामिनी चुनें",
     "access.accessLevel": "पहुंच स्तर",
     "access.noAccess": "पहुंच नहीं दी गई",
+    
+    // Quick Action translations
+    "quickAction.vault.title": "डिजिटल वॉल्ट",
+    "quickAction.vault.subtitle": "अपने सुरक्षित दस्तावेज़ प्रबंधित करें",
+    "quickAction.nominees.title": "नामिनी केंद्र",
+    "quickAction.nominees.subtitle": "विश्वसनीय संपर्क प्रबंधित करें",
+    "quickAction.timeCapsule.title": "टाइम कैप्सूल",
+    "quickAction.timeCapsule.subtitle": "भविष्य के संदेश शेड्यूल करें",
+    "quickAction.inactivity.title": "निष्क्रियता ट्रिगर",
+    "quickAction.inactivity.subtitle": "आपातकालीन पहुंच सेटअप करें",
   },
   ta: {
     // Common
@@ -1945,23 +1986,44 @@ const translations: Record<Language, Record<string, string>> = {
     "access.selectNominee": "நியமனதாரரைத் தேர்ந்தெடுக்கவும்",
     "access.accessLevel": "அணுகல் நிலை",
     "access.noAccess": "அணுகல் வழங்கப்படவில்லை",
+    
+    // Quick Action translations
+    "quickAction.vault.title": "டிஜிட்டல் வால்ட்",
+    "quickAction.vault.subtitle": "உங்கள் பாதுகாப்பான ஆவணங்களை நிர்வகிக்கவும்",
+    "quickAction.nominees.title": "நியமனதாரர் மையம்",
+    "quickAction.nominees.subtitle": "நம்பகமான தொடர்புகளை நிர்வகிக்கவும்",
+    "quickAction.timeCapsule.title": "டைம் காப்சூல்",
+    "quickAction.timeCapsule.subtitle": "எதிர்கால செய்திகளை திட்டமிடுங்கள்",
+    "quickAction.inactivity.title": "செயலற்ற தூண்டுதல்",
+    "quickAction.inactivity.subtitle": "அவசர அணுகலை அமைக்கவும்",
   },
 };
 
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [language, setLanguageState] = useState<Language>(() => {
-    const saved = localStorage.getItem("app_language");
-    return (saved as Language) || "en";
+    // Use sync method for initial render
+    return languageStorage.getSync() as Language || "en";
   });
+
+  // Load language from storage on mount (for APK persistence)
+  useEffect(() => {
+    const loadLanguage = async () => {
+      const saved = await languageStorage.get();
+      if (saved && saved !== language) {
+        setLanguageState(saved as Language);
+      }
+    };
+    loadLanguage();
+  }, []);
 
   useEffect(() => {
     // Update document lang attribute for accessibility
     document.documentElement.lang = language;
   }, [language]);
 
-  const setLanguage = (lang: Language) => {
+  const setLanguage = async (lang: Language) => {
     setLanguageState(lang);
-    localStorage.setItem("app_language", lang);
+    await languageStorage.set(lang);
   };
 
   const t = (key: string, replacements?: Record<string, string | number>): string => {

@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getQuickActions, initializeDefaultActions, type QuickAction } from "@/services/quickActionsService";
 import { DashboardSkeleton } from "@/components/skeletons";
 import { getUnreadCount } from "@/services/notificationService";
+import { getQuickActionText } from "@/lib/categoryTranslations";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -242,8 +243,12 @@ const Dashboard = () => {
                       <Icon className="w-4 h-4 text-primary" />
                     </div>
                     <div className="flex-1 text-left min-w-0">
-                      <h3 className="font-semibold text-foreground text-xs truncate">{action.title}</h3>
-                      <p className="text-[10px] text-muted-foreground truncate">{action.subtitle}</p>
+                      <h3 className="font-semibold text-foreground text-xs truncate">
+                        {getQuickActionText(action.action_key, "title", action.title, t)}
+                      </h3>
+                      <p className="text-[10px] text-muted-foreground truncate">
+                        {getQuickActionText(action.action_key, "subtitle", action.subtitle || "", t)}
+                      </p>
                     </div>
                     <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                   </button>
