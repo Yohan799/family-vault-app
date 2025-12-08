@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { NotificationTemplates } from "@/services/pushNotificationHelper";
 
 const ChangePassword = () => {
   const navigate = useNavigate();
@@ -38,7 +39,7 @@ const ChangePassword = () => {
       });
       return;
     }
-    
+
     if (formData.newPassword.length < 8) {
       toast({
         title: "Password too short",
@@ -80,6 +81,12 @@ const ChangePassword = () => {
         title: "Password changed!",
         description: "Your password has been updated successfully",
       });
+
+      // Send push notification about password change
+      if (user) {
+        NotificationTemplates.passwordChanged(user.id);
+      }
+
       navigate("/settings");
     } catch (error: any) {
       toast({

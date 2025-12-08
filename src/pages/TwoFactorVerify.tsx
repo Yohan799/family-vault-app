@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { NotificationTemplates } from "@/services/pushNotificationHelper";
 
 const TwoFactorVerify = () => {
   const navigate = useNavigate();
@@ -30,7 +31,10 @@ const TwoFactorVerify = () => {
       if (data.success) {
         // Enable 2FA in profile
         await updateProfile({ two_factor_enabled: true });
-        
+
+        // Send push notification
+        NotificationTemplates.twoFactorEnabled(user.id);
+
         toast({
           title: "2FA Enabled",
           description: "Two-factor authentication is now active",

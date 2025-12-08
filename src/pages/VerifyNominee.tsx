@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { NotificationTemplates } from "@/services/pushNotificationHelper";
 
 const VerifyNominee = () => {
   const [searchParams] = useSearchParams();
@@ -14,7 +15,7 @@ const VerifyNominee = () => {
 
   useEffect(() => {
     const token = searchParams.get("token");
-    
+
     if (!token) {
       setStatus("error");
       setMessage("Invalid verification link. No token provided.");
@@ -57,7 +58,7 @@ const VerifyNominee = () => {
       // Update nominee status to verified
       const { error: nomineeError } = await supabase
         .from("nominees")
-        .update({ 
+        .update({
           status: "verified",
           verified_at: new Date().toISOString()
         })
@@ -69,6 +70,14 @@ const VerifyNominee = () => {
 
       setStatus("success");
       setMessage(`Successfully verified ${tokenData.nominees.full_name} as a trusted nominee!`);
+
+      // Send push notification to vault owner
+      if (tokenData.nominees.user_id) {
+        NotificationTemplates.nomineeVerified(
+          tokenData.nominees.user_id,
+          tokenData.nominees.full_name
+        );
+      }
 
       toast({
         title: "Verification Successful",
@@ -107,8 +116,8 @@ const VerifyNominee = () => {
             <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 px-2">
               You are now a verified nominee and may receive access to important documents in case of emergency.
             </p>
-            <Button 
-              onClick={() => navigate("/")} 
+            <Button
+              onClick={() => navigate("/")}
               className="w-full h-11 sm:h-12 text-sm sm:text-base"
             >
               Close This Page
@@ -121,8 +130,8 @@ const VerifyNominee = () => {
             <XCircle className="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 text-destructive" />
             <h1 className="text-xl sm:text-2xl font-bold mb-2 text-destructive">Verification Failed</h1>
             <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6 px-2">{message}</p>
-            <Button 
-              onClick={() => navigate("/")} 
+            <Button
+              onClick={() => navigate("/")}
               variant="outline"
               className="w-full h-11 sm:h-12 text-sm sm:text-base"
             >

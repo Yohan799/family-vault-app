@@ -43,6 +43,7 @@ import TwoFactorSetup from "./pages/TwoFactorSetup";
 import TwoFactorVerify from "./pages/TwoFactorVerify";
 import AppLockSetup from "./pages/AppLockSetup";
 import SetupPIN from "./pages/SetupPIN";
+import BackupRestore from "./pages/BackupRestore";
 import NotFound from "./pages/NotFound";
 import { Capacitor } from "@capacitor/core";
 
@@ -60,19 +61,19 @@ const BackButtonHandler = () => {
         App.addListener("backButton", ({ canGoBack }) => {
           const currentPath = location.pathname;
           const authPaths = ['/', '/onboarding', '/signup', '/signin', '/forgot-password', '/password-reset-otp', '/reset-password'];
-          
+
           // If authenticated and on auth page, minimize app instead of going back
           if (user && authPaths.includes(currentPath)) {
             App.minimizeApp();
             return;
           }
-          
+
           // If on dashboard (main page after login), minimize app
           if (currentPath === '/dashboard') {
             App.minimizeApp();
             return;
           }
-          
+
           if (canGoBack) {
             window.history.back();
           } else {
@@ -96,44 +97,45 @@ const App = () => (
           <BrowserRouter>
             <BackButtonHandler />
             <Routes>
-          <Route path="/" element={<Welcome />} />
-          <Route path="/onboarding" element={<Onboarding />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/password-reset-otp" element={<PasswordResetOTP />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/vault" element={<ProtectedRoute><Vault /></ProtectedRoute>} />
-            <Route path="/vault/home" element={<ProtectedRoute><VaultHome /></ProtectedRoute>} />
-            <Route path="/vault/create-category" element={<ProtectedRoute><CreateCategory /></ProtectedRoute>} />
-            <Route path="/vault/:categoryId" element={<ProtectedRoute><CategoryView /></ProtectedRoute>} />
-            <Route path="/vault/:categoryId/:subcategoryId" element={<ProtectedRoute><SubcategoryView /></ProtectedRoute>} />
-            <Route path="/vault/:categoryId/:subcategoryId/:folderId" element={<ProtectedRoute><NestedFolderView /></ProtectedRoute>} />
-            <Route path="/vault/manage-access/:documentId" element={<ProtectedRoute><ManageAccess /></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-            <Route path="/nominee-center" element={<ProtectedRoute><NomineeCenter /></ProtectedRoute>} />
-            <Route path="/verify-nominee" element={<VerifyNominee />} />
-            <Route path="/emergency-access" element={<EmergencyAccess />} />
-            <Route path="/inactivity-triggers" element={<ProtectedRoute><InactivityTriggers /></ProtectedRoute>} />
-            <Route path="/time-capsule" element={<ProtectedRoute><TimeCapsule /></ProtectedRoute>} />
-            <Route path="/customize-quick-actions" element={<ProtectedRoute><CustomizeQuickActions /></ProtectedRoute>} />
-            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-            <Route path="/edit-profile" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
-            <Route path="/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
-            <Route path="/auto-lock-timeout" element={<ProtectedRoute><AutoLockTimeout /></ProtectedRoute>} />
-            <Route path="/backup-frequency" element={<ProtectedRoute><BackupFrequency /></ProtectedRoute>} />
-            <Route path="/backup-history" element={<ProtectedRoute><BackupHistory /></ProtectedRoute>} />
-            <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
-            <Route path="/email-preferences" element={<ProtectedRoute><EmailPreferences /></ProtectedRoute>} />
-            <Route path="/active-sessions" element={<ProtectedRoute><ActiveSessions /></ProtectedRoute>} />
-            <Route path="/help-center" element={<ProtectedRoute><HelpCenter /></ProtectedRoute>} />
-            <Route path="/two-factor-setup" element={<ProtectedRoute><TwoFactorSetup /></ProtectedRoute>} />
-            <Route path="/two-factor-verify" element={<ProtectedRoute><TwoFactorVerify /></ProtectedRoute>} />
-            <Route path="/app-lock-setup" element={<ProtectedRoute><AppLockSetup /></ProtectedRoute>} />
-            <Route path="/setup-pin" element={<ProtectedRoute><SetupPIN /></ProtectedRoute>} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
+              <Route path="/" element={<Welcome />} />
+              <Route path="/onboarding" element={<Onboarding />} />
+              <Route path="/signup" element={<SignUp />} />
+              <Route path="/signin" element={<SignIn />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/password-reset-otp" element={<PasswordResetOTP />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/vault" element={<ProtectedRoute><Vault /></ProtectedRoute>} />
+              <Route path="/vault/home" element={<ProtectedRoute><VaultHome /></ProtectedRoute>} />
+              <Route path="/vault/create-category" element={<ProtectedRoute><CreateCategory /></ProtectedRoute>} />
+              <Route path="/vault/:categoryId" element={<ProtectedRoute><CategoryView /></ProtectedRoute>} />
+              <Route path="/vault/:categoryId/:subcategoryId" element={<ProtectedRoute><SubcategoryView /></ProtectedRoute>} />
+              <Route path="/vault/:categoryId/:subcategoryId/:folderId" element={<ProtectedRoute><NestedFolderView /></ProtectedRoute>} />
+              <Route path="/vault/manage-access/:documentId" element={<ProtectedRoute><ManageAccess /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+              <Route path="/nominee-center" element={<ProtectedRoute><NomineeCenter /></ProtectedRoute>} />
+              <Route path="/verify-nominee" element={<VerifyNominee />} />
+              <Route path="/emergency-access" element={<EmergencyAccess />} />
+              <Route path="/inactivity-triggers" element={<ProtectedRoute><InactivityTriggers /></ProtectedRoute>} />
+              <Route path="/time-capsule" element={<ProtectedRoute><TimeCapsule /></ProtectedRoute>} />
+              <Route path="/customize-quick-actions" element={<ProtectedRoute><CustomizeQuickActions /></ProtectedRoute>} />
+              <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+              <Route path="/edit-profile" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
+              <Route path="/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
+              <Route path="/auto-lock-timeout" element={<ProtectedRoute><AutoLockTimeout /></ProtectedRoute>} />
+              <Route path="/backup-frequency" element={<ProtectedRoute><BackupFrequency /></ProtectedRoute>} />
+              <Route path="/backup-history" element={<ProtectedRoute><BackupHistory /></ProtectedRoute>} />
+              <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+              <Route path="/email-preferences" element={<ProtectedRoute><EmailPreferences /></ProtectedRoute>} />
+              <Route path="/active-sessions" element={<ProtectedRoute><ActiveSessions /></ProtectedRoute>} />
+              <Route path="/help-center" element={<ProtectedRoute><HelpCenter /></ProtectedRoute>} />
+              <Route path="/two-factor-setup" element={<ProtectedRoute><TwoFactorSetup /></ProtectedRoute>} />
+              <Route path="/two-factor-verify" element={<ProtectedRoute><TwoFactorVerify /></ProtectedRoute>} />
+              <Route path="/app-lock-setup" element={<ProtectedRoute><AppLockSetup /></ProtectedRoute>} />
+              <Route path="/setup-pin" element={<ProtectedRoute><SetupPIN /></ProtectedRoute>} />
+              <Route path="/backup-restore" element={<ProtectedRoute><BackupRestore /></ProtectedRoute>} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
         </AppLockGate>
@@ -143,3 +145,4 @@ const App = () => (
 );
 
 export default App;
+

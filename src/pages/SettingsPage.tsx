@@ -158,12 +158,14 @@ const SettingsPage = () => {
     // Security
     { icon: Shield, title: "Two-Factor Auth", subtitle: profile?.two_factor_enabled ? "Enabled" : "Extra security layer", path: "/two-factor-setup", color: "bg-purple-100" },
     { icon: Smartphone, title: "App Lock", subtitle: profile?.app_lock_type ? `Active (${profile.app_lock_type})` : "PIN or Biometric", path: "/app-lock-setup", color: "bg-violet-100" },
+    { icon: Smartphone, title: "Active Sessions", subtitle: "Manage logged-in devices", path: "/active-sessions", color: "bg-rose-100" },
 
     // Notifications
     { icon: Bell, title: "Push Notifications", subtitle: isPushAvailable() ? "Get mobile alerts" : "Only available on mobile app", toggle: "pushNotifications", color: "bg-amber-100" },
 
     // Vault
     { icon: LockKeyhole, title: "Auto Lock Timeout", subtitle: getAutoLockLabel(profile?.auto_lock_minutes), path: "/auto-lock-timeout", color: "bg-emerald-100" },
+    { icon: Shield, title: "Backup & Restore", subtitle: "Export or restore your vault", path: "/backup-restore", color: "bg-teal-100" },
 
     // Support
     { icon: HelpCircle, title: "Help & Support", subtitle: "FAQs, guides & contact", path: "/help-center", color: "bg-cyan-100" },

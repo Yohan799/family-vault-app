@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { NotificationTemplates } from "@/services/pushNotificationHelper";
 
 const TwoFactorSetup = () => {
   const navigate = useNavigate();
@@ -56,6 +57,12 @@ const TwoFactorSetup = () => {
     setIsLoading(true);
     try {
       await updateProfile({ two_factor_enabled: false });
+
+      // Send push notification
+      if (user) {
+        NotificationTemplates.twoFactorDisabled(user.id);
+      }
+
       toast({
         title: "2FA Disabled",
         description: "Two-factor authentication has been disabled",
