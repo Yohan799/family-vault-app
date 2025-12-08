@@ -9,10 +9,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface RequestBody {
-  email: string;
-  userId: string;
-}
+const RATE_LIMIT_WINDOW_MINUTES = 10;
+const MAX_OTP_REQUESTS_PER_WINDOW = 3;
 
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
@@ -20,16 +18,83 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, userId }: RequestBody = await req.json();
-    console.log("Sending 2FA OTP to:", email, "for user:", userId);
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+
+    // Validate JWT token from Authorization header
+    const authHeader = req.headers.get("authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      console.error("Missing or invalid authorization header");
+      return new Response(
+        JSON.stringify({ error: "Authorization required" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+    
+    // Create a client with the user's token to validate it
+    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: `Bearer ${token}` } }
+    });
+
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
+    
+    if (authError || !user) {
+      console.error("JWT validation failed:", authError?.message);
+      return new Response(
+        JSON.stringify({ error: "Invalid or expired token" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log("Authenticated user:", user.id, "email:", user.email);
+
+    // Use authenticated user's email and ID - ignore any client-provided values
+    const userId = user.id;
+    const email = user.email;
+
+    if (!email) {
+      console.error("User has no email address");
+      return new Response(
+        JSON.stringify({ error: "User email not found" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Create service role client for database operations
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Rate limiting: Check how many OTPs were sent in the last window
+    const windowStart = new Date();
+    windowStart.setMinutes(windowStart.getMinutes() - RATE_LIMIT_WINDOW_MINUTES);
+
+    const { count, error: countError } = await supabase
+      .from("two_fa_verifications")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .gte("created_at", windowStart.toISOString());
+
+    if (countError) {
+      console.error("Rate limit check failed:", countError);
+      throw new Error("Failed to check rate limit");
+    }
+
+    if (count && count >= MAX_OTP_REQUESTS_PER_WINDOW) {
+      console.warn(`Rate limit exceeded for user ${userId}: ${count} requests in last ${RATE_LIMIT_WINDOW_MINUTES} minutes`);
+      return new Response(
+        JSON.stringify({ 
+          error: `Too many OTP requests. Please wait ${RATE_LIMIT_WINDOW_MINUTES} minutes before trying again.` 
+        }),
+        { status: 429, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log(`Sending 2FA OTP to: ${email} for user: ${userId} (${count || 0}/${MAX_OTP_REQUESTS_PER_WINDOW} requests in window)`);
 
     // Generate 6-digit OTP
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-    
-    // Store OTP in database with 10-minute expiration
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
 
     const expiresAt = new Date();
     expiresAt.setMinutes(expiresAt.getMinutes() + 10);
