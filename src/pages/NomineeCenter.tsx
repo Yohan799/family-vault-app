@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { AvatarSelector, getAvatarById } from "@/components/AvatarSelector";
 import { NomineeSkeleton } from "@/components/skeletons";
 
@@ -28,6 +29,7 @@ const NomineeCenter = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [nominees, setNominees] = useState<Nominee[]>([]);
@@ -59,7 +61,7 @@ const NomineeCenter = () => {
       if (error) {
         console.error("Error loading nominees:", error);
         toast({
-          title: "Error loading nominees",
+          title: t("toast.error"),
           description: error.message,
           variant: "destructive"
         });
@@ -93,7 +95,7 @@ const NomineeCenter = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user, t]);
 
   if (isPageLoading) {
     return <NomineeSkeleton />;
@@ -107,8 +109,8 @@ const NomineeCenter = () => {
   const handleAddNominee = async () => {
     if (!formData.fullName || !formData.email) {
       toast({
-        title: "Required fields missing",
-        description: "Please fill in full name and email address",
+        title: t("toast.error"),
+        description: t("common.error"),
         variant: "destructive"
       });
       return;
@@ -117,8 +119,8 @@ const NomineeCenter = () => {
     // Gmail-only validation
     if (!validateGmailOnly(formData.email)) {
       toast({
-        title: "Invalid email",
-        description: "Only Gmail addresses are allowed (example@gmail.com)",
+        title: t("toast.error"),
+        description: t("nominee.gmailOnly"),
         variant: "destructive"
       });
       return;
@@ -127,8 +129,8 @@ const NomineeCenter = () => {
     // Phone validation (if provided)
     if (formData.phone && !validatePhoneExact10(formData.phone)) {
       toast({
-        title: "Invalid phone number",
-        description: "Phone number must be exactly 10 digits",
+        title: t("toast.error"),
+        description: t("nominee.digitsOnly"),
         variant: "destructive"
       });
       return;
@@ -136,8 +138,8 @@ const NomineeCenter = () => {
 
     if (!user) {
       toast({
-        title: "Authentication required",
-        description: "Please sign in to add nominees",
+        title: t("toast.error"),
+        description: t("auth.signIn"),
         variant: "destructive"
       });
       return;
@@ -154,8 +156,8 @@ const NomineeCenter = () => {
 
         if (authError || !currentUser) {
           toast({
-            title: "Authentication error",
-            description: "Please sign in again",
+            title: t("toast.error"),
+            description: t("auth.signIn"),
             variant: "destructive"
           });
           setIsLoading(false);
@@ -177,8 +179,8 @@ const NomineeCenter = () => {
         if (error) throw error;
 
         toast({
-          title: 'Nominee Updated',
-          description: `${formData.fullName} has been updated successfully.`
+          title: t("toast.updated"),
+          description: `${formData.fullName} ${t("toast.updated").toLowerCase()}`
         });
 
         setFormData({ fullName: '', relation: '', email: '', phone: '', avatarUrl: 'avatar-1' });
@@ -194,8 +196,8 @@ const NomineeCenter = () => {
 
       if (authError || !currentUser) {
         toast({
-          title: "Authentication error",
-          description: "Please sign in again",
+          title: t("toast.error"),
+          description: t("auth.signIn"),
           variant: "destructive"
         });
         setIsLoading(false);
@@ -218,10 +220,9 @@ const NomineeCenter = () => {
 
       if (insertError) throw insertError;
 
-      // Note: Email verification bypassed for now - will be enabled after Resend domain verification
       toast({
-        title: "Nominee added successfully!",
-        description: `${formData.fullName} has been added. Email verification will be available soon.`,
+        title: t("toast.success"),
+        description: `${formData.fullName} ${t("nominee.add").toLowerCase()}`,
       });
 
       setFormData({ fullName: '', relation: '', email: '', phone: '', avatarUrl: 'avatar-1' });
@@ -229,7 +230,7 @@ const NomineeCenter = () => {
     } catch (error: any) {
       console.error("Error adding nominee:", error);
       toast({
-        title: "Error adding nominee",
+        title: t("toast.error"),
         description: error.message,
         variant: "destructive"
       });
@@ -256,19 +257,63 @@ const NomineeCenter = () => {
       if (error) throw error;
 
       toast({
-        title: "Verification link sent",
-        description: `A new verification link has been sent to ${nominee.email}`,
+        title: t("nominee.verificationLinkSent"),
+        description: `${nominee.email}`,
       });
     } catch (error: any) {
       console.error("Error resending verification:", error);
       toast({
-        title: "Failed to send verification",
+        title: t("toast.error"),
         description: error.message,
         variant: "destructive"
       });
     } finally {
       setResendingId(null);
     }
+  };
+
+  const handleEditNominee = (nominee: Nominee) => {
+    setFormData({
+      fullName: nominee.full_name,
+      relation: nominee.relation || '',
+      email: nominee.email,
+      phone: nominee.phone || '',
+      avatarUrl: nominee.avatar_url || 'avatar-1'
+    });
+    setEditingId(nominee.id);
+    setShowAddForm(true);
+  };
+
+  const handleDeleteNominee = async () => {
+    if (!deleteDialog.nominee || !user) return;
+
+    try {
+      const { error } = await supabase.rpc('soft_delete_nominee', {
+        _nominee_id: deleteDialog.nominee.id,
+        _user_id: user.id
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: t("toast.deleted"),
+        description: `${deleteDialog.nominee.full_name} ${t("toast.deleted").toLowerCase()}`
+      });
+
+      setDeleteDialog({ open: false, nominee: null });
+    } catch (error: any) {
+      console.error("Error deleting nominee:", error);
+      toast({
+        title: t("toast.error"),
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const getRelationLabel = (relation: string) => {
+    const key = `relation.${relation.toLowerCase()}`;
+    return t(key) !== key ? t(key) : relation;
   };
 
   return (
@@ -280,8 +325,8 @@ const NomineeCenter = () => {
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
           <div className="flex-1 text-center -ml-9 sm:-ml-10">
-            <h1 className="text-xl sm:text-2xl font-bold">Nominee Center</h1>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-1">Manage trusted contacts</p>
+            <h1 className="text-xl sm:text-2xl font-bold">{t("nominee.title")}</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">{t("nominee.subtitle")}</p>
           </div>
         </div>
 
@@ -289,15 +334,15 @@ const NomineeCenter = () => {
         <div className="grid grid-cols-3 gap-2 sm:gap-3">
           <div className="bg-card/50 rounded-xl p-3 sm:p-4 text-center backdrop-blur-sm">
             <div className="text-2xl sm:text-3xl font-bold mb-1">{totalNominees}</div>
-            <div className="text-xs sm:text-sm text-muted-foreground">Total</div>
+            <div className="text-xs sm:text-sm text-muted-foreground">{t("nominee.total")}</div>
           </div>
           <div className="bg-card/50 rounded-xl p-3 sm:p-4 text-center backdrop-blur-sm">
             <div className="text-2xl sm:text-3xl font-bold mb-1 text-green-600">{verifiedNominees}</div>
-            <div className="text-xs sm:text-sm text-muted-foreground">Verified</div>
+            <div className="text-xs sm:text-sm text-muted-foreground">{t("nominee.verified")}</div>
           </div>
           <div className="bg-card/50 rounded-xl p-3 sm:p-4 text-center backdrop-blur-sm">
             <div className="text-2xl sm:text-3xl font-bold mb-1 text-orange-600">{pendingNominees}</div>
-            <div className="text-xs sm:text-sm text-muted-foreground">Pending</div>
+            <div className="text-xs sm:text-sm text-muted-foreground">{t("nominee.pending")}</div>
           </div>
         </div>
       </div>
@@ -307,7 +352,7 @@ const NomineeCenter = () => {
         {showAddForm && (
           <div className="bg-card rounded-2xl p-4 sm:p-6 space-y-4">
             <h2 className="text-base sm:text-lg font-bold text-foreground mb-3 sm:mb-4">
-              {editingId ? '✏️ Edit Nominee' : '+ Add New Nominee'}
+              {editingId ? `✏️ ${t("nominee.editNominee")}` : `+ ${t("nominee.addNewNominee")}`}
             </h2>
 
             {/* Avatar Selector */}
@@ -320,34 +365,34 @@ const NomineeCenter = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Full Name *</label>
+                <label className="text-sm font-medium text-foreground">{t("nominee.fullNameRequired")}</label>
                 <Input
-                  placeholder="Enter full name"
+                  placeholder={t("nominee.fullName")}
                   value={formData.fullName}
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                   className="bg-background border-border"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Relation</label>
+                <label className="text-sm font-medium text-foreground">{t("nominee.relation")}</label>
                 <Select value={formData.relation} onValueChange={(value) => setFormData({ ...formData, relation: value })}>
                   <SelectTrigger className="bg-background border-border">
-                    <SelectValue placeholder="Select relation" />
+                    <SelectValue placeholder={t("nominee.selectRelation")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="spouse">Spouse</SelectItem>
-                    <SelectItem value="child">Child</SelectItem>
-                    <SelectItem value="parent">Parent</SelectItem>
-                    <SelectItem value="sibling">Sibling</SelectItem>
-                    <SelectItem value="friend">Friend</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
+                    <SelectItem value="spouse">{t("relation.spouse")}</SelectItem>
+                    <SelectItem value="child">{t("relation.child")}</SelectItem>
+                    <SelectItem value="parent">{t("relation.parent")}</SelectItem>
+                    <SelectItem value="sibling">{t("relation.sibling")}</SelectItem>
+                    <SelectItem value="friend">{t("relation.friend")}</SelectItem>
+                    <SelectItem value="other">{t("relation.other")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Email Address *</label>
+              <label className="text-sm font-medium text-foreground">{t("nominee.emailRequired")}</label>
               <Input
                 type="email"
                 placeholder="example@gmail.com"
@@ -355,11 +400,11 @@ const NomineeCenter = () => {
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="bg-background border-border"
               />
-              <p className="text-xs text-muted-foreground">Only Gmail addresses are accepted</p>
+              <p className="text-xs text-muted-foreground">{t("nominee.gmailOnly")}</p>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Phone Number</label>
+              <label className="text-sm font-medium text-foreground">{t("nominee.phoneOptional")}</label>
               <Input
                 type="tel"
                 placeholder="9876543210"
@@ -371,7 +416,7 @@ const NomineeCenter = () => {
                 maxLength={10}
                 className="bg-background border-border"
               />
-              <p className="text-xs text-muted-foreground">10 digits only</p>
+              <p className="text-xs text-muted-foreground">{t("nominee.digitsOnly")}</p>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
@@ -380,7 +425,7 @@ const NomineeCenter = () => {
                 disabled={isLoading}
                 className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-11 sm:h-12 text-sm sm:text-base"
               >
-                {isLoading ? "Sending..." : (editingId ? "Update Nominee" : "Add & Send Link")}
+                {isLoading ? t("common.loading") : (editingId ? t("nominee.updateNominee") : t("nominee.addAndSendLink"))}
               </Button>
               <Button
                 variant="outline"
@@ -391,7 +436,7 @@ const NomineeCenter = () => {
                 }}
                 className="flex-1 rounded-xl h-11 sm:h-12 border-border text-sm sm:text-base"
               >
-                Cancel
+                {t("common.cancel")}
               </Button>
             </div>
           </div>
@@ -400,14 +445,14 @@ const NomineeCenter = () => {
         {/* Your Nominees Section */}
         <div className="space-y-3 sm:space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-base sm:text-lg font-bold text-foreground">Your Nominees</h2>
+            <h2 className="text-base sm:text-lg font-bold text-foreground">{t("nominee.yourNominees")}</h2>
             {nominees.length > 0 && !showAddForm && (
               <Button
                 onClick={() => setShowAddForm(true)}
                 size="sm"
                 className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl text-xs sm:text-sm h-8 sm:h-9 px-3 sm:px-4"
               >
-                + Add Nominee
+                + {t("nominee.add")}
               </Button>
             )}
           </div>
@@ -417,16 +462,16 @@ const NomineeCenter = () => {
               <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-3 sm:mb-4 bg-primary/10 rounded-full flex items-center justify-center">
                 <Users className="w-10 h-10 sm:w-12 sm:h-12 text-primary" />
               </div>
-              <h3 className="text-lg sm:text-xl font-bold text-foreground mb-2">No Nominees Yet</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-foreground mb-2">{t("nominee.noNomineesYet")}</h3>
               <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 px-4">
-                Add trusted contacts who can access your vault in emergencies.
+                {t("nominee.noNomineesDesc")}
               </p>
               {!showAddForm && (
                 <Button
                   onClick={() => setShowAddForm(true)}
                   className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-6 sm:px-8 h-10 sm:h-11 text-sm sm:text-base"
                 >
-                  + Add Nominee
+                  + {t("nominee.add")}
                 </Button>
               )}
             </div>
@@ -459,76 +504,47 @@ const NomineeCenter = () => {
                       {nominee.status === 'verified' ? (
                         <div className="flex items-center gap-1 bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium whitespace-nowrap">
                           <CheckCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                          Verified
+                          {t("nominee.verified")}
                         </div>
                       ) : (
                         <div className="flex items-center gap-1 bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium whitespace-nowrap">
                           <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                          Pending
+                          {t("nominee.pending")}
                         </div>
                       )}
                     </div>
-                    <p className="text-xs sm:text-sm text-muted-foreground mb-1.5 sm:mb-2 capitalize">{nominee.relation}</p>
-                    <div className="flex flex-col gap-0.5 sm:gap-1 text-[10px] sm:text-xs text-muted-foreground">
-                      <div className="flex items-center gap-1 truncate">
-                        <Mail className="w-2.5 h-2.5 sm:w-3 sm:h-3 flex-shrink-0" />
-                        <span className="truncate">{nominee.email}</span>
-                      </div>
-                      {nominee.phone && (
-                        <div className="flex items-center gap-1">
-                          <Phone className="w-2.5 h-2.5 sm:w-3 sm:h-3 flex-shrink-0" />
-                          <span>{nominee.phone}</span>
-                        </div>
-                      )}
-                    </div>
+                    <p className="text-xs sm:text-sm text-muted-foreground truncate">{nominee.email}</p>
+                    <p className="text-xs text-muted-foreground capitalize">{getRelationLabel(nominee.relation || '')}</p>
                   </div>
 
-                  {/* Action Buttons */}
-                  <div className="flex flex-col sm:flex-row gap-1 sm:gap-2 flex-shrink-0">
+                  {/* Actions */}
+                  <div className="flex gap-1 sm:gap-2 flex-shrink-0">
                     {nominee.status === 'pending' && (
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
                         onClick={() => handleResendVerification(nominee)}
                         disabled={resendingId === nominee.id}
-                        className="text-xs sm:text-sm h-8 px-2 sm:px-3 border-primary/30 text-primary hover:bg-primary/10"
+                        className="h-8 w-8 sm:h-9 sm:w-9 p-0"
                       >
-                        {resendingId === nominee.id ? (
-                          <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
-                        ) : (
-                          <>
-                            <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
-                            <span className="hidden sm:inline">Resend Link</span>
-                          </>
-                        )}
+                        <RefreshCw className={`w-4 h-4 ${resendingId === nominee.id ? 'animate-spin' : ''}`} />
                       </Button>
                     )}
                     <Button
                       variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        setFormData({
-                          fullName: nominee.full_name,
-                          relation: nominee.relation || '',
-                          email: nominee.email,
-                          phone: nominee.phone || '',
-                          avatarUrl: nominee.avatar_url || 'avatar-1'
-                        });
-                        setEditingId(nominee.id);
-                        setShowAddForm(true);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
-                      className="hover:bg-blue-100 hover:text-blue-600 h-8 w-8 sm:h-9 sm:w-9"
+                      size="sm"
+                      onClick={() => handleEditNominee(nominee)}
+                      className="h-8 w-8 sm:h-9 sm:w-9 p-0"
                     >
-                      <Edit2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                      <Edit2 className="w-4 h-4" />
                     </Button>
                     <Button
                       variant="ghost"
-                      size="icon"
+                      size="sm"
                       onClick={() => setDeleteDialog({ open: true, nominee })}
-                      className="hover:bg-red-100 hover:text-red-600 h-8 w-8 sm:h-9 sm:w-9"
+                      className="h-8 w-8 sm:h-9 sm:w-9 p-0 text-destructive hover:text-destructive"
                     >
-                      <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
                 </div>
@@ -536,21 +552,18 @@ const NomineeCenter = () => {
             </div>
           )}
         </div>
-
-        {/* Info Box */}
-        <div className="bg-primary/5 border border-primary/20 rounded-2xl p-3 sm:p-4 flex gap-2.5 sm:gap-3">
-          <div className="w-7 h-7 sm:w-8 sm:h-8 bg-primary/20 rounded-full flex items-center justify-center flex-shrink-0">
-            <span className="text-primary font-bold text-xs sm:text-sm">i</span>
-          </div>
-          <div>
-            <h3 className="font-semibold text-foreground mb-1 text-sm sm:text-base">About Nominees</h3>
-            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-              Nominees are trusted individuals who can access your vault under specific conditions.
-              They must verify their email before gaining access. You can add up to 5 nominees.
-            </p>
-          </div>
-        </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={deleteDialog.open}
+        onOpenChange={(open) => setDeleteDialog({ open, nominee: open ? deleteDialog.nominee : null })}
+        title={t("nominee.delete")}
+        description={t("nominee.deleteConfirm")}
+        confirmText={t("common.delete")}
+        onConfirm={handleDeleteNominee}
+        variant="destructive"
+      />
 
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
@@ -560,113 +573,24 @@ const NomineeCenter = () => {
             className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
           >
             <Home className="w-6 h-6" />
-            <span className="text-xs font-medium">Home</span>
+            <span className="text-xs font-medium">{t("nav.home")}</span>
           </button>
           <button
             onClick={() => navigate("/vault")}
             className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
           >
             <Vault className="w-6 h-6" />
-            <span className="text-xs font-medium">Vault</span>
+            <span className="text-xs font-medium">{t("nav.vault")}</span>
           </button>
           <button
             onClick={() => navigate("/settings")}
             className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
           >
             <Settings className="w-6 h-6" />
-            <span className="text-xs font-medium">Settings</span>
+            <span className="text-xs font-medium">{t("nav.settings")}</span>
           </button>
         </div>
       </div>
-
-      {/* Confirm Delete Dialog */}
-      <ConfirmDialog
-        open={deleteDialog.open}
-        onOpenChange={(open) => setDeleteDialog({ open, nominee: null })}
-        title="Remove Nominee?"
-        description={`Are you sure you want to remove ${deleteDialog.nominee?.full_name} as a nominee? This action cannot be undone.`}
-        confirmText="Remove"
-        cancelText="Cancel"
-        variant="destructive"
-        onConfirm={async () => {
-          if (!deleteDialog.nominee) return;
-
-          const nomineeToDelete = deleteDialog.nominee;
-
-          try {
-            // 1. Force refresh session and CHECK for errors
-            const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-
-            if (refreshError) {
-              console.error('Session refresh failed:', refreshError);
-              toast({
-                title: 'Session expired',
-                description: 'Please sign in again to continue',
-                variant: 'destructive'
-              });
-              setDeleteDialog({ open: false, nominee: null });
-              return;
-            }
-
-            // 2. Get fresh user from the refreshed session
-            const currentUser = refreshData?.session?.user;
-
-            if (!currentUser) {
-              toast({
-                title: 'Authentication error',
-                description: 'Please sign in again',
-                variant: 'destructive'
-              });
-              setDeleteDialog({ open: false, nominee: null });
-              return;
-            }
-
-            // 3. Optimistic UI update - immediately remove from local state
-            setNominees(prev => prev.filter(n => n.id !== nomineeToDelete.id));
-            setDeleteDialog({ open: false, nominee: null });
-
-            // 4. Use security definer function for cascade deletion
-            const { data: success, error: deleteError } = await supabase
-              .rpc('soft_delete_nominee', {
-                _nominee_id: nomineeToDelete.id,
-                _user_id: currentUser.id
-              });
-
-            // 5. Check for errors or if function returned false
-            if (deleteError || !success) {
-              console.error("Delete nominee error:", deleteError);
-              // Rollback optimistic update by re-fetching
-              const { data: revertData } = await supabase
-                .from("nominees")
-                .select("*")
-                .eq("user_id", currentUser.id)
-                .is("deleted_at", null)
-                .order("created_at", { ascending: false });
-
-              if (revertData) setNominees(revertData);
-
-              toast({
-                title: 'Error removing nominee',
-                description: deleteError?.message || 'Failed to remove nominee',
-                variant: 'destructive'
-              });
-            } else {
-              toast({
-                title: 'Nominee Removed',
-                description: `${nomineeToDelete.full_name} has been removed from your nominees.`
-              });
-            }
-          } catch (err: any) {
-            console.error("Unexpected error:", err);
-            toast({
-              title: 'Error',
-              description: err.message || 'An unexpected error occurred',
-              variant: 'destructive'
-            });
-            setDeleteDialog({ open: false, nominee: null });
-          }
-        }}
-      />
     </div>
   );
 };

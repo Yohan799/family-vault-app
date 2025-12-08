@@ -3,29 +3,31 @@ import { Shield, FileText, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-
-const onboardingSteps = [
-  {
-    icon: Shield,
-    title: "Secure Your Family's Legacy",
-    description: "Keep important documents safe and ensure your family has access when they need it most.",
-  },
-  {
-    icon: FileText,
-    title: "Organize Everything",
-    description: "Store wills, insurance, medical records, and more in one secure digital vault.",
-  },
-  {
-    icon: Users,
-    title: "Share When Needed",
-    description: "Grant trusted family members access to critical information during emergencies.",
-  },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Onboarding = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const navigate = useNavigate();
   const { user, isLoading } = useAuth();
+  const { t } = useLanguage();
+
+  const onboardingSteps = [
+    {
+      icon: Shield,
+      title: t("onboarding.step1Title"),
+      description: t("onboarding.step1Desc"),
+    },
+    {
+      icon: FileText,
+      title: t("onboarding.step2Title"),
+      description: t("onboarding.step2Desc"),
+    },
+    {
+      icon: Users,
+      title: t("onboarding.step3Title"),
+      description: t("onboarding.step3Desc"),
+    },
+  ];
 
   useEffect(() => {
     // If authenticated, redirect to dashboard
@@ -68,7 +70,7 @@ const Onboarding = () => {
             onClick={handleSkip}
             className="text-sm text-muted-foreground hover:text-foreground px-4 py-2 transition-colors"
           >
-            Skip
+            {t("onboarding.skip")}
           </button>
         </div>
 
@@ -85,7 +87,7 @@ const Onboarding = () => {
           </div>
 
           <Button onClick={handleNext} className="w-full" size="lg">
-            {currentStep < onboardingSteps.length - 1 ? "Next" : "Get Started"}
+            {currentStep < onboardingSteps.length - 1 ? t("onboarding.next") : t("onboarding.getStarted")}
           </Button>
 
           <div className="flex justify-center gap-2">

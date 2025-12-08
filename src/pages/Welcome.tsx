@@ -1,11 +1,13 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import logo from "@/assets/logo_fv.jpg";
 
 const Welcome = () => {
   const navigate = useNavigate();
   const { user, isLoading } = useAuth();
+  const { t } = useLanguage();
 
   useEffect(() => {
     // If authenticated, redirect to dashboard
@@ -35,10 +37,10 @@ const Welcome = () => {
         
         <div className="space-y-2">
           <h1 className="text-4xl font-bold text-foreground">
-            Welcome to Family Vault
+            {t("welcome.title")}
           </h1>
           <p className="text-muted-foreground text-lg">
-            Your Digital Vault & Legacy Planner
+            {t("welcome.subtitle")}
           </p>
         </div>
       </div>
