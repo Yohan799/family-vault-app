@@ -12,11 +12,13 @@ import { ActionMenu, createSubcategoryActionMenu } from "@/components/vault/Acti
 import { supabase } from "@/integrations/supabase/client";
 import { filterItems, debounce } from "@/lib/searchUtils";
 import { CategoryViewSkeleton } from "@/components/skeletons";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const CategoryView = () => {
   const navigate = useNavigate();
   const { categoryId } = useParams();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [subcategoryName, setSubcategoryName] = useState("");
   const [customSubcategories, setCustomSubcategories] = useState<any[]>([]);
@@ -300,14 +302,14 @@ const CategoryView = () => {
               <CategoryIcon className="w-6 h-6 text-[#1F2121]" />
               <h1 className="text-2xl font-bold text-[#1F2121]">{category.name}</h1>
             </div>
-            <p className="text-[#626C71] text-sm mt-1">{totalDocumentCount} Documents</p>
+            <p className="text-[#626C71] text-sm mt-1">{totalDocumentCount} {t("common.documents")}</p>
           </div>
         </div>
 
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <Input
-            placeholder="Search subcategories..."
+            placeholder={t("subcategory.searchPlaceholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-12 pr-12 h-12 bg-[#F5F5F5] border-none rounded-xl"
@@ -327,8 +329,8 @@ const CategoryView = () => {
         {filteredSubcategories.length === 0 && debouncedQuery ? (
           <div className="text-center py-12">
             <Folder className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
-            <p className="text-muted-foreground text-lg">No matching subcategories found</p>
-            <p className="text-muted-foreground/60 text-sm mt-2">Try a different search term</p>
+            <p className="text-muted-foreground text-lg">{t("subcategory.noResults")}</p>
+            <p className="text-muted-foreground/60 text-sm mt-2">{t("subcategory.tryDifferent")}</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3 items-stretch">
@@ -346,7 +348,7 @@ const CategoryView = () => {
                       </div>
                       <h3 className="font-semibold text-[#1F2121] text-center mb-1 line-clamp-2">{subcategory.name}</h3>
                     </div>
-                    <p className="text-sm text-[#626C71]">{subcategory.documentCount} Documents</p>
+                    <p className="text-sm text-[#626C71]">{subcategory.documentCount} {t("common.documents")}</p>
                   </button>
 
                   {/* Action Menu - Three dots with Manage Access and Delete */}
@@ -370,7 +372,7 @@ const CategoryView = () => {
                 <div className="w-14 h-14 bg-white/60 rounded-full flex items-center justify-center mb-3">
                   <Plus className="w-7 h-7 text-[#6D28D9]" />
                 </div>
-                <h3 className="font-semibold text-[#1F2121]">Add Subcategory</h3>
+                <h3 className="font-semibold text-[#1F2121]">{t("subcategory.add")}</h3>
               </button>
             )}
           </div>
@@ -431,15 +433,15 @@ const CategoryView = () => {
                 <X className="w-6 h-6" />
               </button>
 
-              <h2 className="text-2xl font-bold text-foreground mb-6">Add Subcategory</h2>
+              <h2 className="text-2xl font-bold text-foreground mb-6">{t("subcategory.add")}</h2>
 
               <div className="space-y-4">
                 <div>
                   <label className="text-sm font-medium text-foreground mb-2 block">
-                    Subcategory Name
+                    {t("subcategory.name")}
                   </label>
                   <Input
-                    placeholder="e.g. Home 1, Property A, etc."
+                    placeholder={t("subcategory.namePlaceholder")}
                     value={subcategoryName}
                     onChange={(e) => setSubcategoryName(e.target.value)}
                     className="bg-background border-border"
@@ -453,13 +455,13 @@ const CategoryView = () => {
                     onClick={() => setShowAddDialog(false)}
                     className="flex-1"
                   >
-                    Cancel
+                    {t("common.cancel")}
                   </Button>
                   <Button
                     onClick={handleAddSubcategory}
                     className="flex-1"
                   >
-                    Add
+                    {t("common.add")}
                   </Button>
                 </div>
               </div>

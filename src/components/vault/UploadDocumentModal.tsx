@@ -15,6 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { GoogleDriveBrowser } from "@/components/GoogleDriveBrowser";
 import { ConnectGoogleDriveModal } from "@/components/ConnectGoogleDriveModal";
 import { Capacitor } from "@capacitor/core";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface UploadDocumentModalProps {
   open: boolean;
@@ -38,6 +39,7 @@ export const UploadDocumentModal = ({
 }: UploadDocumentModalProps) => {
   const { toast } = useToast();
   const { hasGoogleIdentity, getGoogleAccessToken } = useAuth();
+  const { t } = useLanguage();
   const [isUploading, setIsUploading] = useState(false);
   const [uploadingSource, setUploadingSource] = useState<string | null>(null);
   const [showDriveBrowser, setShowDriveBrowser] = useState(false);
@@ -246,8 +248,8 @@ export const UploadDocumentModal = ({
     {
       id: "scan",
       icon: Camera,
-      title: "Scan Document",
-      subtitle: "Use camera with auto edge detection",
+      title: t("document.scanDocument"),
+      subtitle: t("document.scanSubtitle"),
       iconBg: "bg-purple-100 dark:bg-purple-900/30",
       iconColor: "text-purple-600 dark:text-purple-400",
       onClick: handleScanDocument,
@@ -255,8 +257,8 @@ export const UploadDocumentModal = ({
     {
       id: "device",
       icon: Upload,
-      title: "Upload from Device",
-      subtitle: "Choose from your files",
+      title: t("document.fromDevice"),
+      subtitle: t("document.fromDeviceSubtitle"),
       iconBg: "bg-blue-100 dark:bg-blue-900/30",
       iconColor: "text-blue-600 dark:text-blue-400",
       onClick: handleUploadFromDevice,
@@ -264,8 +266,8 @@ export const UploadDocumentModal = ({
     {
       id: "cloud",
       icon: Cloud,
-      title: "Google Drive",
-      subtitle: "Import files from Drive",
+      title: t("document.fromGoogleDrive"),
+      subtitle: t("document.fromGoogleDriveSubtitle"),
       iconBg: "bg-green-100 dark:bg-green-900/30",
       iconColor: "text-green-600 dark:text-green-400",
       onClick: handleGoogleDrive,
@@ -278,7 +280,7 @@ export const UploadDocumentModal = ({
         <DialogContent className="sm:max-w-md bg-card border-border rounded-2xl p-0 gap-0" hideCloseButton>
           <DialogHeader className="p-6 pb-4 border-b border-border/50">
             <DialogTitle className="text-xl font-bold text-foreground text-center">
-              Upload Document
+              {t("document.upload")}
             </DialogTitle>
           </DialogHeader>
 
@@ -310,7 +312,7 @@ export const UploadDocumentModal = ({
                   </div>
                   <div className="flex-1 text-left">
                     <span className="font-semibold text-foreground block">
-                      {isLoading ? "Uploading..." : option.title}
+                      {isLoading ? t("common.loading") : option.title}
                     </span>
                     <span className="text-sm text-muted-foreground">
                       {option.subtitle}
@@ -321,7 +323,7 @@ export const UploadDocumentModal = ({
             })}
 
             <p className="text-xs text-muted-foreground text-center pt-2">
-              Maximum file size: 20MB
+              {t("document.maxSize")}
             </p>
 
             <Button
@@ -330,7 +332,7 @@ export const UploadDocumentModal = ({
               disabled={isUploading}
               className="w-full h-12 rounded-xl mt-2"
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
           </div>
         </DialogContent>

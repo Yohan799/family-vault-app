@@ -10,10 +10,12 @@ import { categoryNameSchema, sanitizeInput } from "@/lib/validation";
 import { AccessControlModal } from "@/components/vault/AccessControlModal";
 import { ActionMenu, createCategoryActionMenu } from "@/components/vault/ActionMenu";
 import { format, parse } from "date-fns";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const VaultHome = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [categoryName, setCategoryName] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -366,13 +368,13 @@ const VaultHome = () => {
   return (
     <div className="min-h-screen bg-[#FCFCF9] pb-20">
       <div className="bg-[#FCFCF9] p-6">
-        <h1 className="text-2xl font-bold text-center text-[#1F2121]">My Vault</h1>
-        <p className="text-center text-[#626C71] text-sm mt-1">{totalDocuments} Documents</p>
+        <h1 className="text-2xl font-bold text-center text-[#1F2121]">{t("vault.title")}</h1>
+        <p className="text-center text-[#626C71] text-sm mt-1">{totalDocuments} {t("common.documents")}</p>
 
         <div className="relative mt-6">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <Input
-            placeholder="Search documents, categories, dates..."
+            placeholder={t("vault.searchPlaceholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-12 pr-12 h-12 bg-[#F5F5F5] border-none rounded-xl"
@@ -388,7 +390,7 @@ const VaultHome = () => {
         </div>
         {searchQuery && (
           <p className="text-sm text-[#626C71] mt-2">
-            {filteredResults.length} {filteredResults.length === 1 ? 'result' : 'results'} found
+            {t("vault.resultsFound", { count: filteredResults.length })}
           </p>
         )}
       </div>
@@ -399,16 +401,16 @@ const VaultHome = () => {
             <div className="w-16 h-16 bg-[#F3E8FF] rounded-full flex items-center justify-center mb-4">
               <FileX className="w-8 h-8 text-[#6D28D9]" />
             </div>
-            <h3 className="text-lg font-semibold text-[#1F2121] mb-2">No results found</h3>
+            <h3 className="text-lg font-semibold text-[#1F2121] mb-2">{t("vault.noResults")}</h3>
             <p className="text-sm text-[#626C71] max-w-xs">
-              Try adjusting your search or browse all categories
+              {t("vault.noResultsDesc")}
             </p>
             <Button
               onClick={() => setSearchQuery("")}
               className="mt-4"
               variant="outline"
             >
-              Clear Search
+              {t("vault.clearSearch")}
             </Button>
           </div>
         ) : (
