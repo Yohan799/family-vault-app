@@ -5,23 +5,24 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const AutoLockTimeout = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { profile, updateProfile } = useAuth();
+  const { t } = useLanguage();
   const [selected, setSelected] = useState("5");
   const [isSaving, setIsSaving] = useState(false);
 
   const options = [
-    { value: "1", label: "1 minute" },
-    { value: "5", label: "5 minutes" },
-    { value: "10", label: "10 minutes" },
-    { value: "15", label: "15 minutes" },
-    { value: "30", label: "30 minutes" },
+    { value: "1", label: `1 ${t("common.minute")}` },
+    { value: "5", label: `5 ${t("common.minutes")}` },
+    { value: "10", label: `10 ${t("common.minutes")}` },
+    { value: "15", label: `15 ${t("common.minutes")}` },
+    { value: "30", label: `30 ${t("common.minutes")}` },
   ];
 
-  // Load current value from profile on mount
   useEffect(() => {
     if (profile?.auto_lock_minutes) {
       setSelected(profile.auto_lock_minutes.toString());
@@ -37,15 +38,15 @@ const AutoLockTimeout = () => {
       await updateProfile({ auto_lock_minutes: minutes });
       
       toast({
-        title: "Auto-lock timeout updated!",
-        description: `Vault will auto-lock after ${selectedOption?.label} of inactivity`,
+        title: t("autoLock.updated"),
+        description: `${t("autoLock.willLockAfter")} ${selectedOption?.label}`,
       });
       navigate("/settings");
     } catch (error) {
       console.error('Error updating auto-lock timeout:', error);
       toast({
-        title: "Failed to update",
-        description: "Could not save auto-lock timeout setting",
+        title: t("autoLock.updateFailed"),
+        description: t("autoLock.couldNotSave"),
         variant: "destructive",
       });
     } finally {
@@ -58,13 +59,13 @@ const AutoLockTimeout = () => {
       <div className="bg-primary/20 text-foreground p-6 rounded-b-3xl">
         <div className="flex items-center gap-4">
           <BackButton to="/settings" />
-          <h1 className="text-2xl font-bold">Auto Lock Timeout</h1>
+          <h1 className="text-2xl font-bold">{t("autoLock.title")}</h1>
         </div>
       </div>
 
       <div className="p-6 space-y-6">
         <p className="text-muted-foreground">
-          Choose how long the app should wait before automatically locking for security.
+          {t("autoLock.description")}
         </p>
 
         <div className="bg-card rounded-2xl overflow-hidden divide-y divide-border">
@@ -87,7 +88,7 @@ const AutoLockTimeout = () => {
           disabled={isSaving}
           className="w-full bg-primary/20 hover:bg-primary/30 text-primary rounded-xl h-12"
         >
-          {isSaving ? "Saving..." : "Save Changes"}
+          {isSaving ? t("common.loading") : t("common.save")}
         </Button>
       </div>
     </div>
