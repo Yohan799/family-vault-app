@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { UploadDocumentModal } from "@/components/vault/UploadDocumentModal";
 import { DocumentOptionsModal } from "@/components/vault/DocumentOptionsModal";
 import { LockDocumentModal } from "@/components/vault/LockDocumentModal";
+import { RenameDocumentModal } from "@/components/vault/RenameDocumentModal";
 import { categoryNameSchema, sanitizeInput } from "@/lib/validation";
 import { filterItems, debounce } from "@/lib/searchUtils";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,6 +34,7 @@ const NestedFolderView = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [documents, setDocuments] = useState<Array<{ id: string; name: string; size: string; date: string }>>([]);
+  const [renameOpen, setRenameOpen] = useState(false);
 
   // Debounce search query
   useEffect(() => {
@@ -44,81 +46,81 @@ const NestedFolderView = () => {
   }, [searchQuery]);
 
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          navigate("/vault");
-          return;
-        }
-
-        // Load current folder from database
-        const { data: folderData } = await supabase
-          .from('folders')
-          .select('*')
-          .eq('id', folderId)
-          .eq('user_id', user.id)
-          .is('deleted_at', null)
-          .maybeSingle();
-
-        if (!folderData) {
-          navigate(`/vault/${categoryId}/${subcategoryId}`);
-          return;
-        }
-
-        setCurrentFolder({
-          id: folderData.id,
-          name: folderData.name,
-          documentCount: 0,
-          depth: 1,
-          isCustom: true
-        });
-
-        // Load nested folders from database
-        const { data: nestedFoldersData } = await supabase
-          .from('folders')
-          .select('*')
-          .eq('parent_folder_id', folderId)
-          .eq('user_id', user.id)
-          .is('deleted_at', null);
-
-        const folders = (nestedFoldersData || []).map(folder => ({
-          id: folder.id,
-          name: folder.name,
-          icon: Folder,
-          documentCount: 0,
-          depth: 2,
-          isCustom: true
-        }));
-        setNestedFolders(folders);
-
-        // Load documents from Supabase
-        const { getDocuments, formatFileSize } = await import('@/lib/documentStorage');
-        const storedDocs = await getDocuments(categoryId!, subcategoryId!, folderId);
-
-        const formattedDocs = storedDocs.map(doc => ({
-          id: doc.id,
-          name: doc.name,
-          size: formatFileSize(doc.size),
-          date: new Date(doc.date).toLocaleDateString(),
-        }));
-        setDocuments(formattedDocs);
-
-        setLoading(false);
-      } catch (error) {
-        console.error("Error loading folder data:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load folder data",
-          variant: "destructive"
-        });
-        setLoading(false);
-      }
-    };
-
-    loadData();
+    loadFolderData();
   }, [folderId, subcategoryId, categoryId, navigate, toast]);
+
+  const loadFolderData = async () => {
+    setLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate("/vault");
+        return;
+      }
+
+      // Load current folder from database
+      const { data: folderData } = await supabase
+        .from('folders')
+        .select('*')
+        .eq('id', folderId)
+        .eq('user_id', user.id)
+        .is('deleted_at', null)
+        .maybeSingle();
+
+      if (!folderData) {
+        navigate(`/vault/${categoryId}/${subcategoryId}`);
+        return;
+      }
+
+      setCurrentFolder({
+        id: folderData.id,
+        name: folderData.name,
+        documentCount: 0,
+        depth: 1,
+        isCustom: true
+      });
+
+      // Load nested folders from database
+      const { data: nestedFoldersData } = await supabase
+        .from('folders')
+        .select('*')
+        .eq('parent_folder_id', folderId)
+        .eq('user_id', user.id)
+        .is('deleted_at', null);
+
+      const folders = (nestedFoldersData || []).map(folder => ({
+        id: folder.id,
+        name: folder.name,
+        icon: Folder,
+        documentCount: 0,
+        depth: 2,
+        isCustom: true
+      }));
+      setNestedFolders(folders);
+
+      // Load documents from Supabase
+      const { getDocuments, formatFileSize } = await import('@/lib/documentStorage');
+      const storedDocs = await getDocuments(categoryId!, subcategoryId!, folderId);
+
+      const formattedDocs = storedDocs.map(doc => ({
+        id: doc.id,
+        name: doc.name,
+        size: formatFileSize(doc.size),
+        date: new Date(doc.date).toLocaleDateString(),
+      }));
+      setDocuments(formattedDocs);
+
+      setLoading(false);
+    } catch (error) {
+      console.error("Error loading folder data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load folder data",
+        variant: "destructive"
+      });
+      setLoading(false);
+    }
+  };
 
   const handleAddFolder = async () => {
     const sanitizedName = sanitizeInput(folderName);
@@ -297,7 +299,7 @@ const NestedFolderView = () => {
             className="pl-12 pr-12 h-12 bg-[#F5F5F5] border-none rounded-xl"
           />
           {searchQuery && (
-            <button 
+            <button
               onClick={() => setSearchQuery("")}
               className="absolute right-4 top-1/2 -translate-y-1/2 hover:bg-accent rounded-full p-1"
             >
@@ -391,8 +393,8 @@ const NestedFolderView = () => {
             <div className="bg-card rounded-2xl p-8 text-center">
               <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
               <p className="text-muted-foreground mb-4">No documents yet</p>
-              <Button 
-                onClick={() => setUploadOpen(true)} 
+              <Button
+                onClick={() => setUploadOpen(true)}
                 variant="outline"
                 className="min-h-[44px]"
               >
@@ -403,32 +405,32 @@ const NestedFolderView = () => {
           ) : (
             <div className="space-y-2">
               {documents.map((doc) => (
-              <div
-                key={doc.id}
-                className="bg-card rounded-xl p-4 flex items-center justify-between hover:bg-accent/50 transition-colors"
-              >
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <FileText className="w-5 h-5 text-primary" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="font-medium text-foreground truncate">{doc.name}</h3>
-                    <p className="text-xs text-muted-foreground">
-                      {doc.size} • {doc.date}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => handleDocumentOptions(doc)}
-                  className="p-2 hover:bg-accent rounded-lg transition-colors"
+                <div
+                  key={doc.id}
+                  className="bg-card rounded-xl p-4 flex items-center justify-between hover:bg-accent/50 transition-colors"
                 >
-                  <MoreVertical className="w-5 h-5 text-muted-foreground" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <FileText className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-medium text-foreground truncate">{doc.name}</h3>
+                      <p className="text-xs text-muted-foreground">
+                        {doc.size} • {doc.date}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleDocumentOptions(doc)}
+                    className="p-2 hover:bg-accent rounded-lg transition-colors"
+                  >
+                    <MoreVertical className="w-5 h-5 text-muted-foreground" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       )}
 
       {deleteConfirm.show && deleteConfirm.folder && (
@@ -534,6 +536,16 @@ const NestedFolderView = () => {
         categoryId={categoryId!}
         subcategoryId={subcategoryId!}
         folderId={folderId}
+        onRename={() => setRenameOpen(true)}
+        onDelete={loadFolderData}
+      />
+
+      <RenameDocumentModal
+        open={renameOpen}
+        onOpenChange={setRenameOpen}
+        documentId={selectedDoc.id}
+        currentName={selectedDoc.name}
+        onRenameSuccess={loadFolderData}
       />
 
       <LockDocumentModal

@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { UploadDocumentModal } from "@/components/vault/UploadDocumentModal";
 import { DocumentOptionsModal } from "@/components/vault/DocumentOptionsModal";
 import { LockDocumentModal } from "@/components/vault/LockDocumentModal";
+import { RenameDocumentModal } from "@/components/vault/RenameDocumentModal";
 import { categoryNameSchema, sanitizeInput } from "@/lib/validation";
 import { AccessControlModal } from "@/components/vault/AccessControlModal";
 import { ActionMenu, createDocumentActionMenu } from "@/components/vault/ActionMenu";
@@ -43,6 +44,7 @@ const SubcategoryView = () => {
   const [viewingDoc, setViewingDoc] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [renameOpen, setRenameOpen] = useState(false);
 
   const loadData = async () => {
     try {
@@ -54,7 +56,7 @@ const SubcategoryView = () => {
 
       // Check if default category first
       const defaultCategory = vaultCategories.find(cat => cat.id === categoryId);
-      
+
       // Load category from database if not default
       let foundCategory: any = null;
       if (defaultCategory) {
@@ -96,7 +98,7 @@ const SubcategoryView = () => {
 
       // Check if default subcategory first
       const defaultSub = defaultCategory?.subcategories?.find(sub => sub.id === subcategoryId);
-      
+
       let foundSubcategory: any = null;
       if (defaultSub) {
         foundSubcategory = {
@@ -757,6 +759,15 @@ const SubcategoryView = () => {
           setViewingDoc({ fileUrl, name, type });
           setViewerOpen(true);
         }}
+        onRename={() => setRenameOpen(true)}
+      />
+
+      <RenameDocumentModal
+        open={renameOpen}
+        onOpenChange={setRenameOpen}
+        documentId={selectedDoc.id}
+        currentName={selectedDoc.name}
+        onRenameSuccess={loadData}
       />
 
       <LockDocumentModal

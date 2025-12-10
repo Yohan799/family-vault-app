@@ -1,4 +1,4 @@
-import { Eye, Download, Users, Trash2 } from "lucide-react";
+import { Eye, Download, Users, Trash2, Pencil } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +19,7 @@ interface DocumentOptionsModalProps {
   folderId?: string;
   onDelete?: () => void;
   onView?: (fileUrl: string, name: string, type: string) => void;
+  onRename?: () => void;
 }
 
 export const DocumentOptionsModal = ({
@@ -31,6 +32,7 @@ export const DocumentOptionsModal = ({
   folderId,
   onDelete,
   onView,
+  onRename,
 }: DocumentOptionsModalProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -153,6 +155,19 @@ export const DocumentOptionsModal = ({
           >
             <Eye className="w-5 h-5" />
             <span className="font-medium">View</span>
+          </button>
+
+          <Separator />
+
+          <button
+            onClick={() => {
+              onOpenChange(false);
+              if (onRename) onRename();
+            }}
+            className="w-full flex items-center gap-4 px-6 py-4 hover:bg-muted/50 transition-colors"
+          >
+            <Pencil className="w-5 h-5" />
+            <span className="font-medium">Rename</span>
           </button>
 
           <Separator />

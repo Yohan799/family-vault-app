@@ -405,3 +405,39 @@ export const formatFileSize = (bytes: number): string => {
 
   return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
 };
+
+/**
+ * Rename document
+ */
+export const renameDocument = async (
+  documentId: string,
+  newName: string
+): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: 'User not authenticated' };
+
+    if (!newName || newName.trim() === '') {
+      return { success: false, error: 'File name cannot be empty' };
+    }
+
+    const { error } = await supabase
+      .from('documents')
+      .update({
+        file_name: newName.trim(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', documentId)
+      .eq('user_id', user.id);
+
+    if (error) {
+      console.error('Error renaming document:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Unexpected error renaming document:', error);
+    return { success: false, error: error.message || 'Unexpected error occurred' };
+  }
+};
