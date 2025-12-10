@@ -99,7 +99,7 @@ const App = () => (
             <BrowserRouter>
               <BackButtonHandler />
               <Routes>
-                <Route path="/" element={<Welcome />} />
+                <Route path="/" element={<Onboarding />} />
                 <Route path="/onboarding" element={<Onboarding />} />
                 <Route path="/signup" element={<SignUp />} />
                 <Route path="/signin" element={<SignIn />} />

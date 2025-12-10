@@ -171,6 +171,19 @@ const TimeCapsule = () => {
       return;
     }
 
+    // Validate release date is in the future (after today)
+    const selectedDate = new Date(formData.releaseDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (selectedDate <= today) {
+      toast({
+        title: t("common.error"),
+        description: t("timeCapsule.futureDateRequired"),
+        variant: "destructive"
+      });
+      return;
+    }
+
     // Gmail-only validation
     if (!validateGmailOnly(formData.recipientEmail)) {
       toast({
@@ -338,9 +351,15 @@ const TimeCapsule = () => {
               <Input
                 type="date"
                 value={formData.releaseDate}
+                min={(() => {
+                  const tomorrow = new Date();
+                  tomorrow.setDate(tomorrow.getDate() + 1);
+                  return tomorrow.toISOString().split('T')[0];
+                })()}
                 onChange={(e) => setFormData({ ...formData, releaseDate: e.target.value })}
                 className="bg-background border-border"
               />
+              <p className="text-xs text-muted-foreground">{t("timeCapsule.futureDateHint")}</p>
             </div>
 
             <div className="space-y-2">

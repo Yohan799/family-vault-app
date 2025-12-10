@@ -202,6 +202,8 @@ const translations: Record<Language, Record<string, string>> = {
     "timeCapsule.released": "Released",
     "timeCapsule.noCapsules": "No time capsules",
     "timeCapsule.createFirst": "Create your first time capsule",
+    "timeCapsule.futureDateRequired": "Please select a future date",
+    "timeCapsule.futureDateHint": "Must be a future date (tomorrow or later)",
     
     // Profile
     "profile.title": "Profile",
@@ -963,6 +965,8 @@ const translations: Record<Language, Record<string, string>> = {
     "timeCapsule.released": "విడుదలయింది",
     "timeCapsule.noCapsules": "టైమ్ క్యాప్సూల్స్ లేవు",
     "timeCapsule.createFirst": "మీ మొదటి టైమ్ క్యాప్సూల్ సృష్టించండి",
+    "timeCapsule.futureDateRequired": "దయచేసి భవిష్యత్తు తేదీని ఎంచుకోండి",
+    "timeCapsule.futureDateHint": "భవిష్యత్తు తేదీ అయి ఉండాలి (రేపు లేదా తర్వాత)",
     
     // Profile
     "profile.title": "ప్రొఫైల్",
@@ -1462,6 +1466,8 @@ const translations: Record<Language, Record<string, string>> = {
     "timeCapsule.released": "ಬಿಡುಗಡೆಯಾಗಿದೆ",
     "timeCapsule.noCapsules": "ಟೈಮ್ ಕ್ಯಾಪ್ಸೂಲ್‌ಗಳಿಲ್ಲ",
     "timeCapsule.createFirst": "ನಿಮ್ಮ ಮೊದಲ ಟೈಮ್ ಕ್ಯಾಪ್ಸೂಲ್ ರಚಿಸಿ",
+    "timeCapsule.futureDateRequired": "ದಯವಿಟ್ಟು ಭವಿಷ್ಯದ ದಿನಾಂಕವನ್ನು ಆಯ್ಕೆಮಾಡಿ",
+    "timeCapsule.futureDateHint": "ಭವಿಷ್ಯದ ದಿನಾಂಕ ಆಗಿರಬೇಕು (ನಾಳೆ ಅಥವಾ ನಂತರ)",
     
     // Profile
     "profile.title": "ಪ್ರೊಫೈಲ್",
@@ -1808,6 +1814,8 @@ const translations: Record<Language, Record<string, string>> = {
     "timeCapsule.released": "रिलीज़ हुआ",
     "timeCapsule.noCapsules": "कोई टाइम कैप्सूल नहीं",
     "timeCapsule.createFirst": "अपना पहला टाइम कैप्सूल बनाएं",
+    "timeCapsule.futureDateRequired": "कृपया भविष्य की तारीख चुनें",
+    "timeCapsule.futureDateHint": "भविष्य की तारीख होनी चाहिए (कल या बाद में)",
     
     // Profile
     "profile.title": "प्रोफाइल",
@@ -2197,6 +2205,8 @@ const translations: Record<Language, Record<string, string>> = {
     "timeCapsule.released": "வெளியிடப்பட்டது",
     "timeCapsule.noCapsules": "டைம் காப்சூல்கள் இல்லை",
     "timeCapsule.createFirst": "உங்கள் முதல் டைம் காப்சூலை உருவாக்குங்கள்",
+    "timeCapsule.futureDateRequired": "எதிர்கால தேதியைத் தேர்ந்தெடுக்கவும்",
+    "timeCapsule.futureDateHint": "எதிர்கால தேதியாக இருக்க வேண்டும் (நாளை அல்லது அதற்குப் பிறகு)",
     
     // Profile
     "profile.title": "சுயவிவரம்",
