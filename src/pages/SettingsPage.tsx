@@ -134,18 +134,32 @@ const SettingsPage = () => {
 
       if (error) throw error;
 
+      // Clear all local storage for fresh start
+      localStorage.removeItem('onboardingComplete');
+      localStorage.removeItem('app_lock_type');
+      localStorage.removeItem('app_pin_hash');
+      localStorage.removeItem('app_lock_session_unlocked');
+      localStorage.removeItem('userPreferences');
+      localStorage.removeItem('language');
+
       toast({
         title: t("toast.accountDeleted"),
         description: t("toast.accountDeleted.description"),
       });
-      navigate("/welcome");
+
+      // Sign out and redirect to onboarding with full page reload for clean state
+      await signOut();
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
+      
+      // Force full page reload to /onboarding for clean navigation stack (critical for APK)
+      window.location.href = "/onboarding";
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: t("toast.deleteFailed"),
         description: error.message || "Failed to delete account",
       });
-    } finally {
       setIsDeleting(false);
       setShowDeleteDialog(false);
     }
