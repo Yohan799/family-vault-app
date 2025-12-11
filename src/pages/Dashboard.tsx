@@ -13,7 +13,7 @@ import { getQuickActions, initializeDefaultActions, type QuickAction } from "@/s
 import { DashboardSkeleton } from "@/components/skeletons";
 import { getUnreadCount } from "@/services/notificationService";
 import { getQuickActionText } from "@/lib/categoryTranslations";
-import { PullToRefresh } from "@/components/PullToRefresh";
+
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -155,17 +155,11 @@ const Dashboard = () => {
     .toUpperCase()
     .slice(0, 2);
 
-  const handleRefresh = async () => {
-    await Promise.all([
-      loadDashboardStats(),
-      loadQuickActions(),
-      loadUnreadCount()
-    ]);
-  };
+
 
   return (
     <>
-      <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-background pb-16">
+      <div className="min-h-screen bg-background pb-16">
         <div className="bg-primary/20 text-foreground p-4 rounded-b-3xl">
           <div className="flex justify-between items-start mb-3">
             <div>
@@ -278,7 +272,7 @@ const Dashboard = () => {
 
         {/* Feature Tour */}
         <FeatureTour isOpen={showTour} onClose={handleTourClose} />
-      </PullToRefresh>
+      </div>
 
       <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
         <div className="flex justify-around items-center h-16 max-w-md mx-auto">

@@ -12,7 +12,7 @@ import { ActionMenu, createCategoryActionMenu } from "@/components/vault/ActionM
 import { format } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getCategoryName } from "@/lib/categoryTranslations";
-import { PullToRefresh } from "@/components/PullToRefresh";
+
 import { syncDefaultCategories, getAllCategoryDocumentCounts, getAllUserDocuments, getAllUserSubcategories, deleteCategoryWithCascade } from "@/services/vaultService";
 
 const VaultHome = () => {
@@ -360,18 +360,11 @@ const VaultHome = () => {
 
   const allCategories = searchQuery ? filteredResults : filteredResults.map(r => r.category);
 
-  const handleRefresh = useCallback(async () => {
-    // Skip sync on refresh (already done), just reload data
-    await Promise.all([
-      loadCategories(true),
-      loadAllDocuments(),
-      loadAllSubcategories()
-    ]);
-  }, [loadCategories, loadAllDocuments, loadAllSubcategories]);
+
 
   return (
     <>
-      <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-[#FCFCF9] pb-20">
+      <div className="min-h-screen bg-[#FCFCF9] pb-20">
         <div className="bg-[#FCFCF9] p-6">
           <h1 className="text-2xl font-bold text-center text-[#1F2121]">{t("vault.title")}</h1>
           <p className="text-center text-[#626C71] text-sm mt-1">{totalDocuments} {t("common.documents")}</p>
@@ -610,7 +603,7 @@ const VaultHome = () => {
             onClose={() => setAccessControlCategory(null)}
           />
         )}
-      </PullToRefresh>
+      </div>
 
       <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
         <div className="flex justify-around items-center h-16 max-w-md mx-auto">

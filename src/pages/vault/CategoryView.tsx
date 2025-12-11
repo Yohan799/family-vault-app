@@ -15,7 +15,7 @@ import { filterItems, debounce } from "@/lib/searchUtils";
 import { CategoryViewSkeleton } from "@/components/skeletons";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getCategoryName, getSubcategoryName } from "@/lib/categoryTranslations";
-import { PullToRefresh } from "@/components/PullToRefresh";
+
 import { getAllSubcategoryDocumentCounts, getCategoryDocumentCount, deleteSubcategoryWithCascade } from "@/services/vaultService";
 
 const CategoryView = () => {
@@ -254,7 +254,7 @@ const CategoryView = () => {
 
       // Update state immediately (remove from list)
       setCustomSubcategories(prev => prev.filter(s => s.id !== subcategoryId));
-      
+
       // Update total document count
       setTotalDocumentCount(prev => prev - (deleteConfirm.subcategory?.documentCount || 0));
 
@@ -274,25 +274,7 @@ const CategoryView = () => {
     }
   };
 
-  const handleRefresh = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
 
-    // Run both queries in parallel
-    const [subDocCountMap, docCount] = await Promise.all([
-      getAllSubcategoryDocumentCounts(user.id),
-      getCategoryDocumentCount(categoryId!, user.id)
-    ]);
-
-    // Update subcategory counts
-    setCustomSubcategories(prev => prev.map(sub => ({
-      ...sub,
-      documentCount: subDocCountMap.get(sub.id) || 0
-    })));
-
-    // Update total document count
-    setTotalDocumentCount(docCount);
-  }, [categoryId]);
 
   if (loading) {
     return <CategoryViewSkeleton />;
@@ -313,7 +295,7 @@ const CategoryView = () => {
 
   return (
     <>
-      <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-[#FCFCF9] pb-20">
+      <div className="min-h-screen bg-[#FCFCF9] pb-20">
         <div className="bg-[#FCFCF9] p-6">
           <div className="flex items-center gap-4 mb-4">
             <BackButton />
@@ -497,7 +479,7 @@ const CategoryView = () => {
             onClose={() => setAccessControlSubcategory(null)}
           />
         )}
-      </PullToRefresh>
+      </div>
 
       <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
         <div className="flex justify-around items-center h-16 max-w-md mx-auto">

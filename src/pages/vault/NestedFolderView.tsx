@@ -13,7 +13,7 @@ import { RenameDocumentModal } from "@/components/vault/RenameDocumentModal";
 import { categoryNameSchema, sanitizeInput } from "@/lib/validation";
 import { filterItems, debounce } from "@/lib/searchUtils";
 import { supabase } from "@/integrations/supabase/client";
-import { PullToRefresh } from "@/components/PullToRefresh";
+
 
 const NestedFolderView = () => {
   const navigate = useNavigate();
@@ -311,7 +311,7 @@ const NestedFolderView = () => {
 
   return (
     <>
-      <PullToRefresh onRefresh={loadFolderData} className="min-h-screen bg-[#FCFCF9] pb-20">
+      <div className="min-h-screen bg-[#FCFCF9] pb-20">
         <div className="bg-[#FCFCF9] p-6">
           <div className="flex items-center gap-4 mb-4">
             <BackButton to={`/vault/${categoryId}/${subcategoryId}`} />
@@ -589,7 +589,7 @@ const NestedFolderView = () => {
           onOpenChange={(open) => setLockOpen(open)}
           documentName={selectedDoc.name}
         />
-      </PullToRefresh>
+      </div>
 
       <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
         <div className="flex justify-around items-center h-16 max-w-md mx-auto">

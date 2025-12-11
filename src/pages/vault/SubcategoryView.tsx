@@ -20,7 +20,7 @@ import { SubcategoryViewSkeleton } from "@/components/skeletons";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getSubcategoryName } from "@/lib/categoryTranslations";
-import { PullToRefresh } from "@/components/PullToRefresh";
+
 import { getDocuments, formatFileSize, deleteDocument, downloadDocument, incrementViewCount } from "@/lib/documentStorage";
 
 const SubcategoryView = () => {
@@ -482,7 +482,7 @@ const SubcategoryView = () => {
 
   return (
     <>
-      <PullToRefresh onRefresh={loadData} className="min-h-screen bg-[#FCFCF9] pb-20">
+      <div className="min-h-screen bg-[#FCFCF9] pb-20">
         <div className="bg-[#FCFCF9] p-6">
           <div className="flex items-center gap-4 mb-4">
             <BackButton />
@@ -827,7 +827,7 @@ const SubcategoryView = () => {
           documentName={viewingDoc?.name || ''}
           documentType={viewingDoc?.type || ''}
         />
-      </PullToRefresh>
+      </div>
 
       <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
         <div className="flex justify-around items-center h-16 max-w-md mx-auto">
