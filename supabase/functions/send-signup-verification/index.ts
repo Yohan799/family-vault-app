@@ -79,7 +79,7 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "Family Vault <noreply@unphuc.com>",
+        from: "Family Vault <onboarding@resend.dev>",
         to: [email],
         subject: "Verify your Family Vault account",
         html: `
