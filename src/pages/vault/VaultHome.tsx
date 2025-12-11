@@ -12,6 +12,7 @@ import { ActionMenu, createCategoryActionMenu } from "@/components/vault/ActionM
 import { format, parse } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getCategoryName } from "@/lib/categoryTranslations";
+import { PullToRefresh } from "@/components/PullToRefresh";
 
 const VaultHome = () => {
   const navigate = useNavigate();
@@ -114,8 +115,11 @@ const VaultHome = () => {
       }
 
       // Sync default categories first
-      const { syncDefaultCategories, getCategoryDocumentCount } = await import('@/services/vaultService');
+      const { syncDefaultCategories, getAllCategoryDocumentCounts } = await import('@/services/vaultService');
       await syncDefaultCategories(user.id);
+
+      // Get ALL document counts in ONE query (eliminates N+1)
+      const docCountMap = await getAllCategoryDocumentCounts(user.id);
 
       // Start with hardcoded default categories as the base
       const baseCategories = vaultCategories.map((cat) => ({
@@ -123,7 +127,7 @@ const VaultHome = () => {
         name: cat.name,
         icon: cat.icon,
         iconBgColor: cat.iconBgColor,
-        documentCount: 0,
+        documentCount: docCountMap.get(cat.id) || 0,  // Lookup from map
         subcategories: [],
         isCustom: false,
       }));
@@ -141,31 +145,19 @@ const VaultHome = () => {
         console.error("Error loading custom categories:", error);
       }
 
-      // Add custom categories to the list
-      const customCats = await Promise.all((customCatsData || []).map(async (cat: any) => {
-        const docCount = await getCategoryDocumentCount(cat.id, user.id);
-        return {
-          id: cat.id,
-          name: cat.name,
-          icon: Folder,
-          iconBgColor: cat.icon_bg_color || "bg-yellow-100",
-          documentCount: docCount,
-          subcategories: [],
-          isCustom: true
-        };
-      }));
-
-      // Get document counts for default categories
-      const categoriesWithCounts = await Promise.all(baseCategories.map(async (cat) => {
-        const docCount = await getCategoryDocumentCount(cat.id, user.id);
-        return {
-          ...cat,
-          documentCount: docCount
-        };
+      // Add custom categories with counts from the map (no extra DB calls!)
+      const customCats = (customCatsData || []).map((cat: any) => ({
+        id: cat.id,
+        name: cat.name,
+        icon: Folder,
+        iconBgColor: cat.icon_bg_color || "bg-yellow-100",
+        documentCount: docCountMap.get(cat.id) || 0,  // Lookup from map
+        subcategories: [],
+        isCustom: true
       }));
 
       // Merge: defaults + custom categories
-      const allCats = [...categoriesWithCounts, ...customCats];
+      const allCats = [...baseCategories, ...customCats];
 
       setCustomCategories(allCats);
     } catch (error) {
@@ -366,246 +358,256 @@ const VaultHome = () => {
 
   const allCategories = searchQuery ? filteredResults : filteredResults.map(r => r.category);
 
+  const handleRefresh = async () => {
+    await Promise.all([
+      loadCategories(),
+      loadAllDocuments(),
+      loadAllSubcategories()
+    ]);
+  };
+
   return (
-    <div className="min-h-screen bg-[#FCFCF9] pb-20">
-      <div className="bg-[#FCFCF9] p-6">
-        <h1 className="text-2xl font-bold text-center text-[#1F2121]">{t("vault.title")}</h1>
-        <p className="text-center text-[#626C71] text-sm mt-1">{totalDocuments} {t("common.documents")}</p>
+    <>
+      <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-[#FCFCF9] pb-20">
+        <div className="bg-[#FCFCF9] p-6">
+          <h1 className="text-2xl font-bold text-center text-[#1F2121]">{t("vault.title")}</h1>
+          <p className="text-center text-[#626C71] text-sm mt-1">{totalDocuments} {t("common.documents")}</p>
 
-        <div className="relative mt-6">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-          <Input
-            placeholder={t("vault.searchPlaceholder")}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-12 pr-12 h-12 bg-[#F5F5F5] border-none rounded-xl"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery("")}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          )}
-        </div>
-        {searchQuery && (
-          <p className="text-sm text-[#626C71] mt-2">
-            {t("vault.resultsFound", { count: filteredResults.length })}
-          </p>
-        )}
-      </div>
-
-      <div className="px-6">
-        {filteredResults.length === 0 && searchQuery ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="w-16 h-16 bg-[#F3E8FF] rounded-full flex items-center justify-center mb-4">
-              <FileX className="w-8 h-8 text-[#6D28D9]" />
-            </div>
-            <h3 className="text-lg font-semibold text-[#1F2121] mb-2">{t("vault.noResults")}</h3>
-            <p className="text-sm text-[#626C71] max-w-xs">
-              {t("vault.noResultsDesc")}
-            </p>
-            <Button
-              onClick={() => setSearchQuery("")}
-              className="mt-4"
-              variant="outline"
-            >
-              {t("vault.clearSearch")}
-            </Button>
-          </div>
-        ) : (
-          <div className={searchQuery ? "space-y-4" : "grid grid-cols-2 gap-3 items-stretch"}>
-            {filteredResults.map((result) => {
-              const category = result.category;
-              const Icon = category.icon;
-
-              return (
-                <div key={category.id} className={searchQuery ? "space-y-2" : "h-full"}>
-                  {/* Category Tile */}
-                  <div className="relative h-full">
-                    <button
-                      onClick={() => navigate(`/vault/${category.id}`)}
-                      className={`w-full bg-[#F3E8FF] rounded-2xl hover:opacity-80 transition-opacity ${searchQuery
-                        ? "p-4 flex items-center gap-4"
-                        : "p-4 h-full flex flex-col items-center justify-between text-center min-h-[140px]"
-                        }`}
-                    >
-                      <div className={searchQuery ? "" : "flex flex-col items-center"}>
-                        <div className={`${category.iconBgColor} rounded-full flex items-center justify-center flex-shrink-0 ${searchQuery ? "w-14 h-14" : "w-12 h-12"
-                          }`}>
-                          <Icon className={`text-[#6D28D9] ${searchQuery ? "w-7 h-7" : "w-6 h-6"}`} />
-                        </div>
-                        <div className={searchQuery ? "flex-1 text-left" : "w-full mt-2"}>
-                          <h3 className={`font-semibold text-[#1F2121] line-clamp-2 ${searchQuery ? "text-lg" : "text-base"}`}>
-                            {getCategoryName(category.id, category.name, t)}
-                          </h3>
-                        </div>
-                      </div>
-                      <p className="text-sm text-[#626C71] mt-1">
-                        {searchQuery && result.totalMatches > 0
-                          ? `${result.totalMatches} ${result.totalMatches === 1 ? t("vault.match") : t("vault.matches")}`
-                          : `${category.documentCount} ${t("common.documents")}`
-                        }
-                      </p>
-                    </button>
-
-                    {/* Action Menu - Always show for all categories */}
-                    <div className="absolute top-2 right-2 z-10">
-                      <ActionMenu
-                        items={createCategoryActionMenu(
-                          () => setAccessControlCategory(category),
-                          category.isCustom ? () => handleDeleteClick(category, { stopPropagation: () => { } } as any) : undefined
-                        )}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Expanded Results: Matching Subcategories */}
-                  {searchQuery && result.matchedSubcategories && result.matchedSubcategories.length > 0 && (
-                    <div className="ml-4 space-y-2">
-                      {result.matchedSubcategories.map((sub: any) => (
-                        <button
-                          key={sub.id}
-                          onClick={() => navigate(`/vault/${category.id}/${sub.id}`)}
-                          className="w-full bg-purple-50 rounded-xl p-3 flex items-center gap-3 hover:bg-purple-100 transition-colors"
-                        >
-                          <Folder className="w-5 h-5 text-[#6D28D9] flex-shrink-0" />
-                          <span className="font-medium text-[#1F2121] text-sm">{sub.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Expanded Results: Matching Documents (show first 3) */}
-                  {searchQuery && result.matchedDocuments && result.matchedDocuments.length > 0 && (
-                    <div className="ml-4 space-y-1">
-                      {result.matchedDocuments.slice(0, 3).map((doc: any) => (
-                        <div key={doc.id} className="flex items-center gap-2 text-sm text-[#626C71] py-1">
-                          <FileText className="w-4 h-4 flex-shrink-0" />
-                          <span className="truncate">{doc.file_name}</span>
-                        </div>
-                      ))}
-                      {result.matchedDocuments.length > 3 && (
-                        <p className="text-xs text-[#626C71] pl-6">
-                          +{result.matchedDocuments.length - 3} more
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-
-            {!searchQuery && (
+          <div className="relative mt-6">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Input
+              placeholder={t("vault.searchPlaceholder")}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-12 pr-12 h-12 bg-[#F5F5F5] border-none rounded-xl"
+            />
+            {searchQuery && (
               <button
-                onClick={() => setShowAddDialog(true)}
-                className="w-full bg-[#F3E8FF] border-2 border-dashed border-[#6D28D9] rounded-2xl p-5 flex flex-col items-center justify-center hover:opacity-80 transition-opacity"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
-                <div className="w-14 h-14 bg-white/60 rounded-full flex items-center justify-center mb-3">
-                  <Plus className="w-7 h-7 text-[#6D28D9]" />
-                </div>
-                <h3 className="font-semibold text-[#1F2121]">{t("vault.addCategory")}</h3>
+                <X className="w-5 h-5" />
               </button>
             )}
           </div>
-        )}
-      </div>
-
-      {deleteConfirm.show && deleteConfirm.category && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-card rounded-3xl p-6 w-full max-w-md">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                <AlertTriangle className="w-6 h-6 text-purple-600" />
-              </div>
-              <h2 className="text-xl font-bold text-foreground">{t("vault.deleteTitle")}</h2>
-            </div>
-
-            <p className="text-foreground mb-2">
-              {t("vault.deleteConfirm")} <span className="font-semibold">{deleteConfirm.category.name}</span>?
+          {searchQuery && (
+            <p className="text-sm text-[#626C71] mt-2">
+              {t("vault.resultsFound", { count: filteredResults.length })}
             </p>
-
-            <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-6">
-              <p className="text-sm text-purple-800 font-medium">
-                {deleteConfirm.category.documentCount} {t("common.documents")} {t("vault.willBeDeleted")}
-              </p>
-              <p className="text-xs text-purple-600 mt-1">{t("vault.cannotUndo")}</p>
-            </div>
-
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setDeleteConfirm({ show: false, category: null })}
-                className="flex-1"
-              >
-                {t("common.cancel")}
-              </Button>
-              <Button
-                onClick={confirmDelete}
-                className="flex-1 bg-purple-500 hover:bg-purple-600 text-white"
-              >
-                {t("common.delete")}
-              </Button>
-            </div>
-          </div>
+          )}
         </div>
-      )}
 
-      {showAddDialog && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-card rounded-3xl p-6 w-full max-w-md relative">
-            <button
-              onClick={() => setShowAddDialog(false)}
-              className="absolute right-4 top-4 text-muted-foreground hover:text-foreground"
-            >
-              <X className="w-6 h-6" />
-            </button>
+        <div className="px-6">
+          {filteredResults.length === 0 && searchQuery ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="w-16 h-16 bg-[#F3E8FF] rounded-full flex items-center justify-center mb-4">
+                <FileX className="w-8 h-8 text-[#6D28D9]" />
+              </div>
+              <h3 className="text-lg font-semibold text-[#1F2121] mb-2">{t("vault.noResults")}</h3>
+              <p className="text-sm text-[#626C71] max-w-xs">
+                {t("vault.noResultsDesc")}
+              </p>
+              <Button
+                onClick={() => setSearchQuery("")}
+                className="mt-4"
+                variant="outline"
+              >
+                {t("vault.clearSearch")}
+              </Button>
+            </div>
+          ) : (
+            <div className={searchQuery ? "space-y-4" : "grid grid-cols-2 gap-3 items-stretch"}>
+              {filteredResults.map((result) => {
+                const category = result.category;
+                const Icon = category.icon;
 
-            <h2 className="text-2xl font-bold text-foreground mb-6">{t("vault.addCategory")}</h2>
+                return (
+                  <div key={category.id} className={searchQuery ? "space-y-2" : "h-full"}>
+                    {/* Category Tile */}
+                    <div className="relative h-full">
+                      <button
+                        onClick={() => navigate(`/vault/${category.id}`)}
+                        className={`w-full bg-[#F3E8FF] rounded-2xl hover:opacity-80 transition-opacity ${searchQuery
+                          ? "p-4 flex items-center gap-4"
+                          : "p-4 h-full flex flex-col items-center justify-between text-center min-h-[140px]"
+                          }`}
+                      >
+                        <div className={searchQuery ? "" : "flex flex-col items-center"}>
+                          <div className={`${category.iconBgColor} rounded-full flex items-center justify-center flex-shrink-0 ${searchQuery ? "w-14 h-14" : "w-12 h-12"
+                            }`}>
+                            <Icon className={`text-[#6D28D9] ${searchQuery ? "w-7 h-7" : "w-6 h-6"}`} />
+                          </div>
+                          <div className={searchQuery ? "flex-1 text-left" : "w-full mt-2"}>
+                            <h3 className={`font-semibold text-[#1F2121] line-clamp-2 ${searchQuery ? "text-lg" : "text-base"}`}>
+                              {getCategoryName(category.id, category.name, t)}
+                            </h3>
+                          </div>
+                        </div>
+                        <p className="text-sm text-[#626C71] mt-1">
+                          {searchQuery && result.totalMatches > 0
+                            ? `${result.totalMatches} ${result.totalMatches === 1 ? t("vault.match") : t("vault.matches")}`
+                            : `${category.documentCount} ${t("common.documents")}`
+                          }
+                        </p>
+                      </button>
 
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-foreground mb-2 block">
-                  {t("vault.categoryName")}
-                </label>
-                <Input
-                  placeholder={t("vault.categoryPlaceholder")}
-                  value={categoryName}
-                  onChange={(e) => setCategoryName(e.target.value)}
-                  className="bg-background border-border"
-                  onKeyPress={(e) => e.key === 'Enter' && handleAddCategory()}
-                />
+                      {/* Action Menu - Always show for all categories */}
+                      <div className="absolute top-2 right-2 z-10">
+                        <ActionMenu
+                          items={createCategoryActionMenu(
+                            () => setAccessControlCategory(category),
+                            category.isCustom ? () => handleDeleteClick(category, { stopPropagation: () => { } } as any) : undefined
+                          )}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Expanded Results: Matching Subcategories */}
+                    {searchQuery && result.matchedSubcategories && result.matchedSubcategories.length > 0 && (
+                      <div className="ml-4 space-y-2">
+                        {result.matchedSubcategories.map((sub: any) => (
+                          <button
+                            key={sub.id}
+                            onClick={() => navigate(`/vault/${category.id}/${sub.id}`)}
+                            className="w-full bg-purple-50 rounded-xl p-3 flex items-center gap-3 hover:bg-purple-100 transition-colors"
+                          >
+                            <Folder className="w-5 h-5 text-[#6D28D9] flex-shrink-0" />
+                            <span className="font-medium text-[#1F2121] text-sm">{sub.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Expanded Results: Matching Documents (show first 3) */}
+                    {searchQuery && result.matchedDocuments && result.matchedDocuments.length > 0 && (
+                      <div className="ml-4 space-y-1">
+                        {result.matchedDocuments.slice(0, 3).map((doc: any) => (
+                          <div key={doc.id} className="flex items-center gap-2 text-sm text-[#626C71] py-1">
+                            <FileText className="w-4 h-4 flex-shrink-0" />
+                            <span className="truncate">{doc.file_name}</span>
+                          </div>
+                        ))}
+                        {result.matchedDocuments.length > 3 && (
+                          <p className="text-xs text-[#626C71] pl-6">
+                            +{result.matchedDocuments.length - 3} more
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+
+              {!searchQuery && (
+                <button
+                  onClick={() => setShowAddDialog(true)}
+                  className="w-full bg-[#F3E8FF] border-2 border-dashed border-[#6D28D9] rounded-2xl p-5 flex flex-col items-center justify-center hover:opacity-80 transition-opacity"
+                >
+                  <div className="w-14 h-14 bg-white/60 rounded-full flex items-center justify-center mb-3">
+                    <Plus className="w-7 h-7 text-[#6D28D9]" />
+                  </div>
+                  <h3 className="font-semibold text-[#1F2121]">{t("vault.addCategory")}</h3>
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {deleteConfirm.show && deleteConfirm.category && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <div className="bg-card rounded-3xl p-6 w-full max-w-md">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                  <AlertTriangle className="w-6 h-6 text-purple-600" />
+                </div>
+                <h2 className="text-xl font-bold text-foreground">{t("vault.deleteTitle")}</h2>
               </div>
 
-              <div className="flex gap-3 pt-2">
+              <p className="text-foreground mb-2">
+                {t("vault.deleteConfirm")} <span className="font-semibold">{deleteConfirm.category.name}</span>?
+              </p>
+
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-6">
+                <p className="text-sm text-purple-800 font-medium">
+                  {deleteConfirm.category.documentCount} {t("common.documents")} {t("vault.willBeDeleted")}
+                </p>
+                <p className="text-xs text-purple-600 mt-1">{t("vault.cannotUndo")}</p>
+              </div>
+
+              <div className="flex gap-3">
                 <Button
                   variant="outline"
-                  onClick={() => setShowAddDialog(false)}
+                  onClick={() => setDeleteConfirm({ show: false, category: null })}
                   className="flex-1"
                 >
                   {t("common.cancel")}
                 </Button>
                 <Button
-                  onClick={handleAddCategory}
-                  className="flex-1"
+                  onClick={confirmDelete}
+                  className="flex-1 bg-purple-500 hover:bg-purple-600 text-white"
                 >
-                  {t("common.add")}
+                  {t("common.delete")}
                 </Button>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {accessControlCategory && (
-        <AccessControlModal
-          resourceType="category"
-          resourceId={accessControlCategory.id}
-          resourceName={accessControlCategory.name}
-          onClose={() => setAccessControlCategory(null)}
-        />
-      )}
+        {showAddDialog && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <div className="bg-card rounded-3xl p-6 w-full max-w-md relative">
+              <button
+                onClick={() => setShowAddDialog(false)}
+                className="absolute right-4 top-4 text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-6 h-6" />
+              </button>
+
+              <h2 className="text-2xl font-bold text-foreground mb-6">{t("vault.addCategory")}</h2>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">
+                    {t("vault.categoryName")}
+                  </label>
+                  <Input
+                    placeholder={t("vault.categoryPlaceholder")}
+                    value={categoryName}
+                    onChange={(e) => setCategoryName(e.target.value)}
+                    className="bg-background border-border"
+                    onKeyPress={(e) => e.key === 'Enter' && handleAddCategory()}
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowAddDialog(false)}
+                    className="flex-1"
+                  >
+                    {t("common.cancel")}
+                  </Button>
+                  <Button
+                    onClick={handleAddCategory}
+                    className="flex-1"
+                  >
+                    {t("common.add")}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {accessControlCategory && (
+          <AccessControlModal
+            resourceType="category"
+            resourceId={accessControlCategory.id}
+            resourceName={accessControlCategory.name}
+            onClose={() => setAccessControlCategory(null)}
+          />
+        )}
+      </PullToRefresh>
 
       <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
         <div className="flex justify-around items-center h-16 max-w-md mx-auto">
@@ -630,7 +632,7 @@ const VaultHome = () => {
           </button>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

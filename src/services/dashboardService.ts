@@ -9,41 +9,44 @@ export interface DashboardStats {
 
 export const fetchDashboardStats = async (userId: string): Promise<DashboardStats> => {
   try {
-    // Fetch documents count
-    const { count: documentsCount } = await supabase
-      .from('documents')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .is('deleted_at', null);
+    // Run ALL queries in PARALLEL for faster loading
+    const [documentsResult, nomineesResult, timeCapsulesResult, inactivityResult] = await Promise.all([
+      // Fetch documents count
+      supabase
+        .from('documents')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .is('deleted_at', null),
 
-    // Fetch nominees count (only verified)
-    const { count: nomineesCount } = await supabase
-      .from('nominees')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('status', 'verified')
-      .is('deleted_at', null);
+      // Fetch nominees count (only verified)
+      supabase
+        .from('nominees')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .eq('status', 'verified')
+        .is('deleted_at', null),
 
-    // Fetch time capsules count (only scheduled)
-    const { count: timeCapsulesCount } = await supabase
-      .from('time_capsules')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('status', 'scheduled')
-      .is('deleted_at', null);
+      // Fetch time capsules count (only scheduled)
+      supabase
+        .from('time_capsules')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .eq('status', 'scheduled')
+        .is('deleted_at', null),
 
-    // Fetch inactivity trigger status
-    const { data: inactivityTrigger } = await supabase
-      .from('inactivity_triggers')
-      .select('is_active')
-      .eq('user_id', userId)
-      .single();
+      // Fetch inactivity trigger status
+      supabase
+        .from('inactivity_triggers')
+        .select('is_active')
+        .eq('user_id', userId)
+        .single()
+    ]);
 
     return {
-      documents: documentsCount || 0,
-      nominees: nomineesCount || 0,
-      timeCapsules: timeCapsulesCount || 0,
-      inactivityTriggerActive: inactivityTrigger?.is_active || false,
+      documents: documentsResult.count || 0,
+      nominees: nomineesResult.count || 0,
+      timeCapsules: timeCapsulesResult.count || 0,
+      inactivityTriggerActive: inactivityResult.data?.is_active || false,
     };
   } catch (error) {
     console.error('Error fetching dashboard stats:', error);

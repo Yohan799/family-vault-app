@@ -161,7 +161,7 @@ export const documentFileSchema = z.object({
     name: z.string().min(1, "File name is required"),
     size: z
         .number()
-        .max(100 * 1024 * 1024, "File size must be less than 100MB"),
+        .max(20 * 1024 * 1024, "File size must be less than 20MB"),
     type: z
         .string()
         .refine(
@@ -228,9 +228,9 @@ export const sanitizeInput = (input: string): string => {
 export const validateFile = (
     file: File
 ): { valid: boolean; error?: string } => {
-    // First check size
-    if (file.size > 100 * 1024 * 1024) {
-        return { valid: false, error: "File size must be less than 100MB" };
+    // First check size - 20MB limit
+    if (file.size > 20 * 1024 * 1024) {
+        return { valid: false, error: "File size must be less than 20MB" };
     }
 
     // Check if file has valid name
@@ -239,17 +239,17 @@ export const validateFile = (
     }
 
     const mimeType = file.type || '';
-    
+
     // Accept known MIME types
     if (ALLOWED_MIME_TYPES.includes(mimeType)) {
         return { valid: true };
     }
-    
+
     // Accept any image/* type (camera/scanner captures)
     if (mimeType.startsWith('image/')) {
         return { valid: true };
     }
-    
+
     // For empty or generic MIME types, check file extension
     if (!mimeType || mimeType === 'application/octet-stream') {
         if (hasImageExtension(file.name)) {
@@ -330,15 +330,15 @@ export const truncateText = (text: string, maxLength: number): string => {
  * Validates Gmail-only email addresses
  */
 export const validateGmailOnly = (email: string): boolean => {
-  const gmailRegex = /^[^\s@]+@gmail\.com$/i;
-  return gmailRegex.test(email);
+    const gmailRegex = /^[^\s@]+@gmail\.com$/i;
+    return gmailRegex.test(email);
 };
 
 /**
  * Validates phone number is exactly 10 digits
  */
 export const validatePhoneExact10 = (phone: string): boolean => {
-  return /^[0-9]{10}$/.test(phone);
+    return /^[0-9]{10}$/.test(phone);
 };
 
 // ============================================

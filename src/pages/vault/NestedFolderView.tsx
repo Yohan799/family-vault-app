@@ -13,6 +13,7 @@ import { RenameDocumentModal } from "@/components/vault/RenameDocumentModal";
 import { categoryNameSchema, sanitizeInput } from "@/lib/validation";
 import { filterItems, debounce } from "@/lib/searchUtils";
 import { supabase } from "@/integrations/supabase/client";
+import { PullToRefresh } from "@/components/PullToRefresh";
 
 const NestedFolderView = () => {
   const navigate = useNavigate();
@@ -217,10 +218,22 @@ const NestedFolderView = () => {
     const folderNameToDelete = deleteConfirm.folder.name;
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to delete folders",
+          variant: "destructive"
+        });
+        setDeleteConfirm({ show: false, folder: null });
+        return;
+      }
+
       const { error } = await supabase
         .from('folders')
         .update({ deleted_at: new Date().toISOString() })
-        .eq('id', folderIdToDelete);
+        .eq('id', folderIdToDelete)
+        .eq('user_id', user.id);
 
       if (error) throw error;
 
@@ -277,282 +290,284 @@ const NestedFolderView = () => {
   const showNoResults = debouncedQuery && filteredFolders.length === 0;
 
   return (
-    <div className="min-h-screen bg-[#FCFCF9] pb-20">
-      <div className="bg-[#FCFCF9] p-6">
-        <div className="flex items-center gap-4 mb-4">
-          <BackButton to={`/vault/${categoryId}/${subcategoryId}`} />
-          <div className="flex-1 text-center -ml-10">
-            <div className="flex items-center justify-center gap-2">
-              <Folder className="w-6 h-6 text-[#1F2121]" />
-              <h1 className="text-2xl font-bold text-[#1F2121]">{currentFolder.name}</h1>
-            </div>
-            <p className="text-[#626C71] text-sm mt-1">{currentFolder.documentCount || 0} Documents</p>
-          </div>
-        </div>
-
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-          <Input
-            placeholder="Search folders..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-12 pr-12 h-12 bg-[#F5F5F5] border-none rounded-xl"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery("")}
-              className="absolute right-4 top-1/2 -translate-y-1/2 hover:bg-accent rounded-full p-1"
-            >
-              <X className="w-4 h-4 text-muted-foreground" />
-            </button>
-          )}
-        </div>
-      </div>
-
-      {showNoResults && (
-        <div className="px-6 text-center py-12">
-          <Folder className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
-          <p className="text-muted-foreground text-lg">No matching folders found</p>
-          <p className="text-muted-foreground/60 text-sm mt-2">Try a different search term</p>
-        </div>
-      )}
-
-      {filteredFolders.length > 0 && !showNoResults && (
-        <div className="px-6 mb-6">
-          <h2 className="text-lg font-semibold text-[#1F2121] mb-3">Subfolders</h2>
-          <div className="grid grid-cols-2 gap-3">
-            {filteredFolders.map((folder) => (
-              <div key={folder.id} className="relative">
-                <button
-                  onClick={() => navigate(`/vault/${categoryId}/${subcategoryId}/${folder.id}`)}
-                  className="w-full bg-[#F3E8FF] rounded-2xl p-5 flex flex-col items-center justify-center hover:opacity-80 transition-opacity"
-                >
-                  <div className="w-14 h-14 bg-indigo-100 rounded-full flex items-center justify-center mb-3">
-                    <Folder className="w-7 h-7 text-[#6D28D9]" />
-                  </div>
-                  <h3 className="font-semibold text-[#1F2121] text-center mb-1">{folder.name}</h3>
-                  <p className="text-sm text-[#626C71]">{folder.documentCount || 0} Documents</p>
-                </button>
-
-                {folder.isCustom && (
-                  <button
-                    onClick={(e) => handleDeleteClick(folder, e)}
-                    className="absolute top-2 right-2 w-7 h-7 bg-purple-500 hover:bg-purple-600 rounded-full flex items-center justify-center transition-colors z-10"
-                    title="Delete folder"
-                  >
-                    <X className="w-4 h-4 text-white" />
-                  </button>
-                )}
+    <>
+      <PullToRefresh onRefresh={loadFolderData} className="min-h-screen bg-[#FCFCF9] pb-20">
+        <div className="bg-[#FCFCF9] p-6">
+          <div className="flex items-center gap-4 mb-4">
+            <BackButton to={`/vault/${categoryId}/${subcategoryId}`} />
+            <div className="flex-1 text-center -ml-10">
+              <div className="flex items-center justify-center gap-2">
+                <Folder className="w-6 h-6 text-[#1F2121]" />
+                <h1 className="text-2xl font-bold text-[#1F2121]">{currentFolder.name}</h1>
               </div>
-            ))}
+              <p className="text-[#626C71] text-sm mt-1">{currentFolder.documentCount || 0} Documents</p>
+            </div>
+          </div>
 
-            {canAddMore && !debouncedQuery && (
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Input
+              placeholder="Search folders..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-12 pr-12 h-12 bg-[#F5F5F5] border-none rounded-xl"
+            />
+            {searchQuery && (
               <button
-                onClick={() => setShowAddFolderDialog(true)}
-                className="bg-[#F3E8FF] border-2 border-dashed border-[#6D28D9] rounded-2xl p-5 flex flex-col items-center justify-center hover:opacity-80 transition-opacity"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-4 top-1/2 -translate-y-1/2 hover:bg-accent rounded-full p-1"
               >
-                <div className="w-14 h-14 bg-white/60 rounded-full flex items-center justify-center mb-3">
-                  <Plus className="w-7 h-7 text-[#6D28D9]" />
-                </div>
-                <h3 className="font-semibold text-[#1F2121]">Add Folder</h3>
+                <X className="w-4 h-4 text-muted-foreground" />
               </button>
             )}
           </div>
         </div>
-      )}
 
-      {nestedFolders.length === 0 && canAddMore && !debouncedQuery && !showNoResults && (
-        <div className="px-6 mb-6">
-          <button
-            onClick={() => setShowAddFolderDialog(true)}
-            className="w-full bg-[#F3E8FF] border-2 border-dashed border-[#6D28D9] rounded-2xl p-6 flex flex-col items-center justify-center hover:opacity-80 transition-opacity"
-          >
-            <div className="w-16 h-16 bg-white/60 rounded-full flex items-center justify-center mb-3">
-              <Plus className="w-8 h-8 text-[#6D28D9]" />
-            </div>
-            <h3 className="font-semibold text-[#1F2121] mb-1">Create Subfolder</h3>
-            <p className="text-sm text-[#626C71]">Organize documents into subfolders</p>
-          </button>
-        </div>
-      )}
-
-      {!showNoResults && (
-        <div className="px-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-[#1F2121]">Documents</h2>
-            <Button
-              onClick={() => setUploadOpen(true)}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground min-h-[44px]"
-            >
-              <Upload className="w-4 h-4 mr-2" />
-              Upload
-            </Button>
+        {showNoResults && (
+          <div className="px-6 text-center py-12">
+            <Folder className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
+            <p className="text-muted-foreground text-lg">No matching folders found</p>
+            <p className="text-muted-foreground/60 text-sm mt-2">Try a different search term</p>
           </div>
+        )}
 
-          {documents.length === 0 ? (
-            <div className="bg-card rounded-2xl p-8 text-center">
-              <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-              <p className="text-muted-foreground mb-4">No documents yet</p>
-              <Button
-                onClick={() => setUploadOpen(true)}
-                variant="outline"
-                className="min-h-[44px]"
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                Upload Document
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {documents.map((doc) => (
-                <div
-                  key={doc.id}
-                  className="bg-card rounded-xl p-4 flex items-center justify-between hover:bg-accent/50 transition-colors"
-                >
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <FileText className="w-5 h-5 text-primary" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-medium text-foreground truncate">{doc.name}</h3>
-                      <p className="text-xs text-muted-foreground">
-                        {doc.size} • {doc.date}
-                      </p>
-                    </div>
-                  </div>
+        {filteredFolders.length > 0 && !showNoResults && (
+          <div className="px-6 mb-6">
+            <h2 className="text-lg font-semibold text-[#1F2121] mb-3">Subfolders</h2>
+            <div className="grid grid-cols-2 gap-3">
+              {filteredFolders.map((folder) => (
+                <div key={folder.id} className="relative">
                   <button
-                    onClick={() => handleDocumentOptions(doc)}
-                    className="p-2 hover:bg-accent rounded-lg transition-colors"
+                    onClick={() => navigate(`/vault/${categoryId}/${subcategoryId}/${folder.id}`)}
+                    className="w-full bg-[#F3E8FF] rounded-2xl p-5 flex flex-col items-center justify-center hover:opacity-80 transition-opacity"
                   >
-                    <MoreVertical className="w-5 h-5 text-muted-foreground" />
+                    <div className="w-14 h-14 bg-indigo-100 rounded-full flex items-center justify-center mb-3">
+                      <Folder className="w-7 h-7 text-[#6D28D9]" />
+                    </div>
+                    <h3 className="font-semibold text-[#1F2121] text-center mb-1">{folder.name}</h3>
+                    <p className="text-sm text-[#626C71]">{folder.documentCount || 0} Documents</p>
                   </button>
+
+                  {folder.isCustom && (
+                    <button
+                      onClick={(e) => handleDeleteClick(folder, e)}
+                      className="absolute top-2 right-2 w-7 h-7 bg-purple-500 hover:bg-purple-600 rounded-full flex items-center justify-center transition-colors z-10"
+                      title="Delete folder"
+                    >
+                      <X className="w-4 h-4 text-white" />
+                    </button>
+                  )}
                 </div>
               ))}
-            </div>
-          )}
-        </div>
-      )}
 
-      {deleteConfirm.show && deleteConfirm.folder && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-card rounded-3xl p-6 w-full max-w-md">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                <AlertTriangle className="w-6 h-6 text-red-600" />
-              </div>
-              <h2 className="text-xl font-bold text-foreground">Delete Folder?</h2>
-            </div>
-
-            <p className="text-foreground mb-2">
-              Are you sure you want to delete <span className="font-semibold">{deleteConfirm.folder.name}</span>?
-            </p>
-
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-6">
-              <p className="text-sm text-red-800 font-medium">
-                {deleteConfirm.folder.documentCount || 0} {deleteConfirm.folder.documentCount === 1 ? 'document' : 'documents'} will be deleted
-              </p>
-              <p className="text-xs text-red-600 mt-1">This action cannot be undone</p>
-            </div>
-
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setDeleteConfirm({ show: false, folder: null })}
-                className="flex-1"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={confirmDelete}
-                className="flex-1 bg-red-500 hover:bg-red-600 text-white"
-              >
-                Delete
-              </Button>
+              {canAddMore && !debouncedQuery && (
+                <button
+                  onClick={() => setShowAddFolderDialog(true)}
+                  className="bg-[#F3E8FF] border-2 border-dashed border-[#6D28D9] rounded-2xl p-5 flex flex-col items-center justify-center hover:opacity-80 transition-opacity"
+                >
+                  <div className="w-14 h-14 bg-white/60 rounded-full flex items-center justify-center mb-3">
+                    <Plus className="w-7 h-7 text-[#6D28D9]" />
+                  </div>
+                  <h3 className="font-semibold text-[#1F2121]">Add Folder</h3>
+                </button>
+              )}
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {showAddFolderDialog && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-card rounded-3xl p-6 w-full max-w-md relative">
+        {nestedFolders.length === 0 && canAddMore && !debouncedQuery && !showNoResults && (
+          <div className="px-6 mb-6">
             <button
-              onClick={() => setShowAddFolderDialog(false)}
-              className="absolute right-4 top-4 text-muted-foreground hover:text-foreground"
+              onClick={() => setShowAddFolderDialog(true)}
+              className="w-full bg-[#F3E8FF] border-2 border-dashed border-[#6D28D9] rounded-2xl p-6 flex flex-col items-center justify-center hover:opacity-80 transition-opacity"
             >
-              <X className="w-6 h-6" />
+              <div className="w-16 h-16 bg-white/60 rounded-full flex items-center justify-center mb-3">
+                <Plus className="w-8 h-8 text-[#6D28D9]" />
+              </div>
+              <h3 className="font-semibold text-[#1F2121] mb-1">Create Subfolder</h3>
+              <p className="text-sm text-[#626C71]">Organize documents into subfolders</p>
             </button>
+          </div>
+        )}
 
-            <h2 className="text-2xl font-bold text-foreground mb-6">Add Subfolder</h2>
+        {!showNoResults && (
+          <div className="px-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-[#1F2121]">Documents</h2>
+              <Button
+                onClick={() => setUploadOpen(true)}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground min-h-[44px]"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Upload
+              </Button>
+            </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-foreground mb-2 block">
-                  Folder Name
-                </label>
-                <Input
-                  placeholder="e.g. 2024 Records, Contracts, etc."
-                  value={folderName}
-                  onChange={(e) => setFolderName(e.target.value)}
-                  className="bg-background border-border"
-                  onKeyPress={(e) => e.key === 'Enter' && handleAddFolder()}
-                />
+            {documents.length === 0 ? (
+              <div className="bg-card rounded-2xl p-8 text-center">
+                <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                <p className="text-muted-foreground mb-4">No documents yet</p>
+                <Button
+                  onClick={() => setUploadOpen(true)}
+                  variant="outline"
+                  className="min-h-[44px]"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Upload Document
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {documents.map((doc) => (
+                  <div
+                    key={doc.id}
+                    className="bg-card rounded-xl p-4 flex items-center justify-between hover:bg-accent/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <FileText className="w-5 h-5 text-primary" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-medium text-foreground truncate">{doc.name}</h3>
+                        <p className="text-xs text-muted-foreground">
+                          {doc.size} • {doc.date}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleDocumentOptions(doc)}
+                      className="p-2 hover:bg-accent rounded-lg transition-colors"
+                    >
+                      <MoreVertical className="w-5 h-5 text-muted-foreground" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {deleteConfirm.show && deleteConfirm.folder && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <div className="bg-card rounded-3xl p-6 w-full max-w-md">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                  <AlertTriangle className="w-6 h-6 text-red-600" />
+                </div>
+                <h2 className="text-xl font-bold text-foreground">Delete Folder?</h2>
               </div>
 
-              <div className="flex gap-3 pt-2">
+              <p className="text-foreground mb-2">
+                Are you sure you want to delete <span className="font-semibold">{deleteConfirm.folder.name}</span>?
+              </p>
+
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-6">
+                <p className="text-sm text-red-800 font-medium">
+                  {deleteConfirm.folder.documentCount || 0} {deleteConfirm.folder.documentCount === 1 ? 'document' : 'documents'} will be deleted
+                </p>
+                <p className="text-xs text-red-600 mt-1">This action cannot be undone</p>
+              </div>
+
+              <div className="flex gap-3">
                 <Button
                   variant="outline"
-                  onClick={() => setShowAddFolderDialog(false)}
+                  onClick={() => setDeleteConfirm({ show: false, folder: null })}
                   className="flex-1"
                 >
                   Cancel
                 </Button>
                 <Button
-                  onClick={handleAddFolder}
-                  className="flex-1"
+                  onClick={confirmDelete}
+                  className="flex-1 bg-red-500 hover:bg-red-600 text-white"
                 >
-                  Add
+                  Delete
                 </Button>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      <UploadDocumentModal
-        open={uploadOpen}
-        onClose={() => setUploadOpen(false)}
-        categoryId={categoryId!}
-        subcategoryId={subcategoryId!}
-        folderId={folderId}
-        subcategoryName={currentFolder?.name || "Folder"}
-      />
+        {showAddFolderDialog && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <div className="bg-card rounded-3xl p-6 w-full max-w-md relative">
+              <button
+                onClick={() => setShowAddFolderDialog(false)}
+                className="absolute right-4 top-4 text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-6 h-6" />
+              </button>
 
-      <DocumentOptionsModal
-        open={optionsOpen}
-        onOpenChange={setOptionsOpen}
-        documentName={selectedDoc.name}
-        documentId={selectedDoc.id}
-        categoryId={categoryId!}
-        subcategoryId={subcategoryId!}
-        folderId={folderId}
-        onRename={() => setRenameOpen(true)}
-        onDelete={loadFolderData}
-      />
+              <h2 className="text-2xl font-bold text-foreground mb-6">Add Subfolder</h2>
 
-      <RenameDocumentModal
-        open={renameOpen}
-        onOpenChange={setRenameOpen}
-        documentId={selectedDoc.id}
-        currentName={selectedDoc.name}
-        onRenameSuccess={loadFolderData}
-      />
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">
+                    Folder Name
+                  </label>
+                  <Input
+                    placeholder="e.g. 2024 Records, Contracts, etc."
+                    value={folderName}
+                    onChange={(e) => setFolderName(e.target.value)}
+                    className="bg-background border-border"
+                    onKeyPress={(e) => e.key === 'Enter' && handleAddFolder()}
+                  />
+                </div>
 
-      <LockDocumentModal
-        open={lockOpen}
-        onOpenChange={(open) => setLockOpen(open)}
-        documentName={selectedDoc.name}
-      />
+                <div className="flex gap-3 pt-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowAddFolderDialog(false)}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleAddFolder}
+                    className="flex-1"
+                  >
+                    Add
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <UploadDocumentModal
+          open={uploadOpen}
+          onClose={() => setUploadOpen(false)}
+          categoryId={categoryId!}
+          subcategoryId={subcategoryId!}
+          folderId={folderId}
+          subcategoryName={currentFolder?.name || "Folder"}
+        />
+
+        <DocumentOptionsModal
+          open={optionsOpen}
+          onOpenChange={setOptionsOpen}
+          documentName={selectedDoc.name}
+          documentId={selectedDoc.id}
+          categoryId={categoryId!}
+          subcategoryId={subcategoryId!}
+          folderId={folderId}
+          onRename={() => setRenameOpen(true)}
+          onDelete={loadFolderData}
+        />
+
+        <RenameDocumentModal
+          open={renameOpen}
+          onOpenChange={setRenameOpen}
+          documentId={selectedDoc.id}
+          currentName={selectedDoc.name}
+          onRenameSuccess={loadFolderData}
+        />
+
+        <LockDocumentModal
+          open={lockOpen}
+          onOpenChange={(open) => setLockOpen(open)}
+          documentName={selectedDoc.name}
+        />
+      </PullToRefresh>
 
       <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
         <div className="flex justify-around items-center h-16 max-w-md mx-auto">
@@ -577,7 +592,7 @@ const NestedFolderView = () => {
           </button>
         </div>
       </div>
-    </div >
+    </>
   );
 };
 

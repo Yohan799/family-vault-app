@@ -211,3 +211,61 @@ export const getAllUserSubcategories = async (userId: string): Promise<any[]> =>
     return [];
   }
 };
+
+/**
+ * Gets document counts for ALL categories in a single query (eliminates N+1)
+ * Returns a Map of categoryId -> documentCount
+ */
+export const getAllCategoryDocumentCounts = async (userId: string): Promise<Map<string, number>> => {
+  try {
+    const { data, error } = await supabase
+      .from('documents')
+      .select('category_id')
+      .eq('user_id', userId)
+      .is('deleted_at', null);
+
+    if (error) throw error;
+
+    // Count documents per category
+    const countMap = new Map<string, number>();
+    (data || []).forEach(doc => {
+      if (doc.category_id) {
+        countMap.set(doc.category_id, (countMap.get(doc.category_id) || 0) + 1);
+      }
+    });
+
+    return countMap;
+  } catch (error) {
+    console.error('Error getting category document counts:', error);
+    return new Map();
+  }
+};
+
+/**
+ * Gets document counts for ALL subcategories in a single query (eliminates N+1)
+ * Returns a Map of subcategoryId -> documentCount
+ */
+export const getAllSubcategoryDocumentCounts = async (userId: string): Promise<Map<string, number>> => {
+  try {
+    const { data, error } = await supabase
+      .from('documents')
+      .select('subcategory_id')
+      .eq('user_id', userId)
+      .is('deleted_at', null);
+
+    if (error) throw error;
+
+    // Count documents per subcategory
+    const countMap = new Map<string, number>();
+    (data || []).forEach(doc => {
+      if (doc.subcategory_id) {
+        countMap.set(doc.subcategory_id, (countMap.get(doc.subcategory_id) || 0) + 1);
+      }
+    });
+
+    return countMap;
+  } catch (error) {
+    console.error('Error getting subcategory document counts:', error);
+    return new Map();
+  }
+};

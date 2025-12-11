@@ -13,6 +13,7 @@ import { getQuickActions, initializeDefaultActions, type QuickAction } from "@/s
 import { DashboardSkeleton } from "@/components/skeletons";
 import { getUnreadCount } from "@/services/notificationService";
 import { getQuickActionText } from "@/lib/categoryTranslations";
+import { PullToRefresh } from "@/components/PullToRefresh";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -56,9 +57,12 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (user) {
-      loadDashboardStats();
-      loadQuickActions();
-      loadUnreadCount();
+      // Load all data in PARALLEL for faster loading
+      Promise.all([
+        loadDashboardStats(),
+        loadQuickActions(),
+        loadUnreadCount()
+      ]);
     }
   }, [user]);
 
@@ -151,117 +155,130 @@ const Dashboard = () => {
     .toUpperCase()
     .slice(0, 2);
 
+  const handleRefresh = async () => {
+    await Promise.all([
+      loadDashboardStats(),
+      loadQuickActions(),
+      loadUnreadCount()
+    ]);
+  };
+
   return (
-    <div className="min-h-screen bg-background pb-16">
-      <div className="bg-primary/20 text-foreground p-4 rounded-b-3xl">
-        <div className="flex justify-between items-start mb-3">
+    <>
+      <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-background pb-16">
+        <div className="bg-primary/20 text-foreground p-4 rounded-b-3xl">
+          <div className="flex justify-between items-start mb-3">
+            <div>
+              <p className="text-xs text-muted-foreground mb-0.5">{t("dashboard.welcome")}</p>
+              <h1 className="text-xl font-bold text-foreground">{firstName}</h1>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="ghost" size="icon" className="text-foreground h-8 w-8 relative" onClick={() => navigate("/notifications")}>
+                <Bell className="w-4 h-4" />
+                {unreadNotifications > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center">
+                    {unreadNotifications > 99 ? '99+' : unreadNotifications}
+                  </span>
+                )}
+              </Button>
+              <Button variant="ghost" size="icon" className="text-foreground p-0 h-8 w-8" onClick={() => navigate("/profile")}>
+                <Avatar className="w-8 h-8 bg-primary">
+                  {profile.profile_image_url && <AvatarImage src={profile.profile_image_url} alt="Profile" />}
+                  <AvatarFallback className="bg-primary text-primary-foreground font-semibold text-xs">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </div>
+          </div>
+
+          <div className="bg-card rounded-xl p-3 text-center">
+            <div className="relative inline-flex items-center justify-center mb-1">
+              <svg className="w-14 h-14 transform -rotate-90">
+                <circle cx="28" cy="28" r="24" stroke="currentColor" strokeWidth="5" fill="none" className="text-muted" />
+                <circle cx="28" cy="28" r="24" stroke="currentColor" strokeWidth="5" fill="none"
+                  strokeDasharray={`${2 * Math.PI * 24}`}
+                  strokeDashoffset={`${2 * Math.PI * 24 * (1 - readinessScore / 100)}`}
+                  className="text-blue-500" />
+              </svg>
+              <span className="absolute text-lg font-bold text-blue-500">{readinessScore}</span>
+            </div>
+            <p className="text-foreground font-medium text-xs">{t("dashboard.securityScore")}</p>
+          </div>
+        </div>
+
+        <div className="p-4 space-y-4">
+          <div className="grid grid-cols-2 gap-2">
+            <div className="bg-card rounded-lg p-2.5 text-center flex flex-col items-center justify-center h-20">
+              <FileText className="w-5 h-5 text-primary mb-1.5" />
+              <span className="text-xs font-medium text-foreground truncate">{stats.documents} {t("dashboard.docs")}</span>
+            </div>
+
+            <div className="bg-card rounded-lg p-2.5 text-center flex flex-col items-center justify-center h-20">
+              <Users className="w-5 h-5 text-primary mb-1.5" />
+              <span className="text-xs font-medium text-foreground truncate">{stats.nominees} {t("dashboard.nominees")}</span>
+            </div>
+
+            <div className="bg-card rounded-lg p-2.5 text-center flex flex-col items-center justify-center h-20">
+              <Clock className="w-5 h-5 text-primary mb-1.5" />
+              <span className="text-xs font-medium text-foreground truncate">{stats.timeCapsules} {t("dashboard.capsules")}</span>
+            </div>
+
+            <div className="bg-card rounded-lg p-2.5 text-center flex flex-col items-center justify-center h-20">
+              <Shield className="w-5 h-5 text-primary mb-0.5" />
+              <span className="text-[10px] font-medium text-foreground truncate mb-0.5">{t("dashboard.trigger")}</span>
+              <Switch
+                checked={stats.inactivityTriggerActive}
+                onCheckedChange={handleInactivityToggle}
+                className="scale-75"
+              />
+            </div>
+          </div>
+
           <div>
-            <p className="text-xs text-muted-foreground mb-0.5">{t("dashboard.welcome")}</p>
-            <h1 className="text-xl font-bold text-foreground">{firstName}</h1>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="ghost" size="icon" className="text-foreground h-8 w-8 relative" onClick={() => navigate("/notifications")}>
-              <Bell className="w-4 h-4" />
-              {unreadNotifications > 0 && (
-                <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center">
-                  {unreadNotifications > 99 ? '99+' : unreadNotifications}
-                </span>
+            <h2 className="text-base font-bold text-foreground mb-2">{t("dashboard.quickActions")}</h2>
+            <div className="space-y-1.5">
+              {quickActions.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">{t("dashboard.noQuickActions")}</p>
+              ) : (
+                quickActions.map((action) => {
+                  const Icon = iconMap[action.icon || 'Plus'] || Plus;
+                  const handleClick = () => {
+                    if (action.route) {
+                      navigate(action.route);
+                    }
+                  };
+
+                  return (
+                    <button key={action.id} onClick={handleClick}
+                      className="w-full bg-card rounded-lg p-2.5 flex items-center gap-2.5 hover:bg-accent transition-colors">
+                      <div className="w-9 h-9 bg-accent rounded-full flex items-center justify-center flex-shrink-0">
+                        <Icon className="w-4 h-4 text-primary" />
+                      </div>
+                      <div className="flex-1 text-left min-w-0">
+                        <h3 className="font-semibold text-foreground text-xs truncate">
+                          {getQuickActionText(action.action_key, "title", action.title, t)}
+                        </h3>
+                        <p className="text-[10px] text-muted-foreground truncate">
+                          {getQuickActionText(action.action_key, "subtitle", action.subtitle || "", t)}
+                        </p>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    </button>
+                  );
+                })
               )}
-            </Button>
-            <Button variant="ghost" size="icon" className="text-foreground p-0 h-8 w-8" onClick={() => navigate("/profile")}>
-              <Avatar className="w-8 h-8 bg-primary">
-                {profile.profile_image_url && <AvatarImage src={profile.profile_image_url} alt="Profile" />}
-                <AvatarFallback className="bg-primary text-primary-foreground font-semibold text-xs">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-            </Button>
+            </div>
           </div>
+
+
+
+
         </div>
 
-        <div className="bg-card rounded-xl p-3 text-center">
-          <div className="relative inline-flex items-center justify-center mb-1">
-            <svg className="w-14 h-14 transform -rotate-90">
-              <circle cx="28" cy="28" r="24" stroke="currentColor" strokeWidth="5" fill="none" className="text-muted" />
-              <circle cx="28" cy="28" r="24" stroke="currentColor" strokeWidth="5" fill="none"
-                strokeDasharray={`${2 * Math.PI * 24}`}
-                strokeDashoffset={`${2 * Math.PI * 24 * (1 - readinessScore / 100)}`}
-                className="text-blue-500" />
-            </svg>
-            <span className="absolute text-lg font-bold text-blue-500">{readinessScore}</span>
-          </div>
-          <p className="text-foreground font-medium text-xs">{t("dashboard.securityScore")}</p>
-        </div>
-      </div>
-
-      <div className="p-4 space-y-4">
-        <div className="grid grid-cols-2 gap-2">
-          <div className="bg-card rounded-lg p-2.5 text-center flex flex-col items-center justify-center h-20">
-            <FileText className="w-5 h-5 text-primary mb-1.5" />
-            <span className="text-xs font-medium text-foreground truncate">{stats.documents} {t("dashboard.docs")}</span>
-          </div>
-
-          <div className="bg-card rounded-lg p-2.5 text-center flex flex-col items-center justify-center h-20">
-            <Users className="w-5 h-5 text-primary mb-1.5" />
-            <span className="text-xs font-medium text-foreground truncate">{stats.nominees} {t("dashboard.nominees")}</span>
-          </div>
-
-          <div className="bg-card rounded-lg p-2.5 text-center flex flex-col items-center justify-center h-20">
-            <Clock className="w-5 h-5 text-primary mb-1.5" />
-            <span className="text-xs font-medium text-foreground truncate">{stats.timeCapsules} {t("dashboard.capsules")}</span>
-          </div>
-
-          <div className="bg-card rounded-lg p-2.5 text-center flex flex-col items-center justify-center h-20">
-            <Shield className="w-5 h-5 text-primary mb-0.5" />
-            <span className="text-[10px] font-medium text-foreground truncate mb-0.5">{t("dashboard.trigger")}</span>
-            <Switch
-              checked={stats.inactivityTriggerActive}
-              onCheckedChange={handleInactivityToggle}
-              className="scale-75"
-            />
-          </div>
-        </div>
-
-        <div>
-          <h2 className="text-base font-bold text-foreground mb-2">{t("dashboard.quickActions")}</h2>
-          <div className="space-y-1.5">
-            {quickActions.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">{t("dashboard.noQuickActions")}</p>
-            ) : (
-              quickActions.map((action) => {
-                const Icon = iconMap[action.icon || 'Plus'] || Plus;
-                const handleClick = () => {
-                  if (action.route) {
-                    navigate(action.route);
-                  }
-                };
-
-                return (
-                  <button key={action.id} onClick={handleClick}
-                    className="w-full bg-card rounded-lg p-2.5 flex items-center gap-2.5 hover:bg-accent transition-colors">
-                    <div className="w-9 h-9 bg-accent rounded-full flex items-center justify-center flex-shrink-0">
-                      <Icon className="w-4 h-4 text-primary" />
-                    </div>
-                    <div className="flex-1 text-left min-w-0">
-                      <h3 className="font-semibold text-foreground text-xs truncate">
-                        {getQuickActionText(action.action_key, "title", action.title, t)}
-                      </h3>
-                      <p className="text-[10px] text-muted-foreground truncate">
-                        {getQuickActionText(action.action_key, "subtitle", action.subtitle || "", t)}
-                      </p>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                  </button>
-                );
-              })
-            )}
-          </div>
-        </div>
-
-
-
-
-      </div>
+        {/* Feature Tour */}
+        <FeatureTour isOpen={showTour} onClose={handleTourClose} />
+      </PullToRefresh>
 
       <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
         <div className="flex justify-around items-center h-16 max-w-md mx-auto">
@@ -280,10 +297,7 @@ const Dashboard = () => {
           </button>
         </div>
       </div>
-
-      {/* Feature Tour */}
-      <FeatureTour isOpen={showTour} onClose={handleTourClose} />
-    </div>
+    </>
   );
 };
 

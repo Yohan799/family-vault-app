@@ -15,6 +15,7 @@ import { filterItems, debounce } from "@/lib/searchUtils";
 import { CategoryViewSkeleton } from "@/components/skeletons";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getCategoryName, getSubcategoryName } from "@/lib/categoryTranslations";
+import { PullToRefresh } from "@/components/PullToRefresh";
 
 const CategoryView = () => {
   const navigate = useNavigate();
@@ -97,12 +98,16 @@ const CategoryView = () => {
 
         setCategory(foundCategory);
 
+        // Get ALL subcategory document counts in ONE query (eliminates N+1)
+        const { getAllSubcategoryDocumentCounts, getCategoryDocumentCount } = await import('@/services/vaultService');
+        const subDocCountMap = await getAllSubcategoryDocumentCounts(user.id);
+
         // Start with hardcoded subcategories if this is a default category
         let baseSubcategories = defaultCategory ? defaultCategory.subcategories.map(sub => ({
           id: sub.id,
           name: sub.name,
           icon: sub.icon,
-          documentCount: 0,
+          documentCount: subDocCountMap.get(sub.id) || 0,  // Lookup from map
           isCustom: false
         })) : [];
 
@@ -120,35 +125,20 @@ const CategoryView = () => {
           console.error("Error loading custom subcategories:", subError);
         }
 
-        const { getSubcategoryDocumentCount } = await import('@/services/vaultService');
-
-        // Get document counts for base subcategories
-        const baseWithCounts = await Promise.all(baseSubcategories.map(async (sub) => {
-          const docCount = await getSubcategoryDocumentCount(sub.id, user.id);
-          return {
-            ...sub,
-            documentCount: docCount
-          };
-        }));
-
-        // Add custom subcategories
-        const customSubs = await Promise.all((customSubsData || []).map(async (sub: any) => {
-          const docCount = await getSubcategoryDocumentCount(sub.id, user.id);
-          return {
-            id: sub.id,
-            name: sub.name,
-            icon: Folder,
-            documentCount: docCount,
-            isCustom: true
-          };
+        // Add custom subcategories with counts from map (no extra DB calls!)
+        const customSubs = (customSubsData || []).map((sub: any) => ({
+          id: sub.id,
+          name: sub.name,
+          icon: Folder,
+          documentCount: subDocCountMap.get(sub.id) || 0,  // Lookup from map
+          isCustom: true
         }));
 
         // Merge: defaults + custom subcategories
-        const allSubs = [...baseWithCounts, ...customSubs];
+        const allSubs = [...baseSubcategories, ...customSubs];
         setCustomSubcategories(allSubs);
 
-        // Get total document count
-        const { getCategoryDocumentCount } = await import('@/services/vaultService');
+        // Get total document count for this category
         const docCount = await getCategoryDocumentCount(categoryId!, user.id);
         setTotalDocumentCount(docCount);
       } catch (error) {
@@ -292,191 +282,212 @@ const CategoryView = () => {
     searchKeys: ['name'],
   });
 
+  const handleRefresh = async () => {
+    // Re-run the loadData effect manually
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { getAllSubcategoryDocumentCounts, getCategoryDocumentCount } = await import('@/services/vaultService');
+    const subDocCountMap = await getAllSubcategoryDocumentCounts(user.id);
+
+    // Update subcategory counts
+    setCustomSubcategories(prev => prev.map(sub => ({
+      ...sub,
+      documentCount: subDocCountMap.get(sub.id) || 0
+    })));
+
+    // Update total document count
+    const docCount = await getCategoryDocumentCount(categoryId!, user.id);
+    setTotalDocumentCount(docCount);
+  };
+
   return (
-    <div className="min-h-screen bg-[#FCFCF9] pb-20">
-      <div className="bg-[#FCFCF9] p-6">
-        <div className="flex items-center gap-4 mb-4">
-          <BackButton />
-        <div className="flex-1 text-center -ml-10">
-            <div className="flex items-center justify-center gap-2">
-              <CategoryIcon className="w-6 h-6 text-[#1F2121]" />
-              <h1 className="text-2xl font-bold text-[#1F2121]">{getCategoryName(category.id, category.name, t)}</h1>
+    <>
+      <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-[#FCFCF9] pb-20">
+        <div className="bg-[#FCFCF9] p-6">
+          <div className="flex items-center gap-4 mb-4">
+            <BackButton />
+            <div className="flex-1 text-center -ml-10">
+              <div className="flex items-center justify-center gap-2">
+                <CategoryIcon className="w-6 h-6 text-[#1F2121]" />
+                <h1 className="text-2xl font-bold text-[#1F2121]">{getCategoryName(category.id, category.name, t)}</h1>
+              </div>
+              <p className="text-[#626C71] text-sm mt-1">{totalDocumentCount} {t("common.documents")}</p>
             </div>
-            <p className="text-[#626C71] text-sm mt-1">{totalDocumentCount} {t("common.documents")}</p>
           </div>
-        </div>
 
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-          <Input
-            placeholder={t("subcategory.searchPlaceholder")}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-12 pr-12 h-12 bg-[#F5F5F5] border-none rounded-xl"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery("")}
-              className="absolute right-4 top-1/2 -translate-y-1/2 hover:bg-accent rounded-full p-1"
-            >
-              <X className="w-4 h-4 text-muted-foreground" />
-            </button>
-          )}
-        </div>
-      </div>
-
-      <div className="px-6">
-        {filteredSubcategories.length === 0 && debouncedQuery ? (
-          <div className="text-center py-12">
-            <Folder className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
-            <p className="text-muted-foreground text-lg">{t("subcategory.noResults")}</p>
-            <p className="text-muted-foreground/60 text-sm mt-2">{t("subcategory.tryDifferent")}</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-3 items-stretch">
-            {filteredSubcategories.map((subcategory) => {
-              const SubIcon = subcategory.icon || Folder;
-              return (
-                <div key={subcategory.id} className="relative h-full">
-                  <button
-                    onClick={() => navigate(`/vault/${categoryId}/${subcategory.id}`)}
-                    className="w-full h-full bg-[#F3E8FF] rounded-2xl p-5 flex flex-col items-center justify-between hover:opacity-80 transition-opacity min-h-[160px]"
-                  >
-                    <div className="flex flex-col items-center">
-                      <div className="w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center mb-3">
-                        <SubIcon className="w-7 h-7 text-[#6D28D9]" />
-                      </div>
-                      <h3 className="font-semibold text-[#1F2121] text-center mb-1 line-clamp-2">{getSubcategoryName(subcategory.id, subcategory.name, t)}</h3>
-                    </div>
-                    <p className="text-sm text-[#626C71]">{subcategory.documentCount} {t("common.documents")}</p>
-                  </button>
-
-                  {/* Action Menu - Three dots with Manage Access and Delete */}
-                  <div className="absolute top-2 right-2 z-10">
-                    <ActionMenu
-                      items={createSubcategoryActionMenu(
-                        () => setAccessControlSubcategory(subcategory),
-                        subcategory.isCustom ? () => handleDeleteClick(subcategory, { stopPropagation: () => { } } as any) : undefined
-                      )}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-
-            {!debouncedQuery && (
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Input
+              placeholder={t("subcategory.searchPlaceholder")}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-12 pr-12 h-12 bg-[#F5F5F5] border-none rounded-xl"
+            />
+            {searchQuery && (
               <button
-                onClick={() => setShowAddDialog(true)}
-                className="bg-[#F3E8FF] border-2 border-dashed border-[#6D28D9] rounded-2xl p-5 flex flex-col items-center justify-center hover:opacity-80 transition-opacity min-h-[160px]"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-4 top-1/2 -translate-y-1/2 hover:bg-accent rounded-full p-1"
               >
-                <div className="w-14 h-14 bg-white/60 rounded-full flex items-center justify-center mb-3">
-                  <Plus className="w-7 h-7 text-[#6D28D9]" />
-                </div>
-                <h3 className="font-semibold text-[#1F2121]">{t("subcategory.add")}</h3>
+                <X className="w-4 h-4 text-muted-foreground" />
               </button>
             )}
           </div>
-        )}
-      </div>
+        </div>
 
-
-      {
-        deleteConfirm.show && deleteConfirm.subcategory && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-            <div className="bg-card rounded-3xl p-6 w-full max-w-md">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                  <AlertTriangle className="w-6 h-6 text-purple-600" />
-                </div>
-                <h2 className="text-xl font-bold text-foreground">{t("subcategory.deleteTitle")}</h2>
-              </div>
-
-              <p className="text-foreground mb-2">
-                {t("subcategory.deleteConfirm")} <span className="font-semibold">{getSubcategoryName(deleteConfirm.subcategory.id, deleteConfirm.subcategory.name, t)}</span>?
-              </p>
-
-              <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-6">
-                <p className="text-sm text-purple-800 font-medium">
-                  {deleteConfirm.subcategory.documentCount} {deleteConfirm.subcategory.documentCount === 1 ? t("common.document") : t("common.documents")} {t("subcategory.willBeDeleted")}
-                </p>
-                <p className="text-xs text-purple-600 mt-1">{t("subcategory.cannotUndo")}</p>
-              </div>
-
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => setDeleteConfirm({ show: false, subcategory: null })}
-                  className="flex-1"
-                >
-                  {t("common.cancel")}
-                </Button>
-                <Button
-                  onClick={confirmDelete}
-                  className="flex-1 bg-purple-500 hover:bg-purple-600 text-white"
-                >
-                  {t("common.delete")}
-                </Button>
-              </div>
+        <div className="px-6">
+          {filteredSubcategories.length === 0 && debouncedQuery ? (
+            <div className="text-center py-12">
+              <Folder className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
+              <p className="text-muted-foreground text-lg">{t("subcategory.noResults")}</p>
+              <p className="text-muted-foreground/60 text-sm mt-2">{t("subcategory.tryDifferent")}</p>
             </div>
-          </div>
-        )
-      }
+          ) : (
+            <div className="grid grid-cols-2 gap-3 items-stretch">
+              {filteredSubcategories.map((subcategory) => {
+                const SubIcon = subcategory.icon || Folder;
+                return (
+                  <div key={subcategory.id} className="relative h-full">
+                    <button
+                      onClick={() => navigate(`/vault/${categoryId}/${subcategory.id}`)}
+                      className="w-full h-full bg-[#F3E8FF] rounded-2xl p-5 flex flex-col items-center justify-between hover:opacity-80 transition-opacity min-h-[160px]"
+                    >
+                      <div className="flex flex-col items-center">
+                        <div className="w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center mb-3">
+                          <SubIcon className="w-7 h-7 text-[#6D28D9]" />
+                        </div>
+                        <h3 className="font-semibold text-[#1F2121] text-center mb-1 line-clamp-2">{getSubcategoryName(subcategory.id, subcategory.name, t)}</h3>
+                      </div>
+                      <p className="text-sm text-[#626C71]">{subcategory.documentCount} {t("common.documents")}</p>
+                    </button>
 
-      {
-        showAddDialog && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-            <div className="bg-card rounded-3xl p-6 w-full max-w-md relative">
-              <button
-                onClick={() => setShowAddDialog(false)}
-                className="absolute right-4 top-4 text-muted-foreground hover:text-foreground"
-              >
-                <X className="w-6 h-6" />
-              </button>
+                    {/* Action Menu - Three dots with Manage Access and Delete */}
+                    <div className="absolute top-2 right-2 z-10">
+                      <ActionMenu
+                        items={createSubcategoryActionMenu(
+                          () => setAccessControlSubcategory(subcategory),
+                          subcategory.isCustom ? () => handleDeleteClick(subcategory, { stopPropagation: () => { } } as any) : undefined
+                        )}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
 
-              <h2 className="text-2xl font-bold text-foreground mb-6">{t("subcategory.add")}</h2>
+              {!debouncedQuery && (
+                <button
+                  onClick={() => setShowAddDialog(true)}
+                  className="bg-[#F3E8FF] border-2 border-dashed border-[#6D28D9] rounded-2xl p-5 flex flex-col items-center justify-center hover:opacity-80 transition-opacity min-h-[160px]"
+                >
+                  <div className="w-14 h-14 bg-white/60 rounded-full flex items-center justify-center mb-3">
+                    <Plus className="w-7 h-7 text-[#6D28D9]" />
+                  </div>
+                  <h3 className="font-semibold text-[#1F2121]">{t("subcategory.add")}</h3>
+                </button>
+              )}
+            </div>
+          )}
+        </div>
 
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-foreground mb-2 block">
-                    {t("subcategory.name")}
-                  </label>
-                  <Input
-                    placeholder={t("subcategory.namePlaceholder")}
-                    value={subcategoryName}
-                    onChange={(e) => setSubcategoryName(e.target.value)}
-                    className="bg-background border-border"
-                    onKeyPress={(e) => e.key === 'Enter' && handleAddSubcategory()}
-                  />
+
+        {
+          deleteConfirm.show && deleteConfirm.subcategory && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+              <div className="bg-card rounded-3xl p-6 w-full max-w-md">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                    <AlertTriangle className="w-6 h-6 text-purple-600" />
+                  </div>
+                  <h2 className="text-xl font-bold text-foreground">{t("subcategory.deleteTitle")}</h2>
                 </div>
 
-                <div className="flex gap-3 pt-2">
+                <p className="text-foreground mb-2">
+                  {t("subcategory.deleteConfirm")} <span className="font-semibold">{getSubcategoryName(deleteConfirm.subcategory.id, deleteConfirm.subcategory.name, t)}</span>?
+                </p>
+
+                <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-6">
+                  <p className="text-sm text-purple-800 font-medium">
+                    {deleteConfirm.subcategory.documentCount} {deleteConfirm.subcategory.documentCount === 1 ? t("common.document") : t("common.documents")} {t("subcategory.willBeDeleted")}
+                  </p>
+                  <p className="text-xs text-purple-600 mt-1">{t("subcategory.cannotUndo")}</p>
+                </div>
+
+                <div className="flex gap-3">
                   <Button
                     variant="outline"
-                    onClick={() => setShowAddDialog(false)}
+                    onClick={() => setDeleteConfirm({ show: false, subcategory: null })}
                     className="flex-1"
                   >
                     {t("common.cancel")}
                   </Button>
                   <Button
-                    onClick={handleAddSubcategory}
-                    className="flex-1"
+                    onClick={confirmDelete}
+                    className="flex-1 bg-purple-500 hover:bg-purple-600 text-white"
                   >
-                    {t("common.add")}
+                    {t("common.delete")}
                   </Button>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )
+        }
 
-      {accessControlSubcategory && (
-        <AccessControlModal
-          resourceType="subcategory"
-          resourceId={accessControlSubcategory.id}
-          resourceName={accessControlSubcategory.name}
-          onClose={() => setAccessControlSubcategory(null)}
-        />
-      )}
+        {
+          showAddDialog && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+              <div className="bg-card rounded-3xl p-6 w-full max-w-md relative">
+                <button
+                  onClick={() => setShowAddDialog(false)}
+                  className="absolute right-4 top-4 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+
+                <h2 className="text-2xl font-bold text-foreground mb-6">{t("subcategory.add")}</h2>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium text-foreground mb-2 block">
+                      {t("subcategory.name")}
+                    </label>
+                    <Input
+                      placeholder={t("subcategory.namePlaceholder")}
+                      value={subcategoryName}
+                      onChange={(e) => setSubcategoryName(e.target.value)}
+                      className="bg-background border-border"
+                      onKeyPress={(e) => e.key === 'Enter' && handleAddSubcategory()}
+                    />
+                  </div>
+
+                  <div className="flex gap-3 pt-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowAddDialog(false)}
+                      className="flex-1"
+                    >
+                      {t("common.cancel")}
+                    </Button>
+                    <Button
+                      onClick={handleAddSubcategory}
+                      className="flex-1"
+                    >
+                      {t("common.add")}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+        {accessControlSubcategory && (
+          <AccessControlModal
+            resourceType="subcategory"
+            resourceId={accessControlSubcategory.id}
+            resourceName={accessControlSubcategory.name}
+            onClose={() => setAccessControlSubcategory(null)}
+          />
+        )}
+      </PullToRefresh>
 
       <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
         <div className="flex justify-around items-center h-16 max-w-md mx-auto">
@@ -501,7 +512,7 @@ const CategoryView = () => {
           </button>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
