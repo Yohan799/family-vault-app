@@ -533,25 +533,25 @@ const TimeCapsule = () => {
           ) : (
             <div className="space-y-4">
               {capsules.map((capsule) => (
-                <div key={capsule.id} className="bg-card rounded-2xl p-4 flex justify-between items-start gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold text-foreground">{capsule.title}</h3>
+                <div key={capsule.id} className="bg-card rounded-2xl p-4 flex justify-between items-start gap-3 overflow-hidden">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <h3 className="font-semibold text-foreground truncate max-w-[180px]">{capsule.title}</h3>
                       {capsule.status === 'released' && (
-                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Released</span>
+                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full flex-shrink-0">Released</span>
                       )}
-                      {capsule.attachment_url && <span className="text-xs">📎</span>}
+                      {capsule.attachment_url && <span className="text-xs flex-shrink-0">📎</span>}
                     </div>
                     <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{capsule.message}</p>
-                    <div className="flex gap-2 text-xs text-muted-foreground">
+                    <div className="flex gap-2 text-xs text-muted-foreground flex-wrap">
                       <span>Release: {new Date(capsule.release_date).toLocaleDateString()}</span>
                       <span>•</span>
-                      <span>{capsule.recipient_email}</span>
+                      <span className="truncate">{capsule.recipient_email}</span>
                     </div>
                   </div>
 
                   {capsule.status !== 'released' && (
-                    <div className="flex gap-2">
+                    <div className="flex gap-1 flex-shrink-0">
                       <Button
                         variant="ghost"
                         size="icon"
@@ -567,7 +567,7 @@ const TimeCapsule = () => {
                           setEditingId(capsule.id);
                           setShowCreateForm(true);
                         }}
-                        className="hover:bg-blue-100 hover:text-blue-600"
+                        className="h-10 w-10 hover:bg-blue-100 hover:text-blue-600 touch-manipulation"
                       >
                         <Edit2 className="w-4 h-4" />
                       </Button>
@@ -575,7 +575,7 @@ const TimeCapsule = () => {
                         variant="ghost"
                         size="icon"
                         onClick={() => setDeleteDialog({ open: true, capsule })}
-                        className="hover:bg-red-100 hover:text-red-600"
+                        className="h-10 w-10 hover:bg-red-100 hover:text-red-600 touch-manipulation"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>

@@ -32,6 +32,7 @@ const NestedFolderView = () => {
     show: false,
     folder: null
   });
+  const [isDeletingFolder, setIsDeletingFolder] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [documents, setDocuments] = useState<Array<{ id: string; name: string; size: string; date: string }>>([]);
@@ -212,10 +213,12 @@ const NestedFolderView = () => {
   };
 
   const confirmDelete = async () => {
-    if (!deleteConfirm.folder) return;
+    if (!deleteConfirm.folder || isDeletingFolder) return;
 
     const folderIdToDelete = deleteConfirm.folder.id;
     const folderNameToDelete = deleteConfirm.folder.name;
+
+    setIsDeletingFolder(true);
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -226,16 +229,31 @@ const NestedFolderView = () => {
           variant: "destructive"
         });
         setDeleteConfirm({ show: false, folder: null });
+        setIsDeletingFolder(false);
         return;
       }
 
-      const { error } = await supabase
+      console.log('[NestedFolderView] Deleting folder:', folderIdToDelete, 'for user:', user.id);
+
+      const { data, error } = await supabase
         .from('folders')
         .update({ deleted_at: new Date().toISOString() })
         .eq('id', folderIdToDelete)
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('[NestedFolderView] Delete error:', error);
+        throw error;
+      }
+
+      // Verify the update actually modified a row
+      if (!data || data.length === 0) {
+        console.error('[NestedFolderView] No rows updated - folder not found or permission denied');
+        throw new Error("Folder not found or you don't have permission to delete it");
+      }
+
+      console.log('[NestedFolderView] Folder deleted successfully:', data);
 
       const updated = nestedFolders.filter(f => f.id !== folderIdToDelete);
       setNestedFolders(updated);
@@ -246,14 +264,16 @@ const NestedFolderView = () => {
       });
 
       setDeleteConfirm({ show: false, folder: null });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error deleting folder:", error);
       toast({
         title: "Error",
-        description: "Failed to delete folder",
+        description: error?.message || "Failed to delete folder",
         variant: "destructive"
       });
       setDeleteConfirm({ show: false, folder: null });
+    } finally {
+      setIsDeletingFolder(false);
     }
   };
 
@@ -351,7 +371,7 @@ const NestedFolderView = () => {
                   {folder.isCustom && (
                     <button
                       onClick={(e) => handleDeleteClick(folder, e)}
-                      className="absolute top-2 right-2 w-7 h-7 bg-purple-500 hover:bg-purple-600 rounded-full flex items-center justify-center transition-colors z-10"
+                      className="absolute top-1 right-1 w-9 h-9 bg-purple-500 hover:bg-purple-600 rounded-full flex items-center justify-center transition-colors z-10 touch-manipulation"
                       title="Delete folder"
                     >
                       <X className="w-4 h-4 text-white" />
@@ -473,14 +493,16 @@ const NestedFolderView = () => {
                   variant="outline"
                   onClick={() => setDeleteConfirm({ show: false, folder: null })}
                   className="flex-1"
+                  disabled={isDeletingFolder}
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={confirmDelete}
                   className="flex-1 bg-red-500 hover:bg-red-600 text-white"
+                  disabled={isDeletingFolder}
                 >
-                  Delete
+                  {isDeletingFolder ? "Deleting..." : "Delete"}
                 </Button>
               </div>
             </div>
