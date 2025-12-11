@@ -274,23 +274,6 @@ const CategoryView = () => {
     }
   };
 
-  if (loading) {
-    return <CategoryViewSkeleton />;
-  }
-
-  if (!category) {
-    navigate("/vault");
-    return null;
-  }
-
-  const CategoryIcon = category?.icon || Folder;
-  const allSubcategories = customSubcategories;
-
-  // Filter subcategories based on search
-  const filteredSubcategories = filterItems(allSubcategories, debouncedQuery, {
-    searchKeys: ['name'],
-  });
-
   const handleRefresh = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -310,6 +293,23 @@ const CategoryView = () => {
     // Update total document count
     setTotalDocumentCount(docCount);
   }, [categoryId]);
+
+  if (loading) {
+    return <CategoryViewSkeleton />;
+  }
+
+  if (!category) {
+    navigate("/vault");
+    return null;
+  }
+
+  const CategoryIcon = category?.icon || Folder;
+  const allSubcategories = customSubcategories;
+
+  // Filter subcategories based on search
+  const filteredSubcategories = filterItems(allSubcategories, debouncedQuery, {
+    searchKeys: ['name'],
+  });
 
   return (
     <>
