@@ -47,16 +47,19 @@ const TimeCapsule = () => {
 
   const loadCapsules = async () => {
     setIsPageLoading(true);
+    console.log('[TimeCapsule] Loading capsules...');
     try {
       const data = await timeCapsuleService.getAll();
-      setCapsules(data);
-    } catch (error) {
-      console.error("Error loading capsules:", error);
+      console.log('[TimeCapsule] Loaded capsules:', data?.length || 0, 'items', data);
+      setCapsules(data || []);
+    } catch (error: any) {
+      console.error("[TimeCapsule] Error loading capsules:", error);
       toast({
         title: t("common.error"),
-        description: t("toast.error"),
+        description: error?.message || t("toast.error"),
         variant: "destructive"
       });
+      setCapsules([]);
     } finally {
       setIsPageLoading(false);
     }

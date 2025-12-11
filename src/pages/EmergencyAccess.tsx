@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Shield, Mail, Key, FileText, Download, Eye } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Shield, Mail, Key, FileText, Download, Eye, X, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -24,6 +25,7 @@ interface AccessControl {
 }
 
 const EmergencyAccess = () => {
+  const navigate = useNavigate();
   const [step, setStep] = useState<"email" | "otp" | "documents">("email");
   const [nomineeEmail, setNomineeEmail] = useState("");
   const [otpCode, setOtpCode] = useState("");
@@ -31,6 +33,22 @@ const EmergencyAccess = () => {
   const [accessControls, setAccessControls] = useState<AccessControl[]>([]);
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState<string>("");
+
+  const handleCancel = () => {
+    // Reset all state and go home
+    setStep("email");
+    setNomineeEmail("");
+    setOtpCode("");
+    setDocuments([]);
+    setAccessControls([]);
+    setUserId("");
+    navigate("/");
+  };
+
+  const handleBackToEmail = () => {
+    setStep("email");
+    setOtpCode("");
+  };
 
   const handleEmailSubmit = async () => {
     if (!nomineeEmail) {
@@ -263,9 +281,15 @@ const EmergencyAccess = () => {
                   onKeyDown={(e) => e.key === "Enter" && handleEmailSubmit()}
                 />
               </div>
-              <Button onClick={handleEmailSubmit} disabled={loading} className="w-full">
-                {loading ? "Verifying..." : "Continue"}
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={handleEmailSubmit} disabled={loading} className="flex-1">
+                  {loading ? "Verifying..." : "Continue"}
+                </Button>
+                <Button variant="outline" onClick={handleCancel}>
+                  <X className="h-4 w-4 mr-2" />
+                  Cancel
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}
@@ -299,8 +323,11 @@ const EmergencyAccess = () => {
                 <Button onClick={handleOTPVerify} disabled={loading} className="flex-1">
                   {loading ? "Verifying..." : "Verify OTP"}
                 </Button>
-                <Button variant="outline" onClick={() => setStep("email")}>
+                <Button variant="outline" onClick={handleBackToEmail}>
                   Back
+                </Button>
+                <Button variant="ghost" onClick={handleCancel}>
+                  <X className="h-4 w-4" />
                 </Button>
               </div>
             </CardContent>
@@ -321,45 +348,57 @@ const EmergencyAccess = () => {
             <CardContent>
               {documents.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  No documents have been shared with you
+                  <p className="mb-4">No documents have been shared with you</p>
+                  <Button variant="outline" onClick={handleCancel}>
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Exit Portal
+                  </Button>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  {documents.map((doc) => (
-                    <div
-                      key={doc.id}
-                      className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/5 transition-colors"
-                    >
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                        <div className="min-w-0 flex-1">
-                          <p className="font-medium truncate">{doc.file_name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {(doc.file_size / 1024).toFixed(2)} KB •{" "}
-                            {new Date(doc.uploaded_at).toLocaleDateString()}
-                          </p>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    {documents.map((doc) => (
+                      <div
+                        key={doc.id}
+                        className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/5 transition-colors"
+                      >
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium truncate">{doc.file_name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {(doc.file_size / 1024).toFixed(2)} KB •{" "}
+                              {new Date(doc.uploaded_at).toLocaleDateString()}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex gap-2 flex-shrink-0">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleViewDocument(doc)}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        {canDownload(doc.id) && (
+                        <div className="flex gap-2 flex-shrink-0">
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleDownloadDocument(doc)}
+                            onClick={() => handleViewDocument(doc)}
                           >
-                            <Download className="h-4 w-4" />
+                            <Eye className="h-4 w-4" />
                           </Button>
-                        )}
+                          {canDownload(doc.id) && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleDownloadDocument(doc)}
+                            >
+                              <Download className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                  <div className="pt-4 border-t">
+                    <Button variant="outline" onClick={handleCancel} className="w-full">
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Exit Portal
+                    </Button>
+                  </div>
                 </div>
               )}
             </CardContent>

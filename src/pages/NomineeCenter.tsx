@@ -38,6 +38,7 @@ const NomineeCenter = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [resendingId, setResendingId] = useState<string | null>(null);
+  const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     fullName: "",
     relation: "",
@@ -288,17 +289,23 @@ const NomineeCenter = () => {
   const handleDeleteNominee = async () => {
     if (!deleteDialog.nominee || !user) return;
 
+    const nomineeToDelete = deleteDialog.nominee;
+    setIsDeletingId(nomineeToDelete.id);
+
     try {
       const { error } = await supabase.rpc('soft_delete_nominee', {
-        _nominee_id: deleteDialog.nominee.id,
+        _nominee_id: nomineeToDelete.id,
         _user_id: user.id
       });
 
       if (error) throw error;
 
+      // Manual refresh to ensure UI updates (fallback for realtime)
+      setNominees(prev => prev.filter(n => n.id !== nomineeToDelete.id));
+
       toast({
         title: t("toast.deleted"),
-        description: `${deleteDialog.nominee.full_name} ${t("toast.deleted").toLowerCase()}`
+        description: `${nomineeToDelete.full_name} ${t("toast.deleted").toLowerCase()}`
       });
 
       setDeleteDialog({ open: false, nominee: null });
@@ -309,6 +316,8 @@ const NomineeCenter = () => {
         description: error.message,
         variant: "destructive"
       });
+    } finally {
+      setIsDeletingId(null);
     }
   };
 
