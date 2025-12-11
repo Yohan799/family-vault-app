@@ -4,15 +4,16 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { vaultCategories } from "@/data/vaultCategories";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { categoryNameSchema, sanitizeInput } from "@/lib/validation";
 import { AccessControlModal } from "@/components/vault/AccessControlModal";
 import { ActionMenu, createCategoryActionMenu } from "@/components/vault/ActionMenu";
-import { format, parse } from "date-fns";
+import { format } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getCategoryName } from "@/lib/categoryTranslations";
 import { PullToRefresh } from "@/components/PullToRefresh";
+import { syncDefaultCategories, getAllCategoryDocumentCounts, getAllUserDocuments, getAllUserSubcategories, deleteCategoryWithCascade } from "@/services/vaultService";
 
 const VaultHome = () => {
   const navigate = useNavigate();
@@ -63,25 +64,23 @@ const VaultHome = () => {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  const loadAllDocuments = async () => {
+  const loadAllDocuments = useCallback(async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { getAllUserDocuments } = await import('@/services/vaultService');
       const docs = await getAllUserDocuments(user.id);
       setAllDocuments(docs);
     } catch (error) {
       console.error('Error loading documents:', error);
     }
-  };
+  }, []);
 
-  const loadAllSubcategories = async () => {
+  const loadAllSubcategories = useCallback(async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { getAllUserSubcategories } = await import('@/services/vaultService');
       const subs = await getAllUserSubcategories(user.id);
 
       // Merge with hardcoded subcategories from vaultCategories
@@ -104,9 +103,9 @@ const VaultHome = () => {
     } catch (error) {
       console.error('Error loading subcategories:', error);
     }
-  };
+  }, []);
 
-  const loadCategories = async () => {
+  const loadCategories = useCallback(async (skipSync = false) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -114,9 +113,12 @@ const VaultHome = () => {
         return;
       }
 
-      // Sync default categories first
-      const { syncDefaultCategories, getAllCategoryDocumentCounts } = await import('@/services/vaultService');
-      await syncDefaultCategories(user.id);
+      // Only sync once per session (check sessionStorage)
+      const syncKey = `vault_synced_${user.id}`;
+      if (!skipSync && !sessionStorage.getItem(syncKey)) {
+        await syncDefaultCategories(user.id);
+        sessionStorage.setItem(syncKey, 'true');
+      }
 
       // Get ALL document counts in ONE query (eliminates N+1)
       const docCountMap = await getAllCategoryDocumentCounts(user.id);
@@ -127,7 +129,7 @@ const VaultHome = () => {
         name: cat.name,
         icon: cat.icon,
         iconBgColor: cat.iconBgColor,
-        documentCount: docCountMap.get(cat.id) || 0,  // Lookup from map
+        documentCount: docCountMap.get(cat.id) || 0,
         subcategories: [],
         isCustom: false,
       }));
@@ -151,7 +153,7 @@ const VaultHome = () => {
         name: cat.name,
         icon: Folder,
         iconBgColor: cat.icon_bg_color || "bg-yellow-100",
-        documentCount: docCountMap.get(cat.id) || 0,  // Lookup from map
+        documentCount: docCountMap.get(cat.id) || 0,
         subcategories: [],
         isCustom: true
       }));
@@ -178,7 +180,7 @@ const VaultHome = () => {
         isCustom: false,
       })));
     }
-  };
+  }, [navigate, toast]);
 
   const handleAddCategory = async () => {
     const sanitizedName = sanitizeInput(categoryName);
@@ -268,9 +270,10 @@ const VaultHome = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated");
 
-      // Use cascade delete from vault service
-      const { deleteCategoryWithCascade } = await import('@/services/vaultService');
       await deleteCategoryWithCascade(categoryId, user.id);
+
+      // Update state immediately (optimistic update)
+      setCustomCategories(prev => prev.filter(c => c.id !== categoryId));
 
       toast({
         title: "Category deleted",
@@ -278,7 +281,6 @@ const VaultHome = () => {
       });
 
       setDeleteConfirm({ show: false, category: null });
-      loadCategories();
     } catch (error) {
       console.error('Error deleting category:', error);
       toast({
@@ -358,13 +360,14 @@ const VaultHome = () => {
 
   const allCategories = searchQuery ? filteredResults : filteredResults.map(r => r.category);
 
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
+    // Skip sync on refresh (already done), just reload data
     await Promise.all([
-      loadCategories(),
+      loadCategories(true),
       loadAllDocuments(),
       loadAllSubcategories()
     ]);
-  };
+  }, [loadCategories, loadAllDocuments, loadAllSubcategories]);
 
   return (
     <>

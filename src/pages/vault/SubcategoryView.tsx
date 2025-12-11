@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useParams } from "react-router-dom";
 import { vaultCategories } from "@/data/vaultCategories";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { UploadDocumentModal } from "@/components/vault/UploadDocumentModal";
 import { DocumentOptionsModal } from "@/components/vault/DocumentOptionsModal";
@@ -21,6 +21,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getSubcategoryName } from "@/lib/categoryTranslations";
 import { PullToRefresh } from "@/components/PullToRefresh";
+import { getDocuments, formatFileSize, deleteDocument, downloadDocument, incrementViewCount } from "@/lib/documentStorage";
 
 const SubcategoryView = () => {
   const navigate = useNavigate();
@@ -153,7 +154,6 @@ const SubcategoryView = () => {
       setNestedFolders(folders);
 
       // Load documents from Supabase
-      const { getDocuments, formatFileSize } = await import('@/lib/documentStorage');
       const storedDocs = await getDocuments(categoryId!, subcategoryId!);
 
       // Format documents for display
@@ -322,9 +322,8 @@ const SubcategoryView = () => {
     setLockOpen(true);
   };
 
-  const handleDownloadDocument = async (doc: any) => {
+  const handleDownloadDocument = useCallback(async (doc: any) => {
     try {
-      const { getDocuments, downloadDocument } = await import('@/lib/documentStorage');
       const storedDocs = await getDocuments(categoryId!, subcategoryId!);
       const fullDoc = storedDocs.find(d => d.id === doc.id);
 
@@ -337,7 +336,6 @@ const SubcategoryView = () => {
         return;
       }
 
-      // Trigger download
       await downloadDocument(fullDoc);
 
       toast({
@@ -352,11 +350,10 @@ const SubcategoryView = () => {
         variant: "destructive"
       });
     }
-  };
+  }, [categoryId, subcategoryId, toast]);
 
-  const handleViewDocument = async (doc: any) => {
+  const handleViewDocument = useCallback(async (doc: any) => {
     try {
-      const { getDocuments, incrementViewCount } = await import('@/lib/documentStorage');
       const storedDocs = await getDocuments(categoryId!, subcategoryId!);
       const fullDoc = storedDocs.find(d => d.id === doc.id);
 
@@ -378,8 +375,8 @@ const SubcategoryView = () => {
         return;
       }
 
-      // Increment view count
-      await incrementViewCount(fullDoc.id);
+      // Increment view count (don't await to not block UI)
+      incrementViewCount(fullDoc.id);
 
       // Open in modal viewer
       setViewingDoc({
@@ -396,17 +393,16 @@ const SubcategoryView = () => {
         variant: "destructive"
       });
     }
-  };
+  }, [categoryId, subcategoryId, toast]);
 
   const handleDeleteDocument = (doc: any) => {
     setDeleteDocConfirm({ show: true, doc });
   };
 
-  const confirmDeleteDocument = async () => {
+  const confirmDeleteDocument = useCallback(async () => {
     if (!deleteDocConfirm.doc) return;
 
     try {
-      const { deleteDocument } = await import('@/lib/documentStorage');
       const result = await deleteDocument(deleteDocConfirm.doc.id);
 
       if (!result.success) {
@@ -419,15 +415,15 @@ const SubcategoryView = () => {
         return;
       }
 
+      // Update state immediately (optimistic update)
+      setDocuments(prev => prev.filter(d => d.id !== deleteDocConfirm.doc!.id));
+
       toast({
         title: "Document deleted",
         description: `${deleteDocConfirm.doc.name} has been removed`,
       });
 
       setDeleteDocConfirm({ show: false, doc: null });
-
-      // Reload documents
-      await loadData();
     } catch (error) {
       console.error("Error deleting document:", error);
       toast({
@@ -437,7 +433,7 @@ const SubcategoryView = () => {
       });
       setDeleteDocConfirm({ show: false, doc: null });
     }
-  };
+  }, [deleteDocConfirm.doc, toast]);
 
   if (loading) {
     return <SubcategoryViewSkeleton />;
