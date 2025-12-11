@@ -15,12 +15,17 @@ const AutoLockTimeout = () => {
   const [selected, setSelected] = useState("5");
   const [isSaving, setIsSaving] = useState(false);
 
+  // Values stored as minutes (fractional for seconds)
   const options = [
+    { value: "0.083", label: `5 ${t("common.seconds")}` },     // 5 seconds
+    { value: "0.167", label: `10 ${t("common.seconds")}` },    // 10 seconds
+    { value: "0.25", label: `15 ${t("common.seconds")}` },     // 15 seconds
+    { value: "0.333", label: `20 ${t("common.seconds")}` },    // 20 seconds
+    { value: "0.417", label: `25 ${t("common.seconds")}` },    // 25 seconds
+    { value: "0.5", label: `30 ${t("common.seconds")}` },      // 30 seconds
     { value: "1", label: `1 ${t("common.minute")}` },
+    { value: "2", label: `2 ${t("common.minutes")}` },
     { value: "5", label: `5 ${t("common.minutes")}` },
-    { value: "10", label: `10 ${t("common.minutes")}` },
-    { value: "15", label: `15 ${t("common.minutes")}` },
-    { value: "30", label: `30 ${t("common.minutes")}` },
   ];
 
   useEffect(() => {
@@ -32,11 +37,11 @@ const AutoLockTimeout = () => {
   const handleSave = async () => {
     const selectedOption = options.find(opt => opt.value === selected);
     const minutes = parseFloat(selected);
-    
+
     setIsSaving(true);
     try {
       await updateProfile({ auto_lock_minutes: minutes });
-      
+
       toast({
         title: t("autoLock.updated"),
         description: `${t("autoLock.willLockAfter")} ${selectedOption?.label}`,

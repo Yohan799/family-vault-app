@@ -32,7 +32,7 @@ export const DocumentViewerModal = ({
     const [numPages, setNumPages] = useState<number | null>(null);
     const [pageNumber, setPageNumber] = useState(1);
     const [scale, setScale] = useState(1.0);
-    
+
     const isNative = Capacitor.isNativePlatform();
 
     if (!isOpen) return null;
@@ -51,7 +51,7 @@ export const DocumentViewerModal = ({
 
     // Office documents can't be previewed directly - show download option
     const isOfficeDoc = isWord || isExcel;
-    
+
     // On native APK, PDFs and Office docs need to be opened externally
     const needsExternalViewer = isNative && (isPdf || isOfficeDoc);
 
@@ -88,11 +88,59 @@ export const DocumentViewerModal = ({
     // Open document in external app (for native)
     const handleOpenExternal = async () => {
         try {
-            await Browser.open({ url: documentUrl });
+            const { Filesystem, Directory } = await import('@capacitor/filesystem');
+            const { FileOpener } = await import('@capacitor-community/file-opener');
+
+            // Download file to device cache
+            const response = await fetch(documentUrl);
+            if (!response.ok) throw new Error('Failed to download file');
+
+            const blob = await response.blob();
+            const base64 = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    const result = reader.result as string;
+                    resolve(result.split(',')[1]);
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+
+            // Create safe filename
+            const safeFileName = documentName.replace(/[^a-zA-Z0-9._-]/g, '_');
+
+            // Write to cache directory
+            const writeResult = await Filesystem.writeFile({
+                path: safeFileName,
+                data: base64,
+                directory: Directory.Cache,
+            });
+
+            // Determine MIME type
+            let mimeType = documentType || 'application/octet-stream';
+            if (!mimeType || mimeType === 'application/octet-stream') {
+                const lowerName = documentName.toLowerCase();
+                if (lowerName.endsWith('.pdf')) mimeType = 'application/pdf';
+                else if (lowerName.endsWith('.doc')) mimeType = 'application/msword';
+                else if (lowerName.endsWith('.docx')) mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+                else if (lowerName.endsWith('.xls')) mimeType = 'application/vnd.ms-excel';
+                else if (lowerName.endsWith('.xlsx')) mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+            }
+
+            // Open with native app
+            await FileOpener.open({
+                filePath: writeResult.uri,
+                contentType: mimeType,
+            });
         } catch (err) {
-            console.error('External open error:', err);
-            // Fallback to download
-            handleDownload();
+            console.error('FileOpener error:', err);
+            // Fallback to browser
+            try {
+                await Browser.open({ url: documentUrl });
+            } catch (browserErr) {
+                console.error('Browser fallback error:', browserErr);
+                handleDownload();
+            }
         }
     };
 
@@ -253,7 +301,7 @@ export const DocumentViewerModal = ({
                             )}
                         </div>
                     )}
-                    
+
                     {/* Native APK: PDF/DOC external viewer prompt */}
                     {needsExternalViewer && (
                         <div className="flex flex-col items-center justify-center text-center p-8">

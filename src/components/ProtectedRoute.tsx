@@ -1,5 +1,6 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { IdleLockProvider } from "@/components/IdleLockProvider";
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
@@ -26,7 +27,12 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
         return <Navigate to="/signin" state={{ from: location.pathname }} replace />;
     }
 
-    return <>{children}</>;
+    // Wrap authenticated content with IdleLockProvider for auto-lock on idle
+    return (
+        <IdleLockProvider>
+            {children}
+        </IdleLockProvider>
+    );
 };
 
 export default ProtectedRoute;

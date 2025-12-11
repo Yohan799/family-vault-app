@@ -26,6 +26,10 @@ const SettingsPage = () => {
 
   const getAutoLockLabel = (minutes: number | null | undefined): string => {
     if (!minutes) return "5 minutes";
+    if (minutes < 1) {
+      const seconds = Math.round(minutes * 60);
+      return `${seconds} seconds`;
+    }
     if (minutes === 1) return "1 minute";
     return `${minutes} minutes`;
   };
@@ -151,7 +155,7 @@ const SettingsPage = () => {
       await signOut();
       setIsDeleting(false);
       setShowDeleteDialog(false);
-      
+
       // Force full page reload to /onboarding for clean navigation stack (critical for APK)
       window.location.href = "/onboarding";
     } catch (error: any) {

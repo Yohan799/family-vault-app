@@ -35,6 +35,8 @@ const translations: Record<Language, Record<string, string>> = {
     "common.disabled": "Disabled",
     "common.minutes": "minutes",
     "common.minute": "minute",
+    "common.seconds": "seconds",
+    "common.second": "second",
     "common.save": "Save",
     "common.cancel": "Cancel",
     "common.delete": "Delete",
@@ -62,12 +64,12 @@ const translations: Record<Language, Record<string, string>> = {
     "common.create": "Create",
     "common.update": "Update",
     "common.remove": "Remove",
-    
+
     // Navigation
     "nav.home": "Home",
     "nav.vault": "Vault",
     "nav.settings": "Settings",
-    
+
     // Dashboard
     "dashboard.welcome": "Welcome,",
     "dashboard.securityScore": "Security Score",
@@ -79,7 +81,7 @@ const translations: Record<Language, Record<string, string>> = {
     "dashboard.noQuickActions": "No quick actions enabled",
     "dashboard.triggerEnabled": "Trigger is enabled",
     "dashboard.triggerDisabled": "Trigger is disabled",
-    
+
     // Vault
     "vault.title": "My Vault",
     "vault.documents": "Documents",
@@ -104,7 +106,7 @@ const translations: Record<Language, Record<string, string>> = {
     "vault.whoHasAccess": "Who has access",
     "vault.matches": "matches",
     "vault.match": "match",
-    
+
     // Documents
     "document.upload": "Upload Document",
     "document.view": "View Document",
@@ -124,7 +126,7 @@ const translations: Record<Language, Record<string, string>> = {
     "document.scanDocument": "Scan Document",
     "document.scanSubtitle": "Use camera with auto edge detection",
     "document.maxSize": "Maximum file size: 20MB",
-    
+
     // Subcategory
     "subcategory.add": "Add Subcategory",
     "subcategory.name": "Subcategory Name",
@@ -136,7 +138,7 @@ const translations: Record<Language, Record<string, string>> = {
     "subcategory.deleteConfirm": "Are you sure you want to delete",
     "subcategory.willBeDeleted": "will be deleted",
     "subcategory.cannotUndo": "This action cannot be undone",
-    
+
     // Folder
     "folder.add": "Add Folder",
     "folder.addFolder": "Add Folder",
@@ -159,14 +161,14 @@ const translations: Record<Language, Record<string, string>> = {
     "folder.cannotUndo": "This action cannot be undone",
     "folder.deleteDocTitle": "Delete Document?",
     "folder.deleteDocConfirm": "Are you sure you want to delete",
-    
+
     // Vault additional
     "vault.deleteTitle": "Delete Category?",
     "vault.deleteConfirm": "Are you sure you want to delete",
     "vault.willBeDeleted": "will be deleted",
     "vault.cannotUndo": "This action cannot be undone",
     "vault.categoryPlaceholder": "e.g. Vehicles, Investments, etc.",
-    
+
     // Nominees
     "nominee.title": "Nominees",
     "nominee.subtitle": "Manage your trusted contacts",
@@ -184,7 +186,7 @@ const translations: Record<Language, Record<string, string>> = {
     "nominee.resendVerification": "Resend Verification",
     "nominee.noNominees": "No nominees added",
     "nominee.addFirst": "Add your first nominee to share access",
-    
+
     // Time Capsule
     "timeCapsule.title": "Time Capsule",
     "timeCapsule.subtitle": "Schedule messages for the future",
@@ -204,7 +206,7 @@ const translations: Record<Language, Record<string, string>> = {
     "timeCapsule.createFirst": "Create your first time capsule",
     "timeCapsule.futureDateRequired": "Please select a future date",
     "timeCapsule.futureDateHint": "Must be a future date (tomorrow or later)",
-    
+
     // Profile
     "profile.title": "Profile",
     "profile.subtitle": "Manage your profile",
@@ -215,7 +217,7 @@ const translations: Record<Language, Record<string, string>> = {
     "profile.dateOfBirth": "Date of Birth",
     "profile.changePhoto": "Change Photo",
     "profile.updated": "Profile updated",
-    
+
     // Settings page
     "settings.title": "Settings",
     "settings.subtitle": "Manage your preferences",
@@ -248,12 +250,12 @@ const translations: Record<Language, Record<string, string>> = {
     "settings.deleteAccount.confirm": "Delete Account",
     "settings.deleting": "Deleting...",
     "settings.appVersion": "App Version 2.0.0",
-    
+
     // Language page
     "language.title": "Language",
     "language.subtitle": "Choose your preferred language",
     "language.current": "Current",
-    
+
     // Auth
     "auth.signIn": "Sign In",
     "auth.signUp": "Sign Up",
@@ -275,7 +277,7 @@ const translations: Record<Language, Record<string, string>> = {
     "auth.otpSent": "OTP sent to your email",
     "auth.verify": "Verify",
     "auth.resendOtp": "Resend OTP",
-    
+
     // Email Verification
     "auth.verifyEmail.title": "Verify Your Email",
     "auth.verifyEmail.checkInbox": "Check Your Inbox",
@@ -293,14 +295,14 @@ const translations: Record<Language, Record<string, string>> = {
     "auth.verifyEmail.invalidDesc": "This verification link is invalid or has already been used.",
     "auth.verifyEmail.notVerified": "Email Not Verified",
     "auth.verifyEmail.pleaseVerify": "Please verify your email before signing in.",
-    
+
     // Notifications
     "notifications.title": "Notifications",
     "notifications.noNotifications": "No notifications",
     "notifications.markAsRead": "Mark as read",
     "notifications.markAllRead": "Mark all as read",
     "notifications.clearAll": "Clear all",
-    
+
     // Help Center
     "help.title": "Help & Support",
     "help.subtitle": "How can we help you?",
@@ -311,7 +313,7 @@ const translations: Record<Language, Record<string, string>> = {
     "help.whatsapp": "WhatsApp",
     "help.sendMessage": "Send Message",
     "help.yourMessage": "Your Message",
-    
+
     // Toasts
     "toast.signedOut": "Signed out",
     "toast.signedOut.description": "See you soon!",
@@ -343,7 +345,7 @@ const translations: Record<Language, Record<string, string>> = {
     "toast.passwordChanged": "Password changed!",
     "toast.passwordUpdated": "Your password has been updated successfully",
     "toast.errorChangingPassword": "Error changing password",
-    
+
     // Change Password page
     "changePassword.title": "Change Password",
     "changePassword.currentPassword": "Current Password",
@@ -355,7 +357,7 @@ const translations: Record<Language, Record<string, string>> = {
     "changePassword.requirements": "Password must be at least 8 characters long and contain uppercase, lowercase, numbers, and special characters.",
     "changePassword.updating": "Updating...",
     "changePassword.updatePassword": "Update Password",
-    
+
     // Reset Password page
     "resetPassword.title": "Reset Password",
     "resetPassword.enterNew": "Enter your new password below",
@@ -374,7 +376,7 @@ const translations: Record<Language, Record<string, string>> = {
     "resetPassword.successDesc": "You can now sign in with your new password",
     "resetPassword.failed": "Reset Failed",
     "resetPassword.sessionExpired": "Reset session expired. Please restart the process.",
-    
+
     // Two Factor Verify
     "twoFactor.enterCode": "Enter Verification Code",
     "twoFactor.codeSent": "We've sent a 6-digit code to",
@@ -391,7 +393,7 @@ const translations: Record<Language, Record<string, string>> = {
     "twoFactor.codeResent": "Code Resent",
     "twoFactor.newCodeSent": "A new verification code has been sent to your email",
     "twoFactor.failedToResend": "Failed to Resend",
-    
+
     // Active Sessions
     "sessions.title": "Active Sessions",
     "sessions.subtitle": "Manage devices where you're currently logged in. End sessions you don't recognize.",
@@ -405,7 +407,7 @@ const translations: Record<Language, Record<string, string>> = {
     "sessions.loggedOut": "has been logged out",
     "sessions.allEnded": "All sessions ended",
     "sessions.allLoggedOut": "You've been logged out from all other devices",
-    
+
     // Emergency Access
     "emergency.title": "Emergency Access Portal",
     "emergency.subtitle": "Verify your identity to access shared documents",
@@ -424,7 +426,7 @@ const translations: Record<Language, Record<string, string>> = {
     "emergency.noDocsShared": "No documents have been shared with you",
     "emergency.aboutTitle": "About Emergency Access",
     "emergency.aboutDesc": "This portal is activated when a Family Vault user has been inactive for an extended period. Only verified nominees with explicitly granted permissions can access shared documents.",
-    
+
     // Customize Quick Actions
     "quickActions.title": "Customize Quick Actions",
     "quickActions.subtitle": "Drag to reorder, toggle to enable/disable. Add custom shortcuts to personalize your dashboard.",
@@ -445,13 +447,13 @@ const translations: Record<Language, Record<string, string>> = {
     "quickActions.saveChanges": "Save Changes",
     "quickActions.updated": "Quick actions updated!",
     "quickActions.changesSaved": "Your changes have been saved successfully",
-    
+
     // Notifications
     "notifications.unread": "unread",
     "notifications.noNotificationsYet": "No notifications yet",
     "notifications.securityAlerts": "You'll see security alerts and updates here",
     "notifications.loading": "Loading notifications...",
-    
+
     // Backup
     "backup.title": "Backup & Restore",
     "backup.subtitle": "Manage your data backups",
@@ -461,7 +463,7 @@ const translations: Record<Language, Record<string, string>> = {
     "backup.frequency": "Backup Frequency",
     "backup.lastBackup": "Last Backup",
     "backup.noBackups": "No backups yet",
-    
+
     // Security
     "security.twoFactor": "Two-Factor Authentication",
     "security.biometric": "Biometric Login",
@@ -473,7 +475,7 @@ const translations: Record<Language, Record<string, string>> = {
     "security.wrongPin": "Wrong PIN",
     "security.pinMismatch": "PINs do not match",
     "security.pinSet": "PIN set successfully",
-    
+
     // Inactivity
     "inactivity.title": "Inactivity Trigger",
     "inactivity.subtitle": "Set up emergency access",
@@ -482,7 +484,7 @@ const translations: Record<Language, Record<string, string>> = {
     "inactivity.message": "Custom Message",
     "inactivity.enabled": "Trigger Enabled",
     "inactivity.disabled": "Trigger Disabled",
-    
+
     // Access Control
     "access.manageAccess": "Manage Access",
     "access.grantAccess": "Grant Access",
@@ -493,7 +495,7 @@ const translations: Record<Language, Record<string, string>> = {
     "access.selectNominee": "Select Nominee",
     "access.accessLevel": "Access Level",
     "access.noAccess": "No access granted",
-    
+
     // Google Drive Modal
     "googleDrive.connectTitle": "Connect Google Drive",
     "googleDrive.connectDescription": "To browse and import files from Google Drive, you need to connect your Google account.",
@@ -505,7 +507,7 @@ const translations: Record<Language, Record<string, string>> = {
     "googleDrive.or": "Or",
     "googleDrive.useDevicePicker": "Use Device File Picker",
     "googleDrive.devicePickerNote": "The device file picker can access Google Drive if the app is installed on your device.",
-    
+
     // Quick Action translations (for dashboard)
     "quickAction.vault.title": "Digital Vault",
     "quickAction.vault.subtitle": "Manage your secure documents",
@@ -515,14 +517,14 @@ const translations: Record<Language, Record<string, string>> = {
     "quickAction.timeCapsule.subtitle": "Schedule future messages",
     "quickAction.inactivity.title": "Inactivity Trigger",
     "quickAction.inactivity.subtitle": "Set up emergency access",
-    
+
     // Vault Categories
     "category.realEstate": "Real Estate",
     "category.medical": "Medical",
     "category.education": "Education",
     "category.insurance": "Insurance",
     "category.personal": "Personal",
-    
+
     // Vault Subcategories - Real Estate
     "subcategory.residential": "Residential Property",
     "subcategory.commercial": "Commercial Property",
@@ -532,34 +534,34 @@ const translations: Record<Language, Record<string, string>> = {
     "subcategory.propertyTax": "Property Tax",
     "subcategory.saleDeeds": "Sale/Purchase Deeds",
     "subcategory.propertyDocuments": "Property Documents",
-    
+
     // Vault Subcategories - Medical
     "subcategory.prescription": "Prescription",
     "subcategory.testReports": "Test Reports",
     "subcategory.hospitalRecords": "Hospital Records",
     "subcategory.vaccination": "Vaccination Records",
     "subcategory.insuranceClaims": "Insurance Claims",
-    
+
     // Vault Subcategories - Education
     "subcategory.certificates": "Certificates",
     "subcategory.transcripts": "Transcripts",
     "subcategory.degrees": "Degrees",
     "subcategory.idCards": "ID Cards",
     "subcategory.scholarships": "Scholarships",
-    
+
     // Vault Subcategories - Insurance
     "subcategory.health": "Health",
     "subcategory.life": "Life",
     "subcategory.vehicle": "Vehicle",
     "subcategory.property": "Property",
     "subcategory.travel": "Travel",
-    
+
     // Vault Subcategories - Personal
     "subcategory.identity": "Identity",
     "subcategory.bank": "Bank",
     "subcategory.tax": "Tax",
     "subcategory.legal": "Legal",
-    
+
     // Nominee relations
     "relation.spouse": "Spouse",
     "relation.child": "Child",
@@ -567,7 +569,7 @@ const translations: Record<Language, Record<string, string>> = {
     "relation.sibling": "Sibling",
     "relation.friend": "Friend",
     "relation.other": "Other",
-    
+
     // Additional nominee keys
     "nominee.total": "Total",
     "nominee.yourNominees": "Your Nominees",
@@ -585,7 +587,7 @@ const translations: Record<Language, Record<string, string>> = {
     "nominee.digitsOnly": "10 digits only",
     "nominee.verificationLinkSent": "Verification link sent",
     "nominee.resending": "Resending...",
-    
+
     // Inactivity additional keys
     "inactivity.monitoring": "Inactivity Monitoring",
     "inactivity.currentlyActive": "Currently Active",
@@ -615,7 +617,7 @@ const translations: Record<Language, Record<string, string>> = {
     "inactivity.settingsSaved": "Settings saved!",
     "inactivity.settingsSavedDesc": "You'll be alerted if inactive for more than {days} days",
     "inactivity.triggerDisabledMsg": "Inactivity trigger has been disabled",
-    
+
     // Time capsule additional keys
     "timeCapsule.createNew": "Create New Time Capsule",
     "timeCapsule.editCapsule": "Edit Time Capsule",
@@ -642,11 +644,11 @@ const translations: Record<Language, Record<string, string>> = {
     "timeCapsule.capsuleUpdated": "Time capsule updated!",
     "timeCapsule.capsuleCreated": "Time capsule created!",
     "timeCapsule.capsuleDeleted": "Time Capsule Deleted",
-    
+
     // Welcome & Auth
     "welcome.title": "Welcome to Family Vault",
     "welcome.subtitle": "Your Digital Vault & Legacy Planner",
-    
+
     // Onboarding
     "onboarding.skip": "Skip",
     "onboarding.next": "Next",
@@ -657,7 +659,7 @@ const translations: Record<Language, Record<string, string>> = {
     "onboarding.step2Desc": "Store wills, insurance, medical records, and more in one secure digital vault.",
     "onboarding.step3Title": "Share When Needed",
     "onboarding.step3Desc": "Grant trusted family members access to critical information during emergencies.",
-    
+
     // Sign In/Up
     "auth.secureFamily": "Secure Your Family's Legacy",
     "auth.createFamily": "Create Your Family Vault",
@@ -668,11 +670,11 @@ const translations: Record<Language, Record<string, string>> = {
     "auth.or": "OR",
     "auth.welcomeBack": "Welcome back!",
     "auth.successSignedIn": "Successfully signed in",
-    
+
     // Profile additional
     "profile.notSet": "Not set",
     "profile.memberSince": "Member Since",
-    
+
     // Two Factor Setup
     "twoFactorSetup.title": "Two-Factor Authentication",
     "twoFactorSetup.userNotFound": "User information not found",
@@ -695,7 +697,7 @@ const translations: Record<Language, Record<string, string>> = {
     "twoFactorSetup.disableButton": "Disable Two-Factor Authentication",
     "twoFactorSetup.sendingCode": "Sending Code...",
     "twoFactorSetup.enableButton": "Enable Two-Factor Authentication",
-    
+
     // App Lock
     "appLock.title": "App Lock",
     "appLock.description": "Add an extra layer of security by requiring authentication when opening the app",
@@ -712,7 +714,7 @@ const translations: Record<Language, Record<string, string>> = {
     "appLock.appWillOpenWithoutAuth": "App will open without authentication",
     "appLock.pinDisabled": "PIN Lock Disabled",
     "appLock.lockActiveMessage": "App lock is active. You'll need to authenticate when opening the app.",
-    
+
     // Auto Lock
     "autoLock.title": "Auto Lock Timeout",
     "autoLock.description": "Choose how long the app should wait before automatically locking for security.",
@@ -720,7 +722,7 @@ const translations: Record<Language, Record<string, string>> = {
     "autoLock.willLockAfter": "Vault will auto-lock after",
     "autoLock.updateFailed": "Failed to update",
     "autoLock.couldNotSave": "Could not save auto-lock timeout setting",
-    
+
     // Backup
     "backup.created": "Backup Created",
     "backup.exportedToJson": "Your vault data has been exported to JSON file",
@@ -741,7 +743,7 @@ const translations: Record<Language, Record<string, string>> = {
     "backup.inactivitySettings": "Inactivity settings",
     "backup.note": "Note:",
     "backup.filesNotIncluded": "Actual document files are stored securely in cloud and not included in this export.",
-    
+
     // Help Center
     "help.faq1Question": "How do I upload documents?",
     "help.faq1Answer": "Go to Vault, select a category, and tap the + button. You can upload from your device, scan documents with your camera, or import from Google Drive.",
@@ -759,7 +761,7 @@ const translations: Record<Language, Record<string, string>> = {
     "help.describeIssue": "Describe your issue or question...",
     "help.sending": "Sending...",
     "help.sendButton": "Send Message",
-    
+
     // Email Preferences
     "emailPrefs.title": "Email Preferences",
     "emailPrefs.description": "Manage your email addresses for account notifications and recovery.",
@@ -792,7 +794,7 @@ const translations: Record<Language, Record<string, string>> = {
     "emailPrefs.enterNewEmail": "Enter new email address",
     "emailPrefs.addEmail": "Add Email",
     "emailPrefs.addNewEmail": "Add New Email",
-    
+
     // Inactivity additional
     "inactivity.loadFailed": "Failed to load settings",
     "inactivity.thresholdError": "Inactivity threshold must be between 1 and 365 days",
@@ -817,6 +819,8 @@ const translations: Record<Language, Record<string, string>> = {
     "common.disabled": "ఆఫ్ చేయబడింది",
     "common.minutes": "నిమిషాలు",
     "common.minute": "నిమిషం",
+    "common.seconds": "సెకన్లు",
+    "common.second": "సెకను",
     "common.save": "సేవ్ చేయండి",
     "common.cancel": "రద్దు చేయండి",
     "common.delete": "తొలగించు",
@@ -844,12 +848,12 @@ const translations: Record<Language, Record<string, string>> = {
     "common.create": "సృష్టించు",
     "common.update": "అప్డేట్",
     "common.remove": "తొలగించు",
-    
+
     // Navigation
     "nav.home": "హోమ్",
     "nav.vault": "వాల్ట్",
     "nav.settings": "సెట్టింగ్స్",
-    
+
     // Dashboard
     "dashboard.welcome": "స్వాగతం,",
     "dashboard.securityScore": "భద్రతా స్కోర్",
@@ -861,7 +865,7 @@ const translations: Record<Language, Record<string, string>> = {
     "dashboard.noQuickActions": "త్వరిత చర్యలు ఆన్ కాలేదు",
     "dashboard.triggerEnabled": "ట్రిగ్గర్ ఆన్ చేయబడింది",
     "dashboard.triggerDisabled": "ట్రిగ్గర్ ఆఫ్ చేయబడింది",
-    
+
     // Vault
     "vault.title": "నా వాల్ట్",
     "vault.documents": "డాక్యుమెంట్లు",
@@ -886,7 +890,7 @@ const translations: Record<Language, Record<string, string>> = {
     "vault.whoHasAccess": "ఎవరికి యాక్సెస్ ఉంది",
     "vault.matches": "మ్యాచ్‌లు",
     "vault.match": "మ్యాచ్",
-    
+
     // Documents
     "document.upload": "డాక్యుమెంట్ అప్లోడ్",
     "document.view": "డాక్యుమెంట్ చూడండి",
@@ -906,7 +910,7 @@ const translations: Record<Language, Record<string, string>> = {
     "document.scanDocument": "డాక్యుమెంట్ స్కాన్",
     "document.scanSubtitle": "ఆటో ఎడ్జ్ డిటెక్షన్‌తో కెమెరా ఉపయోగించండి",
     "document.maxSize": "గరిష్ట ఫైల్ సైజు: 20MB",
-    
+
     // Subcategory
     "subcategory.add": "సబ్‌కేటగిరీ జోడించు",
     "subcategory.name": "సబ్‌కేటగిరీ పేరు",
@@ -918,7 +922,7 @@ const translations: Record<Language, Record<string, string>> = {
     "subcategory.deleteConfirm": "మీరు తొలగించాలనుకుంటున్నారా",
     "subcategory.willBeDeleted": "తొలగించబడతాయి",
     "subcategory.cannotUndo": "ఈ చర్య రద్దు చేయబడదు",
-    
+
     // Folder
     "folder.add": "ఫోల్డర్ జోడించు",
     "folder.addFolder": "ఫోల్డర్ జోడించు",
@@ -941,13 +945,13 @@ const translations: Record<Language, Record<string, string>> = {
     "folder.cannotUndo": "ఈ చర్య రద్దు చేయబడదు",
     "folder.deleteDocTitle": "డాక్యుమెంట్ తొలగించాలా?",
     "folder.deleteDocConfirm": "మీరు తొలగించాలనుకుంటున్నారా",
-    
+
     // Vault additional
     "vault.deleteTitle": "కేటగిరీ తొలగించాలా?",
     "vault.deleteConfirm": "మీరు తొలగించాలనుకుంటున్నారా",
     "vault.willBeDeleted": "తొలగించబడతాయి",
     "vault.categoryPlaceholder": "ఉదా. వాహనాలు, పెట్టుబడులు మొదలైనవి.",
-    
+
     // Nominees
     "nominee.title": "నామినీలు",
     "nominee.subtitle": "మీ విశ్వసనీయ పరిచయాలను నిర్వహించండి",
@@ -965,7 +969,7 @@ const translations: Record<Language, Record<string, string>> = {
     "nominee.resendVerification": "ధృవీకరణ మళ్ళీ పంపండి",
     "nominee.noNominees": "నామినీలు జోడించలేదు",
     "nominee.addFirst": "యాక్సెస్ షేర్ చేయడానికి మీ మొదటి నామినీని జోడించండి",
-    
+
     // Time Capsule
     "timeCapsule.title": "టైమ్ క్యాప్సూల్",
     "timeCapsule.subtitle": "భవిష్యత్తు కోసం సందేశాలను షెడ్యూల్ చేయండి",
@@ -985,7 +989,7 @@ const translations: Record<Language, Record<string, string>> = {
     "timeCapsule.createFirst": "మీ మొదటి టైమ్ క్యాప్సూల్ సృష్టించండి",
     "timeCapsule.futureDateRequired": "దయచేసి భవిష్యత్తు తేదీని ఎంచుకోండి",
     "timeCapsule.futureDateHint": "భవిష్యత్తు తేదీ అయి ఉండాలి (రేపు లేదా తర్వాత)",
-    
+
     // Profile
     "profile.title": "ప్రొఫైల్",
     "profile.subtitle": "మీ ప్రొఫైల్ నిర్వహించండి",
@@ -996,7 +1000,7 @@ const translations: Record<Language, Record<string, string>> = {
     "profile.dateOfBirth": "పుట్టిన తేదీ",
     "profile.changePhoto": "ఫోటో మార్చు",
     "profile.updated": "ప్రొఫైల్ అప్డేట్ అయింది",
-    
+
     // Settings page
     "settings.title": "సెట్టింగ్స్",
     "settings.subtitle": "మీ ప్రాధాన్యతలను నిర్వహించండి",
@@ -1029,12 +1033,12 @@ const translations: Record<Language, Record<string, string>> = {
     "settings.deleteAccount.confirm": "ఖాతాను తొలగించు",
     "settings.deleting": "తొలగిస్తోంది...",
     "settings.appVersion": "యాప్ వెర్షన్ 2.0.0",
-    
+
     // Language page
     "language.title": "భాష",
     "language.subtitle": "మీకు నచ్చిన భాషను ఎంచుకోండి",
     "language.current": "ప్రస్తుతం",
-    
+
     // Auth
     "auth.signIn": "సైన్ ఇన్",
     "auth.signUp": "సైన్ అప్",
@@ -1056,7 +1060,7 @@ const translations: Record<Language, Record<string, string>> = {
     "auth.otpSent": "OTP మీ ఇమెయిల్‌కు పంపబడింది",
     "auth.verify": "ధృవీకరించు",
     "auth.resendOtp": "OTP మళ్ళీ పంపండి",
-    
+
     // Email Verification
     "auth.verifyEmail.title": "మీ ఇమెయిల్ ధృవీకరించండి",
     "auth.verifyEmail.checkInbox": "మీ ఇన్‌బాక్స్ చెక్ చేయండి",
@@ -1074,14 +1078,14 @@ const translations: Record<Language, Record<string, string>> = {
     "auth.verifyEmail.invalidDesc": "ఈ ధృవీకరణ లింక్ చెల్లదు లేదా ఇప్పటికే ఉపయోగించబడింది.",
     "auth.verifyEmail.notVerified": "ఇమెయిల్ ధృవీకరించబడలేదు",
     "auth.verifyEmail.pleaseVerify": "సైన్ ఇన్ చేయడానికి ముందు మీ ఇమెయిల్ ధృవీకరించండి.",
-    
+
     // Notifications
     "notifications.title": "నోటిఫికేషన్లు",
     "notifications.noNotifications": "నోటిఫికేషన్లు లేవు",
     "notifications.markAsRead": "చదివినట్లు గుర్తు పెట్టు",
     "notifications.markAllRead": "అన్నీ చదివినట్లు గుర్తు పెట్టు",
     "notifications.clearAll": "అన్నీ క్లియర్ చేయండి",
-    
+
     // Help Center
     "help.title": "సహాయం & సపోర్ట్",
     "help.subtitle": "మేము మీకు ఎలా సహాయం చేయగలం?",
@@ -1092,7 +1096,7 @@ const translations: Record<Language, Record<string, string>> = {
     "help.whatsapp": "WhatsApp",
     "help.sendMessage": "సందేశం పంపండి",
     "help.yourMessage": "మీ సందేశం",
-    
+
     // Toasts
     "toast.signedOut": "సైన్ అవుట్ అయింది",
     "toast.signedOut.description": "త్వరలో కలుద్దాం!",
@@ -1113,7 +1117,7 @@ const translations: Record<Language, Record<string, string>> = {
     "toast.uploadSuccess": "అప్లోడ్ విజయవంతం",
     "toast.uploadFailed": "అప్లోడ్ విఫలమైంది",
     "toast.downloadStarted": "డౌన్లోడ్ మొదలయింది",
-    
+
     // Backup
     "backup.title": "బ్యాకప్ & రీస్టోర్",
     "backup.subtitle": "మీ డేటా బ్యాకప్‌లను నిర్వహించండి",
@@ -1123,7 +1127,7 @@ const translations: Record<Language, Record<string, string>> = {
     "backup.frequency": "బ్యాకప్ ఫ్రీక్వెన్సీ",
     "backup.lastBackup": "చివరి బ్యాకప్",
     "backup.noBackups": "బ్యాకప్‌లు లేవు",
-    
+
     // Security
     "security.twoFactor": "రెండు-కారక ప్రమాణీకరణ",
     "security.biometric": "బయోమెట్రిక్ లాగిన్",
@@ -1135,7 +1139,7 @@ const translations: Record<Language, Record<string, string>> = {
     "security.wrongPin": "తప్పు PIN",
     "security.pinMismatch": "PINలు సరిపోలలేదు",
     "security.pinSet": "PIN విజయవంతంగా సెట్ అయింది",
-    
+
     // Inactivity
     "inactivity.title": "నిష్క్రియాత్మక ట్రిగ్గర్",
     "inactivity.subtitle": "అత్యవసర యాక్సెస్ సెటప్ చేయండి",
@@ -1144,7 +1148,7 @@ const translations: Record<Language, Record<string, string>> = {
     "inactivity.message": "అనుకూల సందేశం",
     "inactivity.enabled": "ట్రిగ్గర్ ఆన్",
     "inactivity.disabled": "ట్రిగ్గర్ ఆఫ్",
-    
+
     // Access Control
     "access.manageAccess": "యాక్సెస్ నిర్వహించు",
     "access.grantAccess": "యాక్సెస్ ఇవ్వండి",
@@ -1155,7 +1159,7 @@ const translations: Record<Language, Record<string, string>> = {
     "access.selectNominee": "నామినీ ఎంచుకోండి",
     "access.accessLevel": "యాక్సెస్ స్థాయి",
     "access.noAccess": "యాక్సెస్ ఇవ్వలేదు",
-    
+
     // Google Drive Modal
     "googleDrive.connectTitle": "Google Drive కనెక్ట్ చేయండి",
     "googleDrive.connectDescription": "Google Drive నుండి ఫైల్స్ బ్రౌజ్ చేయడానికి మీ Google ఖాతాను కనెక్ట్ చేయాలి.",
@@ -1175,14 +1179,14 @@ const translations: Record<Language, Record<string, string>> = {
     "quickAction.timeCapsule.subtitle": "భవిష్యత్తు సందేశాలను షెడ్యూల్ చేయండి",
     "quickAction.inactivity.title": "నిష్క్రియాత్మక ట్రిగ్గర్",
     "quickAction.inactivity.subtitle": "అత్యవసర యాక్సెస్ సెటప్ చేయండి",
-    
+
     // Vault Categories
     "category.realEstate": "రియల్ ఎస్టేట్",
     "category.medical": "వైద్య",
     "category.education": "విద్య",
     "category.insurance": "భీమా",
     "category.personal": "వ్యక్తిగత",
-    
+
     // Vault Subcategories - Real Estate
     "subcategory.residential": "నివాస ఆస్తి",
     "subcategory.commercial": "వాణిజ్య ఆస్తి",
@@ -1192,34 +1196,34 @@ const translations: Record<Language, Record<string, string>> = {
     "subcategory.propertyTax": "ఆస్తి పన్ను",
     "subcategory.saleDeeds": "అమ్మకం/కొనుగోలు డీడ్లు",
     "subcategory.propertyDocuments": "ఆస్తి డాక్యుమెంట్లు",
-    
+
     // Vault Subcategories - Medical
     "subcategory.prescription": "ప్రిస్క్రిప్షన్",
     "subcategory.testReports": "టెస్ట్ రిపోర్ట్‌లు",
     "subcategory.hospitalRecords": "ఆసుపత్రి రికార్డులు",
     "subcategory.vaccination": "టీకాకరణ రికార్డులు",
     "subcategory.insuranceClaims": "భీమా క్లెయిమ్‌లు",
-    
+
     // Vault Subcategories - Education
     "subcategory.certificates": "సర్టిఫికేట్లు",
     "subcategory.transcripts": "ట్రాన్‌స్క్రిప్ట్‌లు",
     "subcategory.degrees": "డిగ్రీలు",
     "subcategory.idCards": "ID కార్డులు",
     "subcategory.scholarships": "స్కాలర్‌షిప్‌లు",
-    
+
     // Vault Subcategories - Insurance
     "subcategory.health": "ఆరోగ్యం",
     "subcategory.life": "జీవితం",
     "subcategory.vehicle": "వాహనం",
     "subcategory.property": "ఆస్తి",
     "subcategory.travel": "ప్రయాణం",
-    
+
     // Vault Subcategories - Personal
     "subcategory.identity": "గుర్తింపు",
     "subcategory.bank": "బ్యాంక్",
     "subcategory.tax": "పన్ను",
     "subcategory.legal": "న్యాయ",
-    
+
     // Nominee relations
     "relation.spouse": "భర్త/భార్య",
     "relation.child": "బిడ్డ",
@@ -1227,7 +1231,7 @@ const translations: Record<Language, Record<string, string>> = {
     "relation.sibling": "సోదరుడు/సోదరి",
     "relation.friend": "స్నేహితుడు",
     "relation.other": "ఇతర",
-    
+
     // Additional nominee keys
     "nominee.total": "మొత్తం",
     "nominee.yourNominees": "మీ నామినీలు",
@@ -1245,7 +1249,7 @@ const translations: Record<Language, Record<string, string>> = {
     "nominee.digitsOnly": "10 అంకెలు మాత్రమే",
     "nominee.verificationLinkSent": "ధృవీకరణ లింక్ పంపబడింది",
     "nominee.resending": "మళ్ళీ పంపుతోంది...",
-    
+
     // Inactivity additional keys
     "inactivity.monitoring": "నిష్క్రియాత్మక పర్యవేక్షణ",
     "inactivity.currentlyActive": "ప్రస్తుతం యాక్టివ్",
@@ -1275,7 +1279,7 @@ const translations: Record<Language, Record<string, string>> = {
     "inactivity.settingsSaved": "సెట్టింగ్స్ సేవ్ అయ్యాయి!",
     "inactivity.settingsSavedDesc": "{days} రోజులకు మించి నిష్క్రియంగా ఉంటే మీకు అలర్ట్ వస్తుంది",
     "inactivity.triggerDisabledMsg": "ఇనాక్టివిటీ ట్రిగ్గర్ డిసేబుల్ చేయబడింది",
-    
+
     // Time capsule additional keys
     "timeCapsule.createNew": "కొత్త టైమ్ క్యాప్సూల్ సృష్టించు",
     "timeCapsule.editCapsule": "టైమ్ క్యాప్సూల్ ఎడిట్ చేయండి",
@@ -1302,11 +1306,11 @@ const translations: Record<Language, Record<string, string>> = {
     "timeCapsule.capsuleUpdated": "టైమ్ క్యాప్సూల్ అప్‌డేట్ అయింది!",
     "timeCapsule.capsuleCreated": "టైమ్ క్యాప్సూల్ సృష్టించబడింది!",
     "timeCapsule.capsuleDeleted": "టైమ్ క్యాప్సూల్ తొలగించబడింది",
-    
+
     // Welcome & Auth
     "welcome.title": "Family Vault కు స్వాగతం",
     "welcome.subtitle": "మీ డిజిటల్ వాల్ట్ & లెగసీ ప్లానర్",
-    
+
     // Onboarding
     "onboarding.skip": "దాటవేయండి",
     "onboarding.next": "తదుపరి",
@@ -1317,7 +1321,7 @@ const translations: Record<Language, Record<string, string>> = {
     "onboarding.step2Desc": "విల్లులు, భీమా, వైద్య రికార్డులు మరియు మరిన్నింటిని ఒక సురక్షిత డిజిటల్ వాల్ట్‌లో నిల్వ చేయండి.",
     "onboarding.step3Title": "అవసరమైనప్పుడు షేర్ చేయండి",
     "onboarding.step3Desc": "అత్యవసర సమయంలో విశ్వసనీయ కుటుంబ సభ్యులకు క్లిష్టమైన సమాచారానికి యాక్సెస్ ఇవ్వండి.",
-    
+
     // Sign In/Up
     "auth.secureFamily": "మీ కుటుంబ వారసత్వాన్ని సురక్షితం చేయండి",
     "auth.createFamily": "మీ Family Vault సృష్టించండి",
@@ -1336,6 +1340,8 @@ const translations: Record<Language, Record<string, string>> = {
     "common.disabled": "ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ",
     "common.minutes": "ನಿಮಿಷಗಳು",
     "common.minute": "ನಿಮಿಷ",
+    "common.seconds": "ಸೆಕೆಂಡುಗಳು",
+    "common.second": "ಸೆಕೆಂಡು",
     "common.save": "ಉಳಿಸಿ",
     "common.cancel": "ರದ್ದುಮಾಡಿ",
     "common.delete": "ಅಳಿಸಿ",
@@ -1363,12 +1369,12 @@ const translations: Record<Language, Record<string, string>> = {
     "common.create": "ರಚಿಸಿ",
     "common.update": "ನವೀಕರಿಸಿ",
     "common.remove": "ತೆಗೆದುಹಾಕಿ",
-    
+
     // Navigation
     "nav.home": "ಮುಖಪುಟ",
     "nav.vault": "ವಾಲ್ಟ್",
     "nav.settings": "ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
-    
+
     // Dashboard
     "dashboard.welcome": "ಸ್ವಾಗತ,",
     "dashboard.securityScore": "ಭದ್ರತಾ ಸ್ಕೋರ್",
@@ -1380,7 +1386,7 @@ const translations: Record<Language, Record<string, string>> = {
     "dashboard.noQuickActions": "ತ್ವರಿತ ಕ್ರಿಯೆಗಳು ಸಕ್ರಿಯವಾಗಿಲ್ಲ",
     "dashboard.triggerEnabled": "ಟ್ರಿಗ್ಗರ್ ಸಕ್ರಿಯವಾಗಿದೆ",
     "dashboard.triggerDisabled": "ಟ್ರಿಗ್ಗರ್ ನಿಷ್ಕ್ರಿಯವಾಗಿದೆ",
-    
+
     // Vault
     "vault.title": "ನನ್ನ ವಾಲ್ಟ್",
     "vault.documents": "ಡಾಕ್ಯುಮೆಂಟ್‌ಗಳು",
@@ -1405,7 +1411,7 @@ const translations: Record<Language, Record<string, string>> = {
     "vault.whoHasAccess": "ಯಾರಿಗೆ ಪ್ರವೇಶವಿದೆ",
     "vault.matches": "ಹೊಂದಾಣಿಕೆಗಳು",
     "vault.match": "ಹೊಂದಾಣಿಕೆ",
-    
+
     // Documents
     "document.upload": "ಡಾಕ್ಯುಮೆಂಟ್ ಅಪ್‌ಲೋಡ್",
     "document.view": "ಡಾಕ್ಯುಮೆಂಟ್ ನೋಡಿ",
@@ -1425,7 +1431,7 @@ const translations: Record<Language, Record<string, string>> = {
     "document.scanDocument": "ಡಾಕ್ಯುಮೆಂಟ್ ಸ್ಕ್ಯಾನ್",
     "document.scanSubtitle": "ಆಟೋ ಎಡ್ಜ್ ಡಿಟೆಕ್ಷನ್‌ನೊಂದಿಗೆ ಕ್ಯಾಮೆರಾ ಬಳಸಿ",
     "document.maxSize": "ಗರಿಷ್ಠ ಫೈಲ್ ಗಾತ್ರ: 20MB",
-    
+
     // Subcategory
     "subcategory.add": "ಉಪವರ್ಗ ಸೇರಿಸಿ",
     "subcategory.name": "ಉಪವರ್ಗ ಹೆಸರು",
@@ -1437,7 +1443,7 @@ const translations: Record<Language, Record<string, string>> = {
     "subcategory.deleteConfirm": "ನೀವು ಅಳಿಸಲು ಖಚಿತವಾಗಿದ್ದೀರಾ",
     "subcategory.willBeDeleted": "ಅಳಿಸಲಾಗುತ್ತದೆ",
     "subcategory.cannotUndo": "ಈ ಕ್ರಿಯೆಯನ್ನು ರದ್ದುಗೊಳಿಸಲಾಗುವುದಿಲ್ಲ",
-    
+
     // Folder
     "folder.add": "ಫೋಲ್ಡರ್ ಸೇರಿಸಿ",
     "folder.addFolder": "ಫೋಲ್ಡರ್ ಸೇರಿಸಿ",
@@ -1460,13 +1466,13 @@ const translations: Record<Language, Record<string, string>> = {
     "folder.cannotUndo": "ಈ ಕ್ರಿಯೆಯನ್ನು ರದ್ದುಗೊಳಿಸಲಾಗುವುದಿಲ್ಲ",
     "folder.deleteDocTitle": "ಡಾಕ್ಯುಮೆಂಟ್ ಅಳಿಸಬೇಕೆ?",
     "folder.deleteDocConfirm": "ನೀವು ಅಳಿಸಲು ಖಚಿತವಾಗಿದ್ದೀರಾ",
-    
+
     // Vault additional
     "vault.deleteTitle": "ವರ್ಗ ಅಳಿಸಬೇಕೆ?",
     "vault.deleteConfirm": "ನೀವು ಅಳಿಸಲು ಖಚಿತವಾಗಿದ್ದೀರಾ",
     "vault.willBeDeleted": "ಅಳಿಸಲಾಗುತ್ತದೆ",
     "vault.categoryPlaceholder": "ಉದಾ. ವಾಹನಗಳು, ಹೂಡಿಕೆಗಳು, ಇತ್ಯಾದಿ.",
-    
+
     // Nominees
     "nominee.title": "ನಾಮಿನಿಗಳು",
     "nominee.subtitle": "ನಿಮ್ಮ ವಿಶ್ವಾಸಾರ್ಹ ಸಂಪರ್ಕಗಳನ್ನು ನಿರ್ವಹಿಸಿ",
@@ -1484,7 +1490,7 @@ const translations: Record<Language, Record<string, string>> = {
     "nominee.resendVerification": "ದೃಢೀಕರಣ ಮತ್ತೆ ಕಳುಹಿಸಿ",
     "nominee.noNominees": "ನಾಮಿನಿಗಳಿಲ್ಲ",
     "nominee.addFirst": "ಪ್ರವೇಶ ಹಂಚಲು ನಿಮ್ಮ ಮೊದಲ ನಾಮಿನಿಯನ್ನು ಸೇರಿಸಿ",
-    
+
     // Time Capsule
     "timeCapsule.title": "ಟೈಮ್ ಕ್ಯಾಪ್ಸೂಲ್",
     "timeCapsule.subtitle": "ಭವಿಷ್ಯಕ್ಕಾಗಿ ಸಂದೇಶಗಳನ್ನು ಶೆಡ್ಯೂಲ್ ಮಾಡಿ",
@@ -1504,7 +1510,7 @@ const translations: Record<Language, Record<string, string>> = {
     "timeCapsule.createFirst": "ನಿಮ್ಮ ಮೊದಲ ಟೈಮ್ ಕ್ಯಾಪ್ಸೂಲ್ ರಚಿಸಿ",
     "timeCapsule.futureDateRequired": "ದಯವಿಟ್ಟು ಭವಿಷ್ಯದ ದಿನಾಂಕವನ್ನು ಆಯ್ಕೆಮಾಡಿ",
     "timeCapsule.futureDateHint": "ಭವಿಷ್ಯದ ದಿನಾಂಕ ಆಗಿರಬೇಕು (ನಾಳೆ ಅಥವಾ ನಂತರ)",
-    
+
     // Profile
     "profile.title": "ಪ್ರೊಫೈಲ್",
     "profile.subtitle": "ನಿಮ್ಮ ಪ್ರೊಫೈಲ್ ನಿರ್ವಹಿಸಿ",
@@ -1515,7 +1521,7 @@ const translations: Record<Language, Record<string, string>> = {
     "profile.dateOfBirth": "ಹುಟ್ಟಿದ ದಿನಾಂಕ",
     "profile.changePhoto": "ಫೋಟೋ ಬದಲಾಯಿಸಿ",
     "profile.updated": "ಪ್ರೊಫೈಲ್ ನವೀಕರಿಸಲಾಗಿದೆ",
-    
+
     // Settings page
     "settings.title": "ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
     "settings.subtitle": "ನಿಮ್ಮ ಆದ್ಯತೆಗಳನ್ನು ನಿರ್ವಹಿಸಿ",
@@ -1548,12 +1554,12 @@ const translations: Record<Language, Record<string, string>> = {
     "settings.deleteAccount.confirm": "ಖಾತೆ ಅಳಿಸಿ",
     "settings.deleting": "ಅಳಿಸಲಾಗುತ್ತಿದೆ...",
     "settings.appVersion": "ಆ್ಯಪ್ ಆವೃತ್ತಿ 2.0.0",
-    
+
     // Language page
     "language.title": "ಭಾಷೆ",
     "language.subtitle": "ನಿಮ್ಮ ಆದ್ಯತೆಯ ಭಾಷೆಯನ್ನು ಆರಿಸಿ",
     "language.current": "ಪ್ರಸ್ತುತ",
-    
+
     // Auth
     "auth.signIn": "ಸೈನ್ ಇನ್",
     "auth.signUp": "ಸೈನ್ ಅಪ್",
@@ -1575,7 +1581,7 @@ const translations: Record<Language, Record<string, string>> = {
     "auth.otpSent": "OTP ನಿಮ್ಮ ಇಮೇಲ್‌ಗೆ ಕಳುಹಿಸಲಾಗಿದೆ",
     "auth.verify": "ದೃಢೀಕರಿಸಿ",
     "auth.resendOtp": "OTP ಮತ್ತೆ ಕಳುಹಿಸಿ",
-    
+
     // Email Verification
     "auth.verifyEmail.title": "ನಿಮ್ಮ ಇಮೇಲ್ ಪರಿಶೀಲಿಸಿ",
     "auth.verifyEmail.checkInbox": "ನಿಮ್ಮ ಇನ್‌ಬಾಕ್ಸ್ ಪರಿಶೀಲಿಸಿ",
@@ -1593,14 +1599,14 @@ const translations: Record<Language, Record<string, string>> = {
     "auth.verifyEmail.invalidDesc": "ಈ ಪರಿಶೀಲನಾ ಲಿಂಕ್ ಅಮಾನ್ಯವಾಗಿದೆ ಅಥವಾ ಈಗಾಗಲೇ ಬಳಸಲಾಗಿದೆ.",
     "auth.verifyEmail.notVerified": "ಇಮೇಲ್ ಪರಿಶೀಲಿಸಿಲ್ಲ",
     "auth.verifyEmail.pleaseVerify": "ಸೈನ್ ಇನ್ ಮಾಡುವ ಮೊದಲು ದಯವಿಟ್ಟು ನಿಮ್ಮ ಇಮೇಲ್ ಪರಿಶೀಲಿಸಿ.",
-    
+
     // Notifications
     "notifications.title": "ಅಧಿಸೂಚನೆಗಳು",
     "notifications.noNotifications": "ಅಧಿಸೂಚನೆಗಳಿಲ್ಲ",
     "notifications.markAsRead": "ಓದಿದಂತೆ ಗುರುತಿಸಿ",
     "notifications.markAllRead": "ಎಲ್ಲವನ್ನೂ ಓದಿದಂತೆ ಗುರುತಿಸಿ",
     "notifications.clearAll": "ಎಲ್ಲವನ್ನೂ ತೆರವುಗೊಳಿಸಿ",
-    
+
     // Help Center
     "help.title": "ಸಹಾಯ & ಬೆಂಬಲ",
     "help.subtitle": "ನಾವು ನಿಮಗೆ ಹೇಗೆ ಸಹಾಯ ಮಾಡಬಹುದು?",
@@ -1611,7 +1617,7 @@ const translations: Record<Language, Record<string, string>> = {
     "help.whatsapp": "WhatsApp",
     "help.sendMessage": "ಸಂದೇಶ ಕಳುಹಿಸಿ",
     "help.yourMessage": "ನಿಮ್ಮ ಸಂದೇಶ",
-    
+
     // Toasts
     "toast.signedOut": "ಸೈನ್ ಔಟ್ ಆಯಿತು",
     "toast.signedOut.description": "ಶೀಘ್ರದಲ್ಲಿ ಭೇಟಿಯಾಗೋಣ!",
@@ -1632,7 +1638,7 @@ const translations: Record<Language, Record<string, string>> = {
     "toast.uploadSuccess": "ಅಪ್‌ಲೋಡ್ ಯಶಸ್ವಿ",
     "toast.uploadFailed": "ಅಪ್‌ಲೋಡ್ ವಿಫಲ",
     "toast.downloadStarted": "ಡೌನ್‌ಲೋಡ್ ಪ್ರಾರಂಭವಾಯಿತು",
-    
+
     // Backup
     "backup.title": "ಬ್ಯಾಕಪ್ & ಮರುಸ್ಥಾಪನೆ",
     "backup.subtitle": "ನಿಮ್ಮ ಡೇಟಾ ಬ್ಯಾಕಪ್‌ಗಳನ್ನು ನಿರ್ವಹಿಸಿ",
@@ -1642,7 +1648,7 @@ const translations: Record<Language, Record<string, string>> = {
     "backup.frequency": "ಬ್ಯಾಕಪ್ ಆವರ್ತನ",
     "backup.lastBackup": "ಕೊನೆಯ ಬ್ಯಾಕಪ್",
     "backup.noBackups": "ಬ್ಯಾಕಪ್‌ಗಳಿಲ್ಲ",
-    
+
     // Security
     "security.twoFactor": "ಎರಡು-ಅಂಶ ದೃಢೀಕರಣ",
     "security.biometric": "ಬಯೋಮೆಟ್ರಿಕ್ ಲಾಗಿನ್",
@@ -1654,7 +1660,7 @@ const translations: Record<Language, Record<string, string>> = {
     "security.wrongPin": "ತಪ್ಪು PIN",
     "security.pinMismatch": "PIN ಹೊಂದುತ್ತಿಲ್ಲ",
     "security.pinSet": "PIN ಯಶಸ್ವಿಯಾಗಿ ಸೆಟ್ ಆಯಿತು",
-    
+
     // Inactivity
     "inactivity.title": "ನಿಷ್ಕ್ರಿಯತೆ ಟ್ರಿಗ್ಗರ್",
     "inactivity.subtitle": "ತುರ್ತು ಪ್ರವೇಶ ಸೆಟಪ್ ಮಾಡಿ",
@@ -1663,7 +1669,7 @@ const translations: Record<Language, Record<string, string>> = {
     "inactivity.message": "ಕಸ್ಟಮ್ ಸಂದೇಶ",
     "inactivity.enabled": "ಟ್ರಿಗ್ಗರ್ ಸಕ್ರಿಯ",
     "inactivity.disabled": "ಟ್ರಿಗ್ಗರ್ ನಿಷ್ಕ್ರಿಯ",
-    
+
     // Access Control
     "access.manageAccess": "ಪ್ರವೇಶ ನಿರ್ವಹಿಸಿ",
     "access.grantAccess": "ಪ್ರವೇಶ ನೀಡಿ",
@@ -1674,7 +1680,7 @@ const translations: Record<Language, Record<string, string>> = {
     "access.selectNominee": "ನಾಮಿನಿ ಆರಿಸಿ",
     "access.accessLevel": "ಪ್ರವೇಶ ಹಂತ",
     "access.noAccess": "ಪ್ರವೇಶ ನೀಡಿಲ್ಲ",
-    
+
     // Google Drive Modal
     "googleDrive.connectTitle": "Google Drive ಸಂಪರ್ಕಿಸಿ",
     "googleDrive.connectDescription": "Google Drive ನಿಂದ ಫೈಲ್‌ಗಳನ್ನು ಬ್ರೌಸ್ ಮಾಡಲು ನಿಮ್ಮ Google ಖಾತೆಯನ್ನು ಸಂಪರ್ಕಿಸಬೇಕು.",
@@ -1702,6 +1708,8 @@ const translations: Record<Language, Record<string, string>> = {
     "common.disabled": "अक्षम",
     "common.minutes": "मिनट",
     "common.minute": "मिनट",
+    "common.seconds": "सेकंड",
+    "common.second": "सेकंड",
     "common.save": "सेव करें",
     "common.cancel": "रद्द करें",
     "common.delete": "हटाएं",
@@ -1729,12 +1737,12 @@ const translations: Record<Language, Record<string, string>> = {
     "common.create": "बनाएं",
     "common.update": "अपडेट",
     "common.remove": "हटाएं",
-    
+
     // Navigation
     "nav.home": "होम",
     "nav.vault": "वॉल्ट",
     "nav.settings": "सेटिंग्स",
-    
+
     // Dashboard
     "dashboard.welcome": "स्वागत,",
     "dashboard.securityScore": "सुरक्षा स्कोर",
@@ -1746,7 +1754,7 @@ const translations: Record<Language, Record<string, string>> = {
     "dashboard.noQuickActions": "कोई त्वरित क्रियाएं सक्षम नहीं",
     "dashboard.triggerEnabled": "ट्रिगर सक्षम है",
     "dashboard.triggerDisabled": "ट्रिगर अक्षम है",
-    
+
     // Vault
     "vault.title": "मेरा वॉल्ट",
     "vault.documents": "दस्तावेज़",
@@ -1771,7 +1779,7 @@ const translations: Record<Language, Record<string, string>> = {
     "vault.whoHasAccess": "किसकी पहुंच है",
     "vault.matches": "मैच",
     "vault.match": "मैच",
-    
+
     // Documents
     "document.upload": "दस्तावेज़ अपलोड",
     "document.view": "दस्तावेज़ देखें",
@@ -1791,7 +1799,7 @@ const translations: Record<Language, Record<string, string>> = {
     "document.scanDocument": "दस्तावेज़ स्कैन",
     "document.scanSubtitle": "ऑटो एज डिटेक्शन के साथ कैमरा उपयोग करें",
     "document.maxSize": "अधिकतम फ़ाइल आकार: 20MB",
-    
+
     // Subcategory
     "subcategory.add": "उप-श्रेणी जोड़ें",
     "subcategory.name": "उप-श्रेणी नाम",
@@ -1803,7 +1811,7 @@ const translations: Record<Language, Record<string, string>> = {
     "subcategory.deleteConfirm": "क्या आप वाकई हटाना चाहते हैं",
     "subcategory.willBeDeleted": "हटा दिए जाएंगे",
     "subcategory.cannotUndo": "यह क्रिया पूर्ववत नहीं की जा सकती",
-    
+
     // Folder
     "folder.add": "फ़ोल्डर जोड़ें",
     "folder.addFolder": "फ़ोल्डर जोड़ें",
@@ -1826,13 +1834,13 @@ const translations: Record<Language, Record<string, string>> = {
     "folder.cannotUndo": "यह क्रिया पूर्ववत नहीं की जा सकती",
     "folder.deleteDocTitle": "दस्तावेज़ हटाएं?",
     "folder.deleteDocConfirm": "क्या आप वाकई हटाना चाहते हैं",
-    
+
     // Vault additional
     "vault.deleteTitle": "श्रेणी हटाएं?",
     "vault.deleteConfirm": "क्या आप वाकई हटाना चाहते हैं",
     "vault.willBeDeleted": "हटा दिए जाएंगे",
     "vault.categoryPlaceholder": "जैसे वाहन, निवेश, आदि।",
-    
+
     // Nominees
     "nominee.title": "नामिनी",
     "nominee.subtitle": "अपने विश्वसनीय संपर्कों को प्रबंधित करें",
@@ -1850,7 +1858,7 @@ const translations: Record<Language, Record<string, string>> = {
     "nominee.resendVerification": "सत्यापन फिर से भेजें",
     "nominee.noNominees": "कोई नामिनी नहीं जोड़ा गया",
     "nominee.addFirst": "पहुंच साझा करने के लिए अपना पहला नामिनी जोड़ें",
-    
+
     // Time Capsule
     "timeCapsule.title": "टाइम कैप्सूल",
     "timeCapsule.subtitle": "भविष्य के लिए संदेश शेड्यूल करें",
@@ -1870,7 +1878,7 @@ const translations: Record<Language, Record<string, string>> = {
     "timeCapsule.createFirst": "अपना पहला टाइम कैप्सूल बनाएं",
     "timeCapsule.futureDateRequired": "कृपया भविष्य की तारीख चुनें",
     "timeCapsule.futureDateHint": "भविष्य की तारीख होनी चाहिए (कल या बाद में)",
-    
+
     // Profile
     "profile.title": "प्रोफाइल",
     "profile.subtitle": "अपनी प्रोफाइल प्रबंधित करें",
@@ -1881,7 +1889,7 @@ const translations: Record<Language, Record<string, string>> = {
     "profile.dateOfBirth": "जन्म तिथि",
     "profile.changePhoto": "फोटो बदलें",
     "profile.updated": "प्रोफाइल अपडेट हुई",
-    
+
     // Settings page
     "settings.title": "सेटिंग्स",
     "settings.subtitle": "अपनी प्राथमिकताएं प्रबंधित करें",
@@ -1914,12 +1922,12 @@ const translations: Record<Language, Record<string, string>> = {
     "settings.deleteAccount.confirm": "खाता हटाएं",
     "settings.deleting": "हटाया जा रहा है...",
     "settings.appVersion": "ऐप संस्करण 2.0.0",
-    
+
     // Language page
     "language.title": "भाषा",
     "language.subtitle": "अपनी पसंदीदा भाषा चुनें",
     "language.current": "वर्तमान",
-    
+
     // Auth
     "auth.signIn": "साइन इन",
     "auth.signUp": "साइन अप",
@@ -1941,7 +1949,7 @@ const translations: Record<Language, Record<string, string>> = {
     "auth.otpSent": "OTP आपके ईमेल पर भेजा गया",
     "auth.verify": "सत्यापित करें",
     "auth.resendOtp": "OTP फिर से भेजें",
-    
+
     // Email Verification
     "auth.verifyEmail.title": "अपना ईमेल सत्यापित करें",
     "auth.verifyEmail.checkInbox": "अपना इनबॉक्स देखें",
@@ -1959,14 +1967,14 @@ const translations: Record<Language, Record<string, string>> = {
     "auth.verifyEmail.invalidDesc": "यह सत्यापन लिंक अमान्य है या पहले से उपयोग की जा चुकी है।",
     "auth.verifyEmail.notVerified": "ईमेल सत्यापित नहीं",
     "auth.verifyEmail.pleaseVerify": "साइन इन करने से पहले कृपया अपना ईमेल सत्यापित करें।",
-    
+
     // Notifications
     "notifications.title": "सूचनाएं",
     "notifications.noNotifications": "कोई सूचनाएं नहीं",
     "notifications.markAsRead": "पढ़ा गया चिह्नित करें",
     "notifications.markAllRead": "सभी पढ़े गए चिह्नित करें",
     "notifications.clearAll": "सभी साफ़ करें",
-    
+
     // Help Center
     "help.title": "सहायता और समर्थन",
     "help.subtitle": "हम आपकी कैसे मदद कर सकते हैं?",
@@ -1977,7 +1985,7 @@ const translations: Record<Language, Record<string, string>> = {
     "help.whatsapp": "WhatsApp",
     "help.sendMessage": "संदेश भेजें",
     "help.yourMessage": "आपका संदेश",
-    
+
     // Toasts
     "toast.signedOut": "साइन आउट हो गया",
     "toast.signedOut.description": "जल्द मिलते हैं!",
@@ -1998,7 +2006,7 @@ const translations: Record<Language, Record<string, string>> = {
     "toast.uploadSuccess": "अपलोड सफल",
     "toast.uploadFailed": "अपलोड विफल",
     "toast.downloadStarted": "डाउनलोड शुरू हुआ",
-    
+
     // Backup
     "backup.title": "बैकअप और रिस्टोर",
     "backup.subtitle": "अपने डेटा बैकअप प्रबंधित करें",
@@ -2008,7 +2016,7 @@ const translations: Record<Language, Record<string, string>> = {
     "backup.frequency": "बैकअप आवृत्ति",
     "backup.lastBackup": "अंतिम बैकअप",
     "backup.noBackups": "कोई बैकअप नहीं",
-    
+
     // Security
     "security.twoFactor": "दो-कारक प्रमाणीकरण",
     "security.biometric": "बायोमेट्रिक लॉगिन",
@@ -2020,7 +2028,7 @@ const translations: Record<Language, Record<string, string>> = {
     "security.wrongPin": "गलत PIN",
     "security.pinMismatch": "PIN मेल नहीं खाते",
     "security.pinSet": "PIN सफलतापूर्वक सेट हुआ",
-    
+
     // Inactivity
     "inactivity.title": "निष्क्रियता ट्रिगर",
     "inactivity.subtitle": "आपातकालीन पहुंच सेटअप करें",
@@ -2029,7 +2037,7 @@ const translations: Record<Language, Record<string, string>> = {
     "inactivity.message": "कस्टम संदेश",
     "inactivity.enabled": "ट्रिगर सक्षम",
     "inactivity.disabled": "ट्रिगर अक्षम",
-    
+
     // Access Control
     "access.manageAccess": "पहुंच प्रबंधित करें",
     "access.grantAccess": "पहुंच दें",
@@ -2040,7 +2048,7 @@ const translations: Record<Language, Record<string, string>> = {
     "access.selectNominee": "नामिनी चुनें",
     "access.accessLevel": "पहुंच स्तर",
     "access.noAccess": "पहुंच नहीं दी गई",
-    
+
     // Google Drive Modal
     "googleDrive.connectTitle": "Google Drive कनेक्ट करें",
     "googleDrive.connectDescription": "Google Drive से फ़ाइलें ब्राउज़ करने के लिए अपना Google खाता कनेक्ट करें।",
@@ -2060,14 +2068,14 @@ const translations: Record<Language, Record<string, string>> = {
     "quickAction.timeCapsule.subtitle": "भविष्य के संदेश शेड्यूल करें",
     "quickAction.inactivity.title": "निष्क्रियता ट्रिगर",
     "quickAction.inactivity.subtitle": "आपातकालीन पहुंच सेटअप करें",
-    
+
     // Vault Categories
     "category.realEstate": "रियल एस्टेट",
     "category.medical": "चिकित्सा",
     "category.education": "शिक्षा",
     "category.insurance": "बीमा",
     "category.personal": "व्यक्तिगत",
-    
+
     // Vault Subcategories - Real Estate
     "subcategory.residential": "आवासीय संपत्ति",
     "subcategory.commercial": "व्यावसायिक संपत्ति",
@@ -2077,28 +2085,28 @@ const translations: Record<Language, Record<string, string>> = {
     "subcategory.propertyTax": "संपत्ति कर",
     "subcategory.saleDeeds": "बिक्री/खरीद विलेख",
     "subcategory.propertyDocuments": "संपत्ति दस्तावेज़",
-    
+
     // Vault Subcategories - Medical
     "subcategory.prescription": "पर्चा",
     "subcategory.testReports": "टेस्ट रिपोर्ट",
     "subcategory.hospitalRecords": "अस्पताल रिकॉर्ड",
     "subcategory.vaccination": "टीकाकरण रिकॉर्ड",
     "subcategory.insuranceClaims": "बीमा दावे",
-    
+
     // Vault Subcategories - Education
     "subcategory.certificates": "प्रमाणपत्र",
     "subcategory.transcripts": "ट्रांसक्रिप्ट",
     "subcategory.degrees": "डिग्री",
     "subcategory.idCards": "आईडी कार्ड",
     "subcategory.scholarships": "छात्रवृत्ति",
-    
+
     // Vault Subcategories - Insurance
     "subcategory.health": "स्वास्थ्य",
     "subcategory.life": "जीवन",
     "subcategory.vehicle": "वाहन",
     "subcategory.property": "संपत्ति",
     "subcategory.travel": "यात्रा",
-    
+
     // Vault Subcategories - Personal
     "subcategory.identity": "पहचान",
     "subcategory.bank": "बैंक",
@@ -2112,6 +2120,8 @@ const translations: Record<Language, Record<string, string>> = {
     "common.disabled": "முடக்கப்பட்டது",
     "common.minutes": "நிமிடங்கள்",
     "common.minute": "நிமிடம்",
+    "common.seconds": "வினாடிகள்",
+    "common.second": "வினாடி",
     "common.save": "சேமிக்கவும்",
     "common.cancel": "ரத்து செய்யவும்",
     "common.delete": "நீக்கவும்",
@@ -2139,12 +2149,12 @@ const translations: Record<Language, Record<string, string>> = {
     "common.create": "உருவாக்கவும்",
     "common.update": "புதுப்பிக்கவும்",
     "common.remove": "நீக்கவும்",
-    
+
     // Navigation
     "nav.home": "முகப்பு",
     "nav.vault": "வால்ட்",
     "nav.settings": "அமைப்புகள்",
-    
+
     // Dashboard
     "dashboard.welcome": "வரவேற்கிறோம்,",
     "dashboard.securityScore": "பாதுகாப்பு மதிப்பெண்",
@@ -2156,7 +2166,7 @@ const translations: Record<Language, Record<string, string>> = {
     "dashboard.noQuickActions": "விரைவு செயல்கள் இயக்கப்படவில்லை",
     "dashboard.triggerEnabled": "தூண்டுதல் செயல்படுத்தப்பட்டது",
     "dashboard.triggerDisabled": "தூண்டுதல் முடக்கப்பட்டது",
-    
+
     // Vault
     "vault.title": "எனது வால்ட்",
     "vault.documents": "ஆவணங்கள்",
@@ -2181,7 +2191,7 @@ const translations: Record<Language, Record<string, string>> = {
     "vault.whoHasAccess": "யாருக்கு அணுகல் உள்ளது",
     "vault.matches": "பொருத்தங்கள்",
     "vault.match": "பொருத்தம்",
-    
+
     // Documents
     "document.upload": "ஆவணம் பதிவேற்றம்",
     "document.view": "ஆவணம் பார்க்கவும்",
@@ -2201,7 +2211,7 @@ const translations: Record<Language, Record<string, string>> = {
     "document.scanDocument": "ஆவணம் ஸ்கேன்",
     "document.scanSubtitle": "ஆட்டோ எட்ஜ் கண்டறிதலுடன் கேமரா பயன்படுத்தவும்",
     "document.maxSize": "அதிகபட்ச கோப்பு அளவு: 20MB",
-    
+
     "subcategory.add": "துணைவகை சேர்க்கவும்",
     "subcategory.name": "துணைவகை பெயர்",
     "subcategory.namePlaceholder": "எ.கா. வீடு 1, சொத்து A, போன்றவை.",
@@ -2212,7 +2222,7 @@ const translations: Record<Language, Record<string, string>> = {
     "subcategory.deleteConfirm": "நீக்க விரும்புகிறீர்களா",
     "subcategory.willBeDeleted": "நீக்கப்படும்",
     "subcategory.cannotUndo": "இந்த செயலை செயல்தவிர்க்க முடியாது",
-    
+
     // Folder
     "folder.add": "கோப்புறை சேர்க்கவும்",
     "folder.addFolder": "கோப்புறை சேர்க்கவும்",
@@ -2235,13 +2245,13 @@ const translations: Record<Language, Record<string, string>> = {
     "folder.cannotUndo": "இந்த செயலை செயல்தவிர்க்க முடியாது",
     "folder.deleteDocTitle": "ஆவணத்தை நீக்கவா?",
     "folder.deleteDocConfirm": "நீக்க விரும்புகிறீர்களா",
-    
+
     // Vault additional
     "vault.deleteTitle": "வகையை நீக்கவா?",
     "vault.deleteConfirm": "நீக்க விரும்புகிறீர்களா",
     "vault.willBeDeleted": "நீக்கப்படும்",
     "vault.categoryPlaceholder": "எ.கா. வாகனங்கள், முதலீடுகள், போன்றவை.",
-    
+
     // Nominees
     "nominee.title": "நியமனதாரர்கள்",
     "nominee.subtitle": "உங்கள் நம்பகமான தொடர்புகளை நிர்வகிக்கவும்",
@@ -2259,7 +2269,7 @@ const translations: Record<Language, Record<string, string>> = {
     "nominee.resendVerification": "சரிபார்ப்பு மீண்டும் அனுப்பவும்",
     "nominee.noNominees": "நியமனதாரர்கள் சேர்க்கப்படவில்லை",
     "nominee.addFirst": "அணுகலைப் பகிர உங்கள் முதல் நியமனதாரரைச் சேர்க்கவும்",
-    
+
     // Time Capsule
     "timeCapsule.title": "டைம் காப்சூல்",
     "timeCapsule.subtitle": "எதிர்காலத்திற்கான செய்திகளை திட்டமிடுங்கள்",
@@ -2279,7 +2289,7 @@ const translations: Record<Language, Record<string, string>> = {
     "timeCapsule.createFirst": "உங்கள் முதல் டைம் காப்சூலை உருவாக்குங்கள்",
     "timeCapsule.futureDateRequired": "எதிர்கால தேதியைத் தேர்ந்தெடுக்கவும்",
     "timeCapsule.futureDateHint": "எதிர்கால தேதியாக இருக்க வேண்டும் (நாளை அல்லது அதற்குப் பிறகு)",
-    
+
     // Profile
     "profile.title": "சுயவிவரம்",
     "profile.subtitle": "உங்கள் சுயவிவரத்தை நிர்வகிக்கவும்",
@@ -2290,7 +2300,7 @@ const translations: Record<Language, Record<string, string>> = {
     "profile.dateOfBirth": "பிறந்த தேதி",
     "profile.changePhoto": "புகைப்படம் மாற்றவும்",
     "profile.updated": "சுயவிவரம் புதுப்பிக்கப்பட்டது",
-    
+
     // Settings page
     "settings.title": "அமைப்புகள்",
     "settings.subtitle": "உங்கள் விருப்பங்களை நிர்வகிக்கவும்",
@@ -2323,12 +2333,12 @@ const translations: Record<Language, Record<string, string>> = {
     "settings.deleteAccount.confirm": "கணக்கை நீக்கு",
     "settings.deleting": "நீக்கப்படுகிறது...",
     "settings.appVersion": "ஆப் பதிப்பு 2.0.0",
-    
+
     // Language page
     "language.title": "மொழி",
     "language.subtitle": "உங்கள் விருப்பமான மொழியைத் தேர்ந்தெடுக்கவும்",
     "language.current": "தற்போதைய",
-    
+
     // Auth
     "auth.signIn": "உள்நுழைய",
     "auth.signUp": "பதிவு செய்ய",
@@ -2350,7 +2360,7 @@ const translations: Record<Language, Record<string, string>> = {
     "auth.otpSent": "OTP உங்கள் மின்னஞ்சலுக்கு அனுப்பப்பட்டது",
     "auth.verify": "சரிபார்க்கவும்",
     "auth.resendOtp": "OTP மீண்டும் அனுப்பவும்",
-    
+
     // Email Verification
     "auth.verifyEmail.title": "உங்கள் மின்னஞ்சலை சரிபார்க்கவும்",
     "auth.verifyEmail.checkInbox": "உங்கள் இன்பாக்ஸை சரிபார்க்கவும்",
@@ -2368,14 +2378,14 @@ const translations: Record<Language, Record<string, string>> = {
     "auth.verifyEmail.invalidDesc": "இந்த சரிபார்ப்பு இணைப்பு தவறானது அல்லது ஏற்கனவே பயன்படுத்தப்பட்டது.",
     "auth.verifyEmail.notVerified": "மின்னஞ்சல் சரிபார்க்கப்படவில்லை",
     "auth.verifyEmail.pleaseVerify": "உள்நுழைவதற்கு முன் உங்கள் மின்னஞ்சலை சரிபார்க்கவும்.",
-    
+
     // Notifications
     "notifications.title": "அறிவிப்புகள்",
     "notifications.noNotifications": "அறிவிப்புகள் இல்லை",
     "notifications.markAsRead": "படிக்கப்பட்டதாக குறிக்கவும்",
     "notifications.markAllRead": "அனைத்தையும் படிக்கப்பட்டதாக குறிக்கவும்",
     "notifications.clearAll": "அனைத்தையும் அழிக்கவும்",
-    
+
     // Help Center
     "help.title": "உதவி & ஆதரவு",
     "help.subtitle": "நாங்கள் உங்களுக்கு எவ்வாறு உதவ முடியும்?",
@@ -2386,7 +2396,7 @@ const translations: Record<Language, Record<string, string>> = {
     "help.whatsapp": "WhatsApp",
     "help.sendMessage": "செய்தி அனுப்பவும்",
     "help.yourMessage": "உங்கள் செய்தி",
-    
+
     // Toasts
     "toast.signedOut": "வெளியேறியது",
     "toast.signedOut.description": "விரைவில் சந்திப்போம்!",
@@ -2407,7 +2417,7 @@ const translations: Record<Language, Record<string, string>> = {
     "toast.uploadSuccess": "பதிவேற்றம் வெற்றி",
     "toast.uploadFailed": "பதிவேற்றம் தோல்வி",
     "toast.downloadStarted": "பதிவிறக்கம் தொடங்கியது",
-    
+
     // Backup
     "backup.title": "காப்புப்பிரதி & மீட்டமை",
     "backup.subtitle": "உங்கள் தரவு காப்புப்பிரதிகளை நிர்வகிக்கவும்",
@@ -2417,7 +2427,7 @@ const translations: Record<Language, Record<string, string>> = {
     "backup.frequency": "காப்புப்பிரதி அதிர்வெண்",
     "backup.lastBackup": "கடைசி காப்புப்பிரதி",
     "backup.noBackups": "காப்புப்பிரதிகள் இல்லை",
-    
+
     // Security
     "security.twoFactor": "இரு-காரணி அங்கீகாரம்",
     "security.biometric": "பயோமெட்ரிக் உள்நுழைவு",
@@ -2429,7 +2439,7 @@ const translations: Record<Language, Record<string, string>> = {
     "security.wrongPin": "தவறான PIN",
     "security.pinMismatch": "PIN பொருந்தவில்லை",
     "security.pinSet": "PIN வெற்றிகரமாக அமைக்கப்பட்டது",
-    
+
     // Inactivity
     "inactivity.title": "செயலற்ற தூண்டுதல்",
     "inactivity.subtitle": "அவசர அணுகலை அமைக்கவும்",
@@ -2438,7 +2448,7 @@ const translations: Record<Language, Record<string, string>> = {
     "inactivity.message": "தனிப்பயன் செய்தி",
     "inactivity.enabled": "தூண்டுதல் செயல்படுத்தப்பட்டது",
     "inactivity.disabled": "தூண்டுதல் முடக்கப்பட்டது",
-    
+
     // Access Control
     "access.manageAccess": "அணுகலை நிர்வகிக்கவும்",
     "access.grantAccess": "அணுகல் வழங்கவும்",
@@ -2449,7 +2459,7 @@ const translations: Record<Language, Record<string, string>> = {
     "access.selectNominee": "நியமனதாரரைத் தேர்ந்தெடுக்கவும்",
     "access.accessLevel": "அணுகல் நிலை",
     "access.noAccess": "அணுகல் வழங்கப்படவில்லை",
-    
+
     // Google Drive Modal
     "googleDrive.connectTitle": "Google Drive இணைக்கவும்",
     "googleDrive.connectDescription": "Google Drive இலிருந்து கோப்புகளை உலாவ உங்கள் Google கணக்கை இணைக்கவும்.",
@@ -2469,14 +2479,14 @@ const translations: Record<Language, Record<string, string>> = {
     "quickAction.timeCapsule.subtitle": "எதிர்கால செய்திகளை திட்டமிடுங்கள்",
     "quickAction.inactivity.title": "செயலற்ற தூண்டுதல்",
     "quickAction.inactivity.subtitle": "அவசர அணுகலை அமைக்கவும்",
-    
+
     // Vault Categories
     "category.realEstate": "ரியல் எஸ்டேட்",
     "category.medical": "மருத்துவம்",
     "category.education": "கல்வி",
     "category.insurance": "காப்பீடு",
     "category.personal": "தனிப்பட்ட",
-    
+
     // Vault Subcategories - Real Estate
     "subcategory.residential": "குடியிருப்பு சொத்து",
     "subcategory.commercial": "வணிக சொத்து",
@@ -2486,28 +2496,28 @@ const translations: Record<Language, Record<string, string>> = {
     "subcategory.propertyTax": "சொத்து வரி",
     "subcategory.saleDeeds": "விற்பனை/கொள்முதல் பத்திரங்கள்",
     "subcategory.propertyDocuments": "சொத்து ஆவணங்கள்",
-    
+
     // Vault Subcategories - Medical
     "subcategory.prescription": "மருந்துச்சீட்டு",
     "subcategory.testReports": "சோதனை அறிக்கைகள்",
     "subcategory.hospitalRecords": "மருத்துவமனை பதிவுகள்",
     "subcategory.vaccination": "தடுப்பூசி பதிவுகள்",
     "subcategory.insuranceClaims": "காப்பீடு கோரிக்கைகள்",
-    
+
     // Vault Subcategories - Education
     "subcategory.certificates": "சான்றிதழ்கள்",
     "subcategory.transcripts": "டிரான்ஸ்கிரிப்ட்கள்",
     "subcategory.degrees": "பட்டங்கள்",
     "subcategory.idCards": "அடையாள அட்டைகள்",
     "subcategory.scholarships": "உதவித்தொகைகள்",
-    
+
     // Vault Subcategories - Insurance
     "subcategory.health": "ஆரோக்கியம்",
     "subcategory.life": "ஆயுள்",
     "subcategory.vehicle": "வாகனம்",
     "subcategory.property": "சொத்து",
     "subcategory.travel": "பயணம்",
-    
+
     // Vault Subcategories - Personal
     "subcategory.identity": "அடையாளம்",
     "subcategory.bank": "வங்கி",
@@ -2545,14 +2555,14 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const t = (key: string, replacements?: Record<string, string | number>): string => {
     let text = translations[language][key] || translations.en[key] || key;
-    
+
     // Handle replacements like {count}
     if (replacements) {
       Object.entries(replacements).forEach(([k, v]) => {
         text = text.replace(`{${k}}`, String(v));
       });
     }
-    
+
     return text;
   };
 
