@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useParams } from "react-router-dom";
 import { vaultCategories } from "@/data/vaultCategories";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { categoryNameSchema, sanitizeInput } from "@/lib/validation";
 import { AccessControlModal } from "@/components/vault/AccessControlModal";
@@ -16,6 +16,7 @@ import { CategoryViewSkeleton } from "@/components/skeletons";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getCategoryName, getSubcategoryName } from "@/lib/categoryTranslations";
 import { PullToRefresh } from "@/components/PullToRefresh";
+import { getAllSubcategoryDocumentCounts, getCategoryDocumentCount, deleteSubcategoryWithCascade } from "@/services/vaultService";
 
 const CategoryView = () => {
   const navigate = useNavigate();
@@ -99,7 +100,6 @@ const CategoryView = () => {
         setCategory(foundCategory);
 
         // Get ALL subcategory document counts in ONE query (eliminates N+1)
-        const { getAllSubcategoryDocumentCounts, getCategoryDocumentCount } = await import('@/services/vaultService');
         const subDocCountMap = await getAllSubcategoryDocumentCounts(user.id);
 
         // Start with hardcoded subcategories if this is a default category
@@ -196,6 +196,16 @@ const CategoryView = () => {
 
       if (error) throw error;
 
+      // Add the new subcategory to state immediately (optimistic update)
+      const newSub = {
+        id: data.id,
+        name: data.name,
+        icon: Folder,
+        documentCount: 0,
+        isCustom: true
+      };
+      setCustomSubcategories(prev => [...prev, newSub]);
+
       toast({
         title: "Subcategory created!",
         description: `${validation.data} has been added`
@@ -203,9 +213,6 @@ const CategoryView = () => {
 
       setSubcategoryName("");
       setShowAddDialog(false);
-
-      // Reload data
-      window.location.reload();
     } catch (error) {
       console.error('Error adding subcategory:', error);
       toast({
@@ -243,8 +250,13 @@ const CategoryView = () => {
       if (!user) throw new Error("User not authenticated");
 
       // Use cascade delete from vault service
-      const { deleteSubcategoryWithCascade } = await import('@/services/vaultService');
       await deleteSubcategoryWithCascade(subcategoryId, categoryId!, user.id);
+
+      // Update state immediately (remove from list)
+      setCustomSubcategories(prev => prev.filter(s => s.id !== subcategoryId));
+      
+      // Update total document count
+      setTotalDocumentCount(prev => prev - (deleteConfirm.subcategory?.documentCount || 0));
 
       toast({
         title: "Subcategory deleted",
@@ -252,9 +264,6 @@ const CategoryView = () => {
       });
 
       setDeleteConfirm({ show: false, subcategory: null });
-
-      // Reload data
-      window.location.reload();
     } catch (error) {
       console.error('Error deleting subcategory:', error);
       toast({
@@ -282,13 +291,15 @@ const CategoryView = () => {
     searchKeys: ['name'],
   });
 
-  const handleRefresh = async () => {
-    // Re-run the loadData effect manually
+  const handleRefresh = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { getAllSubcategoryDocumentCounts, getCategoryDocumentCount } = await import('@/services/vaultService');
-    const subDocCountMap = await getAllSubcategoryDocumentCounts(user.id);
+    // Run both queries in parallel
+    const [subDocCountMap, docCount] = await Promise.all([
+      getAllSubcategoryDocumentCounts(user.id),
+      getCategoryDocumentCount(categoryId!, user.id)
+    ]);
 
     // Update subcategory counts
     setCustomSubcategories(prev => prev.map(sub => ({
@@ -297,9 +308,8 @@ const CategoryView = () => {
     })));
 
     // Update total document count
-    const docCount = await getCategoryDocumentCount(categoryId!, user.id);
     setTotalDocumentCount(docCount);
-  };
+  }, [categoryId]);
 
   return (
     <>

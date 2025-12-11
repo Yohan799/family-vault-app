@@ -7,15 +7,19 @@ import { vaultCategories } from "@/data/vaultCategories";
  */
 export const syncDefaultCategories = async (userId: string): Promise<void> => {
   try {
-    // Check if user already has default categories synced
-    const { data: existingCategories } = await supabase
+    // Fast check: if user already has ANY default categories, skip the heavy sync
+    const { count } = await supabase
       .from('categories')
-      .select('id')
+      .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
       .eq('is_custom', false);
 
-    // If user already has default categories, skip category sync but still check subcategories
-    const shouldSyncCategories = !existingCategories || existingCategories.length === 0;
+    // If user already has default categories, skip entirely (fast path)
+    if (count && count > 0) {
+      return;
+    }
+
+    const shouldSyncCategories = true;
 
     // Sync default categories
     for (const template of vaultCategories) {
