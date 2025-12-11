@@ -1,13 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, FileText, FileSpreadsheet, File, Download, ExternalLink, Loader2, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Capacitor } from "@capacitor/core";
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
+import { Browser } from '@capacitor/browser';
 
-// Configure PDF worker - use CDN for Capacitor WebView compatibility
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/5.0.375/pdf.worker.min.mjs`;
+// Configure PDF worker - use CDN for web only
+if (!Capacitor.isNativePlatform()) {
+    pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/5.0.375/pdf.worker.min.mjs`;
+}
 
 interface DocumentViewerModalProps {
     isOpen: boolean;
@@ -29,6 +32,8 @@ export const DocumentViewerModal = ({
     const [numPages, setNumPages] = useState<number | null>(null);
     const [pageNumber, setPageNumber] = useState(1);
     const [scale, setScale] = useState(1.0);
+    
+    const isNative = Capacitor.isNativePlatform();
 
     if (!isOpen) return null;
 
@@ -46,6 +51,9 @@ export const DocumentViewerModal = ({
 
     // Office documents can't be previewed directly - show download option
     const isOfficeDoc = isWord || isExcel;
+    
+    // On native APK, PDFs and Office docs need to be opened externally
+    const needsExternalViewer = isNative && (isPdf || isOfficeDoc);
 
     // Get file type display name
     const getFileTypeLabel = () => {
@@ -77,9 +85,20 @@ export const DocumentViewerModal = ({
         setError(true);
     }
 
+    // Open document in external app (for native)
+    const handleOpenExternal = async () => {
+        try {
+            await Browser.open({ url: documentUrl });
+        } catch (err) {
+            console.error('External open error:', err);
+            // Fallback to download
+            handleDownload();
+        }
+    };
+
     // Handle download
     const handleDownload = async () => {
-        if (Capacitor.isNativePlatform()) {
+        if (isNative) {
             try {
                 const { Filesystem, Directory } = await import('@capacitor/filesystem');
                 const response = await fetch(documentUrl);
@@ -179,8 +198,8 @@ export const DocumentViewerModal = ({
                         </div>
                     )}
 
-                    {/* PDF Viewer */}
-                    {isPdf && !isImage && (
+                    {/* PDF Viewer - Web only, native uses external viewer */}
+                    {isPdf && !isImage && !isNative && (
                         <div className="w-full h-full flex flex-col items-center">
                             <div className="relative min-h-[200px] bg-white shadow-lg rounded-lg overflow-hidden">
                                 <Document
@@ -234,6 +253,29 @@ export const DocumentViewerModal = ({
                             )}
                         </div>
                     )}
+                    
+                    {/* Native APK: PDF/DOC external viewer prompt */}
+                    {needsExternalViewer && (
+                        <div className="flex flex-col items-center justify-center text-center p-8">
+                            <div className="w-24 h-24 bg-muted rounded-2xl flex items-center justify-center mb-6">
+                                {getFileIcon()}
+                            </div>
+                            <h3 className="text-xl font-semibold mb-2">{documentName}</h3>
+                            <p className="text-muted-foreground mb-6 max-w-sm">
+                                Tap below to open this document in your device's viewer app.
+                            </p>
+                            <div className="flex gap-3">
+                                <Button onClick={handleOpenExternal} className="gap-2">
+                                    <ExternalLink className="w-4 h-4" />
+                                    Open Document
+                                </Button>
+                                <Button variant="outline" onClick={handleDownload} className="gap-2">
+                                    <Download className="w-4 h-4" />
+                                    Download
+                                </Button>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Video */}
                     {isVideo && (
@@ -246,8 +288,8 @@ export const DocumentViewerModal = ({
                         </video>
                     )}
 
-                    {/* Office Documents (DOC/XLS) & Fallback */}
-                    {(isOfficeDoc || (!isImage && !isPdf && !isVideo)) && (
+                    {/* Office Documents (DOC/XLS) & Fallback - Web only (native handled above) */}
+                    {!needsExternalViewer && (isOfficeDoc || (!isImage && !isPdf && !isVideo)) && (
                         <div className="flex flex-col items-center justify-center text-center p-8">
                             <div className="w-24 h-24 bg-muted rounded-2xl flex items-center justify-center mb-6">
                                 {getFileIcon()}
