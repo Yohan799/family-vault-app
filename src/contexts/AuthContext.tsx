@@ -146,24 +146,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Log signup activity
     await logActivity(data.user.id, 'auth.signup', 'user', data.user.id);
     
-    // Send verification email
-    const { error: verifyError } = await supabase.functions.invoke('send-signup-verification', {
-      body: { 
-        user_id: data.user.id, 
-        email: email.toLowerCase(), 
-        name: fullName 
-      }
-    });
-
-    if (verifyError) {
-      console.error('Error sending verification email:', verifyError);
-      // Don't throw - user is created, they can resend verification
-    }
-
-    // Sign out immediately - user must verify email first
-    await supabase.auth.signOut();
-    
-    // Mark as first login for feature tour (for after verification)
+    // Mark as first login for feature tour
     localStorage.setItem('isFirstLogin', 'true');
 
     return { userId: data.user.id };

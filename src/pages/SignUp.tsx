@@ -91,20 +91,12 @@ const SignUp = () => {
 
     setIsEmailLoading(true);
     try {
-      const { userId } = await signUp(formData.email.toLowerCase(), formData.password, formData.name);
+      await signUp(formData.email.toLowerCase(), formData.password, formData.name);
       toast({
         title: t("toast.success"),
-        description: t("auth.verifyEmail.sentTo"),
+        description: t("auth.successCreatedAccount"),
       });
-      // Navigate to pending verification page with email info
-      navigate("/verify-email-pending", { 
-        state: { 
-          email: formData.email.toLowerCase(),
-          name: formData.name,
-          userId
-        },
-        replace: true 
-      });
+      navigate("/dashboard", { replace: true });
     } catch (error: any) {
       const errorMessage = error.message || t("toast.error");
       toast({
