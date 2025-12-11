@@ -1,4 +1,5 @@
-import { Eye, Download, Users, Trash2, Pencil } from "lucide-react";
+import { useState } from "react";
+import { Eye, Download, Users, Trash2, Pencil, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -8,6 +9,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 interface DocumentOptionsModalProps {
   open: boolean;
@@ -36,6 +38,8 @@ export const DocumentOptionsModal = ({
 }: DocumentOptionsModalProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const handleView = async () => {
     try {
@@ -107,34 +111,36 @@ export const DocumentOptionsModal = ({
   };
 
   const handleDelete = async () => {
-    if (confirm(`Are you sure you want to delete ${documentName}?`)) {
-      try {
-        const { deleteDocument } = await import('@/lib/documentStorage');
-        const result = await deleteDocument(documentId);
+    setIsDeleting(true);
+    try {
+      const { deleteDocument } = await import('@/lib/documentStorage');
+      const result = await deleteDocument(documentId);
 
-        if (result.success) {
-          toast({
-            title: "Document deleted",
-            description: `${documentName} has been removed from your vault`,
-          });
-          if (onDelete) {
-            onDelete();
-          }
-        } else {
-          toast({
-            title: "Error",
-            description: result.error || "Failed to delete document",
-            variant: "destructive",
-          });
+      if (result.success) {
+        toast({
+          title: "Document deleted",
+          description: `${documentName} has been removed from your vault`,
+        });
+        onOpenChange(false);
+        setShowDeleteConfirm(false);
+        if (onDelete) {
+          onDelete();
         }
-      } catch (error) {
+      } else {
         toast({
           title: "Error",
-          description: "Failed to delete document",
+          description: result.error || "Failed to delete document",
           variant: "destructive",
         });
       }
-      onOpenChange(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete document",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -193,14 +199,31 @@ export const DocumentOptionsModal = ({
           <Separator />
 
           <button
-            onClick={handleDelete}
-            className="w-full flex items-center gap-4 px-6 py-4 hover:bg-destructive/10 transition-colors"
+            onClick={() => setShowDeleteConfirm(true)}
+            disabled={isDeleting}
+            className="w-full flex items-center gap-4 px-6 py-4 hover:bg-destructive/10 transition-colors disabled:opacity-50"
           >
-            <Trash2 className="w-5 h-5 text-destructive" />
-            <span className="font-medium text-destructive">Delete</span>
+            {isDeleting ? (
+              <Loader2 className="w-5 h-5 text-destructive animate-spin" />
+            ) : (
+              <Trash2 className="w-5 h-5 text-destructive" />
+            )}
+            <span className="font-medium text-destructive">
+              {isDeleting ? "Deleting..." : "Delete"}
+            </span>
           </button>
         </div>
       </DialogContent>
+
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        title="Delete Document"
+        description={`Are you sure you want to delete "${documentName}"? This action cannot be undone.`}
+        confirmText={isDeleting ? "Deleting..." : "Delete"}
+        onConfirm={handleDelete}
+        variant="destructive"
+      />
     </Dialog>
   );
 };
