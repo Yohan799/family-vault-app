@@ -31,7 +31,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   hasGoogleIdentity: boolean;
-  signUp: (email: string, password: string, fullName: string) => Promise<void>;
+  signUp: (email: string, password: string, fullName: string) => Promise<{ userId: string }>;
   signIn: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -123,7 +123,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (email: string, password: string, fullName: string): Promise<{ userId: string }> => {
     const redirectUrl = `${window.location.origin}/dashboard`;
     
     const { data, error } = await supabase.auth.signUp({
@@ -139,12 +139,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (error) throw error;
 
-    if (data.user) {
-      await logActivity(data.user.id, 'auth.signup', 'user', data.user.id);
+    if (!data.user) {
+      throw new Error('Failed to create user');
     }
+
+    // Log signup activity
+    await logActivity(data.user.id, 'auth.signup', 'user', data.user.id);
     
-    // Mark as first login for feature tour
+    // Send verification email
+    const { error: verifyError } = await supabase.functions.invoke('send-signup-verification', {
+      body: { 
+        user_id: data.user.id, 
+        email: email.toLowerCase(), 
+        name: fullName 
+      }
+    });
+
+    if (verifyError) {
+      console.error('Error sending verification email:', verifyError);
+      // Don't throw - user is created, they can resend verification
+    }
+
+    // Sign out immediately - user must verify email first
+    await supabase.auth.signOut();
+    
+    // Mark as first login for feature tour (for after verification)
     localStorage.setItem('isFirstLogin', 'true');
+
+    return { userId: data.user.id };
   };
 
   const signIn = async (email: string, password: string) => {

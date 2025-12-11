@@ -487,6 +487,7 @@ export type Database = {
           created_at: string
           date_of_birth: string | null
           email: string
+          email_verified: boolean | null
           full_name: string | null
           id: string
           last_login: string | null
@@ -506,6 +507,7 @@ export type Database = {
           created_at?: string
           date_of_birth?: string | null
           email: string
+          email_verified?: boolean | null
           full_name?: string | null
           id: string
           last_login?: string | null
@@ -525,6 +527,7 @@ export type Database = {
           created_at?: string
           date_of_birth?: string | null
           email?: string
+          email_verified?: boolean | null
           full_name?: string | null
           id?: string
           last_login?: string | null
@@ -577,6 +580,36 @@ export type Database = {
           subtitle?: string | null
           title?: string
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      signup_verification_tokens: {
+        Row: {
+          created_at: string | null
+          email: string
+          expires_at: string
+          id: string
+          token: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          expires_at: string
+          id?: string
+          token: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          expires_at?: string
+          id?: string
+          token?: string
+          used_at?: string | null
           user_id?: string
         }
         Relationships: []

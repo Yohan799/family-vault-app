@@ -276,6 +276,24 @@ const translations: Record<Language, Record<string, string>> = {
     "auth.verify": "Verify",
     "auth.resendOtp": "Resend OTP",
     
+    // Email Verification
+    "auth.verifyEmail.title": "Verify Your Email",
+    "auth.verifyEmail.checkInbox": "Check Your Inbox",
+    "auth.verifyEmail.sentTo": "We've sent a verification link to",
+    "auth.verifyEmail.clickLink": "Click the link in the email to verify your account and complete registration.",
+    "auth.verifyEmail.resend": "Resend Email",
+    "auth.verifyEmail.resent": "Email Resent!",
+    "auth.verifyEmail.backToSignIn": "Back to Sign In",
+    "auth.verifyEmail.verifying": "Verifying...",
+    "auth.verifyEmail.success": "Email Verified!",
+    "auth.verifyEmail.signInNow": "Your email has been verified. You can now sign in to your account.",
+    "auth.verifyEmail.expired": "Link Expired",
+    "auth.verifyEmail.expiredDesc": "This verification link has expired. Please sign up again to receive a new link.",
+    "auth.verifyEmail.invalid": "Invalid Link",
+    "auth.verifyEmail.invalidDesc": "This verification link is invalid or has already been used.",
+    "auth.verifyEmail.notVerified": "Email Not Verified",
+    "auth.verifyEmail.pleaseVerify": "Please verify your email before signing in.",
+    
     // Notifications
     "notifications.title": "Notifications",
     "notifications.noNotifications": "No notifications",
@@ -1039,6 +1057,24 @@ const translations: Record<Language, Record<string, string>> = {
     "auth.verify": "ధృవీకరించు",
     "auth.resendOtp": "OTP మళ్ళీ పంపండి",
     
+    // Email Verification
+    "auth.verifyEmail.title": "మీ ఇమెయిల్ ధృవీకరించండి",
+    "auth.verifyEmail.checkInbox": "మీ ఇన్‌బాక్స్ చెక్ చేయండి",
+    "auth.verifyEmail.sentTo": "మేము ధృవీకరణ లింక్ పంపాము",
+    "auth.verifyEmail.clickLink": "మీ ఖాతాను ధృవీకరించడానికి ఇమెయిల్‌లోని లింక్‌పై క్లిక్ చేయండి.",
+    "auth.verifyEmail.resend": "ఇమెయిల్ మళ్ళీ పంపండి",
+    "auth.verifyEmail.resent": "ఇమెయిల్ పంపబడింది!",
+    "auth.verifyEmail.backToSignIn": "సైన్ ఇన్‌కు తిరిగి వెళ్ళు",
+    "auth.verifyEmail.verifying": "ధృవీకరిస్తోంది...",
+    "auth.verifyEmail.success": "ఇమెయిల్ ధృవీకరించబడింది!",
+    "auth.verifyEmail.signInNow": "మీ ఇమెయిల్ ధృవీకరించబడింది. ఇప్పుడు సైన్ ఇన్ చేయవచ్చు.",
+    "auth.verifyEmail.expired": "లింక్ గడువు ముగిసింది",
+    "auth.verifyEmail.expiredDesc": "ఈ ధృవీకరణ లింక్ గడువు ముగిసింది. దయచేసి కొత్త లింక్ కోసం మళ్ళీ సైన్ అప్ చేయండి.",
+    "auth.verifyEmail.invalid": "చెల్లని లింక్",
+    "auth.verifyEmail.invalidDesc": "ఈ ధృవీకరణ లింక్ చెల్లదు లేదా ఇప్పటికే ఉపయోగించబడింది.",
+    "auth.verifyEmail.notVerified": "ఇమెయిల్ ధృవీకరించబడలేదు",
+    "auth.verifyEmail.pleaseVerify": "సైన్ ఇన్ చేయడానికి ముందు మీ ఇమెయిల్ ధృవీకరించండి.",
+    
     // Notifications
     "notifications.title": "నోటిఫికేషన్లు",
     "notifications.noNotifications": "నోటిఫికేషన్లు లేవు",
@@ -1540,6 +1576,24 @@ const translations: Record<Language, Record<string, string>> = {
     "auth.verify": "ದೃಢೀಕರಿಸಿ",
     "auth.resendOtp": "OTP ಮತ್ತೆ ಕಳುಹಿಸಿ",
     
+    // Email Verification
+    "auth.verifyEmail.title": "ನಿಮ್ಮ ಇಮೇಲ್ ಪರಿಶೀಲಿಸಿ",
+    "auth.verifyEmail.checkInbox": "ನಿಮ್ಮ ಇನ್‌ಬಾಕ್ಸ್ ಪರಿಶೀಲಿಸಿ",
+    "auth.verifyEmail.sentTo": "ನಾವು ಪರಿಶೀಲನಾ ಲಿಂಕ್ ಕಳುಹಿಸಿದ್ದೇವೆ",
+    "auth.verifyEmail.clickLink": "ನಿಮ್ಮ ಖಾತೆಯನ್ನು ಪರಿಶೀಲಿಸಲು ಇಮೇಲ್‌ನಲ್ಲಿರುವ ಲಿಂಕ್ ಕ್ಲಿಕ್ ಮಾಡಿ.",
+    "auth.verifyEmail.resend": "ಇಮೇಲ್ ಮತ್ತೆ ಕಳುಹಿಸಿ",
+    "auth.verifyEmail.resent": "ಇಮೇಲ್ ಕಳುಹಿಸಲಾಗಿದೆ!",
+    "auth.verifyEmail.backToSignIn": "ಸೈನ್ ಇನ್‌ಗೆ ಹಿಂತಿರುಗಿ",
+    "auth.verifyEmail.verifying": "ಪರಿಶೀಲಿಸಲಾಗುತ್ತಿದೆ...",
+    "auth.verifyEmail.success": "ಇಮೇಲ್ ಪರಿಶೀಲಿಸಲಾಗಿದೆ!",
+    "auth.verifyEmail.signInNow": "ನಿಮ್ಮ ಇಮೇಲ್ ಪರಿಶೀಲಿಸಲಾಗಿದೆ. ಈಗ ಸೈನ್ ಇನ್ ಮಾಡಬಹುದು.",
+    "auth.verifyEmail.expired": "ಲಿಂಕ್ ಅವಧಿ ಮುಗಿದಿದೆ",
+    "auth.verifyEmail.expiredDesc": "ಈ ಪರಿಶೀಲನಾ ಲಿಂಕ್ ಅವಧಿ ಮುಗಿದಿದೆ. ದಯವಿಟ್ಟು ಹೊಸ ಲಿಂಕ್‌ಗಾಗಿ ಮತ್ತೆ ಸೈನ್ ಅಪ್ ಮಾಡಿ.",
+    "auth.verifyEmail.invalid": "ಅಮಾನ್ಯ ಲಿಂಕ್",
+    "auth.verifyEmail.invalidDesc": "ಈ ಪರಿಶೀಲನಾ ಲಿಂಕ್ ಅಮಾನ್ಯವಾಗಿದೆ ಅಥವಾ ಈಗಾಗಲೇ ಬಳಸಲಾಗಿದೆ.",
+    "auth.verifyEmail.notVerified": "ಇಮೇಲ್ ಪರಿಶೀಲಿಸಿಲ್ಲ",
+    "auth.verifyEmail.pleaseVerify": "ಸೈನ್ ಇನ್ ಮಾಡುವ ಮೊದಲು ದಯವಿಟ್ಟು ನಿಮ್ಮ ಇಮೇಲ್ ಪರಿಶೀಲಿಸಿ.",
+    
     // Notifications
     "notifications.title": "ಅಧಿಸೂಚನೆಗಳು",
     "notifications.noNotifications": "ಅಧಿಸೂಚನೆಗಳಿಲ್ಲ",
@@ -1887,6 +1941,24 @@ const translations: Record<Language, Record<string, string>> = {
     "auth.otpSent": "OTP आपके ईमेल पर भेजा गया",
     "auth.verify": "सत्यापित करें",
     "auth.resendOtp": "OTP फिर से भेजें",
+    
+    // Email Verification
+    "auth.verifyEmail.title": "अपना ईमेल सत्यापित करें",
+    "auth.verifyEmail.checkInbox": "अपना इनबॉक्स देखें",
+    "auth.verifyEmail.sentTo": "हमने एक सत्यापन लिंक भेजा है",
+    "auth.verifyEmail.clickLink": "अपना खाता सत्यापित करने के लिए ईमेल में लिंक पर क्लिक करें।",
+    "auth.verifyEmail.resend": "ईमेल फिर से भेजें",
+    "auth.verifyEmail.resent": "ईमेल भेजा गया!",
+    "auth.verifyEmail.backToSignIn": "साइन इन पर वापस जाएं",
+    "auth.verifyEmail.verifying": "सत्यापित हो रहा है...",
+    "auth.verifyEmail.success": "ईमेल सत्यापित!",
+    "auth.verifyEmail.signInNow": "आपका ईमेल सत्यापित हो गया है। अब आप साइन इन कर सकते हैं।",
+    "auth.verifyEmail.expired": "लिंक समाप्त हो गई",
+    "auth.verifyEmail.expiredDesc": "यह सत्यापन लिंक समाप्त हो गई है। नई लिंक के लिए कृपया फिर से साइन अप करें।",
+    "auth.verifyEmail.invalid": "अमान्य लिंक",
+    "auth.verifyEmail.invalidDesc": "यह सत्यापन लिंक अमान्य है या पहले से उपयोग की जा चुकी है।",
+    "auth.verifyEmail.notVerified": "ईमेल सत्यापित नहीं",
+    "auth.verifyEmail.pleaseVerify": "साइन इन करने से पहले कृपया अपना ईमेल सत्यापित करें।",
     
     // Notifications
     "notifications.title": "सूचनाएं",
@@ -2278,6 +2350,24 @@ const translations: Record<Language, Record<string, string>> = {
     "auth.otpSent": "OTP உங்கள் மின்னஞ்சலுக்கு அனுப்பப்பட்டது",
     "auth.verify": "சரிபார்க்கவும்",
     "auth.resendOtp": "OTP மீண்டும் அனுப்பவும்",
+    
+    // Email Verification
+    "auth.verifyEmail.title": "உங்கள் மின்னஞ்சலை சரிபார்க்கவும்",
+    "auth.verifyEmail.checkInbox": "உங்கள் இன்பாக்ஸை சரிபார்க்கவும்",
+    "auth.verifyEmail.sentTo": "நாங்கள் சரிபார்ப்பு இணைப்பை அனுப்பியுள்ளோம்",
+    "auth.verifyEmail.clickLink": "உங்கள் கணக்கை சரிபார்க்க மின்னஞ்சலில் உள்ள இணைப்பைக் கிளிக் செய்யவும்.",
+    "auth.verifyEmail.resend": "மின்னஞ்சல் மீண்டும் அனுப்பவும்",
+    "auth.verifyEmail.resent": "மின்னஞ்சல் அனுப்பப்பட்டது!",
+    "auth.verifyEmail.backToSignIn": "உள்நுழைவுக்கு திரும்பு",
+    "auth.verifyEmail.verifying": "சரிபார்க்கிறது...",
+    "auth.verifyEmail.success": "மின்னஞ்சல் சரிபார்க்கப்பட்டது!",
+    "auth.verifyEmail.signInNow": "உங்கள் மின்னஞ்சல் சரிபார்க்கப்பட்டது. இப்போது உள்நுழையலாம்.",
+    "auth.verifyEmail.expired": "இணைப்பு காலாவதியானது",
+    "auth.verifyEmail.expiredDesc": "இந்த சரிபார்ப்பு இணைப்பு காலாவதியானது. புதிய இணைப்புக்கு மீண்டும் பதிவு செய்யவும்.",
+    "auth.verifyEmail.invalid": "தவறான இணைப்பு",
+    "auth.verifyEmail.invalidDesc": "இந்த சரிபார்ப்பு இணைப்பு தவறானது அல்லது ஏற்கனவே பயன்படுத்தப்பட்டது.",
+    "auth.verifyEmail.notVerified": "மின்னஞ்சல் சரிபார்க்கப்படவில்லை",
+    "auth.verifyEmail.pleaseVerify": "உள்நுழைவதற்கு முன் உங்கள் மின்னஞ்சலை சரிபார்க்கவும்.",
     
     // Notifications
     "notifications.title": "அறிவிப்புகள்",

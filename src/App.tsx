@@ -45,6 +45,8 @@ import TwoFactorVerify from "./pages/TwoFactorVerify";
 import AppLockSetup from "./pages/AppLockSetup";
 import SetupPIN from "./pages/SetupPIN";
 import LanguageSettings from "./pages/LanguageSettings";
+import VerifyEmailPending from "./pages/VerifyEmailPending";
+import VerifyEmailConfirm from "./pages/VerifyEmailConfirm";
 import NotFound from "./pages/NotFound";
 import { Capacitor } from "@capacitor/core";
 
@@ -61,7 +63,7 @@ const BackButtonHandler = () => {
       import("@capacitor/app").then(({ App }) => {
         App.addListener("backButton", ({ canGoBack }) => {
           const currentPath = location.pathname;
-          const authPaths = ['/', '/onboarding', '/signup', '/signin', '/forgot-password', '/password-reset-otp', '/reset-password'];
+          const authPaths = ['/', '/onboarding', '/signup', '/signin', '/forgot-password', '/password-reset-otp', '/reset-password', '/verify-email-pending', '/verify-email'];
 
           // If authenticated and on auth page, minimize app instead of going back
           if (user && authPaths.includes(currentPath)) {
@@ -106,6 +108,8 @@ const App = () => (
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/password-reset-otp" element={<PasswordResetOTP />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/verify-email-pending" element={<VerifyEmailPending />} />
+                <Route path="/verify-email" element={<VerifyEmailConfirm />} />
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 <Route path="/vault" element={<ProtectedRoute><Vault /></ProtectedRoute>} />
                 <Route path="/vault/home" element={<ProtectedRoute><VaultHome /></ProtectedRoute>} />

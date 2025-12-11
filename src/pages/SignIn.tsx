@@ -60,12 +60,38 @@ const SignIn = () => {
     try {
       await signIn(formData.email.toLowerCase(), formData.password);
       
-      // Check if 2FA is enabled (profile will be loaded by AuthContext)
+      // Check profile for email_verified and 2FA status
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('two_factor_enabled')
+        .select('two_factor_enabled, email_verified')
         .eq('email', formData.email.toLowerCase())
         .single();
+
+      // Check if email is verified
+      if (profileData && !profileData.email_verified) {
+        // Sign out and redirect to verification pending page
+        await supabase.auth.signOut();
+        toast({
+          title: t("auth.verifyEmail.notVerified"),
+          description: t("auth.verifyEmail.pleaseVerify"),
+          variant: "destructive",
+        });
+        // Get user id to allow resend
+        const { data: userData } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('email', formData.email.toLowerCase())
+          .single();
+        
+        navigate("/verify-email-pending", { 
+          state: { 
+            email: formData.email.toLowerCase(),
+            userId: userData?.id
+          },
+          replace: true 
+        });
+        return;
+      }
 
       if (profileData?.two_factor_enabled) {
         // Redirect to 2FA verification
