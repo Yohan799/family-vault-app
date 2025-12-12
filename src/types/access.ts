@@ -36,6 +36,7 @@ export interface AccessSummary {
 }
 
 export interface AccessControlProps {
+    isOpen: boolean;
     resourceType: AccessLevel;
     resourceId: string;
     resourceName: string;

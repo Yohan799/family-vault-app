@@ -64,10 +64,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) throw error;
 
-      // Cast additional_emails from Json to string[]
+      // Cast additional_emails from Json to string[] and add auto_lock_seconds default
       setProfile({
         ...data,
-        additional_emails: (data.additional_emails as string[]) || []
+        additional_emails: (data.additional_emails as string[]) || [],
+        auto_lock_seconds: data.auto_lock_minutes ? data.auto_lock_minutes * 60 : null
       });
     } catch (error) {
       console.error('Error fetching profile:', error);

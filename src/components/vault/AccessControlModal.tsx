@@ -4,12 +4,14 @@ import { AccessControlProps, NomineeAccess, AccessSummary } from '../../types/ac
 import { accessControlService } from '../../services/accessControlService';
 
 export const AccessControlModal: React.FC<AccessControlProps> = ({
+    isOpen,
     resourceType,
     resourceId,
     resourceName,
     onClose,
     onAccessChanged,
 }) => {
+    if (!isOpen) return null;
     const [accessSummary, setAccessSummary] = useState<AccessSummary | null>(null);
     const [loading, setLoading] = useState(true);
     const [savingNomineeId, setSavingNomineeId] = useState<string | null>(null);
