@@ -33,7 +33,7 @@ import CustomizeQuickActions from "./pages/CustomizeQuickActions";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
 import ChangePassword from "./pages/ChangePassword";
-import AutoLockTimeout from "./pages/AutoLockTimeout";
+
 import BackupFrequency from "./pages/BackupFrequency";
 import BackupHistory from "./pages/BackupHistory";
 import Notifications from "./pages/Notifications";
@@ -128,7 +128,7 @@ const App = () => (
                 <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                 <Route path="/edit-profile" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
                 <Route path="/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
-                <Route path="/auto-lock-timeout" element={<ProtectedRoute><AutoLockTimeout /></ProtectedRoute>} />
+
                 <Route path="/backup-frequency" element={<ProtectedRoute><BackupFrequency /></ProtectedRoute>} />
                 <Route path="/backup-history" element={<ProtectedRoute><BackupHistory /></ProtectedRoute>} />
                 <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />

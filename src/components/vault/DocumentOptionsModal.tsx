@@ -44,11 +44,25 @@ export const DocumentOptionsModal = ({
   const handleView = async () => {
     try {
       const { getDocuments } = await import('@/lib/documentStorage');
+      const { shouldUseInAppViewer, openWithNativeViewer } = await import('@/lib/openDocument');
       const storedDocs = await getDocuments(categoryId, subcategoryId, folderId);
       const doc = storedDocs.find(d => d.id === documentId);
 
-      if (doc && onView) {
-        onView(doc.fileUrl, doc.name, doc.type);
+      if (doc) {
+        // Check if this file type should use in-app viewer (images/videos)
+        if (shouldUseInAppViewer(doc.type, doc.name)) {
+          // Use in-app viewer for images and videos
+          if (onView) {
+            onView(doc.fileUrl, doc.name, doc.type);
+          }
+        } else {
+          // Open PDFs, DOCs, spreadsheets with native app
+          toast({
+            title: "Opening document...",
+            description: "Please wait while the document is being prepared",
+          });
+          await openWithNativeViewer(doc.fileUrl, doc.name, doc.type);
+        }
       } else {
         toast({
           title: "Error",
@@ -57,6 +71,7 @@ export const DocumentOptionsModal = ({
         });
       }
     } catch (error) {
+      console.error("Error viewing document:", error);
       toast({
         title: "Error",
         description: "Failed to open document",

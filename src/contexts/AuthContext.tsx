@@ -18,6 +18,7 @@ interface Profile {
   biometric_enabled: boolean;
   backup_frequency: string;
   auto_lock_minutes: number | null;
+  auto_lock_seconds: number | null;
   app_lock_type: string | null;
   app_pin_hash: string | null;
   additional_emails: string[] | null;
@@ -62,7 +63,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .single();
 
       if (error) throw error;
-      
+
       // Cast additional_emails from Json to string[]
       setProfile({
         ...data,
@@ -80,13 +81,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        
+
         // Fetch profile when user signs in
         if (session?.user) {
           // Create session on login
           if (event === 'SIGNED_IN') {
             setTimeout(() => {
-              createSession(session.user.id).catch(err => 
+              createSession(session.user.id).catch(err =>
                 console.error('Failed to create session:', err)
               );
               logActivity(session.user.id, 'auth.login', 'user', session.user.id).catch(err =>
@@ -112,7 +113,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      
+
       if (session?.user) {
         fetchProfile(session.user.id);
         updateActivityTimestamp(session.user.id);
@@ -125,7 +126,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, fullName: string): Promise<{ userId: string }> => {
     const redirectUrl = `${window.location.origin}/dashboard`;
-    
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -145,7 +146,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Log signup activity
     await logActivity(data.user.id, 'auth.signup', 'user', data.user.id);
-    
+
     // Mark as first login for feature tour
     localStorage.setItem('isFirstLogin', 'true');
 
@@ -179,7 +180,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signInWithGoogle = async () => {
     const isNative = Capacitor.isNativePlatform();
-    
+
     if (isNative) {
       // Native Android/iOS flow using SocialLogin plugin
       try {
@@ -189,36 +190,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             scopes: ['profile', 'email', 'https://www.googleapis.com/auth/drive'],
           }
         });
-        
+
         if (response.provider === 'google' && response.result) {
           // Extract tokens from response
           const result = response.result as any;
           const idToken = result.idToken || result.authentication?.idToken;
           const accessToken = result.accessToken?.token || result.authentication?.accessToken;
-          
+
           if (!idToken) {
             throw new Error('No authentication token received from Google');
           }
-          
+
           // Store access token for Google Drive
           if (accessToken) {
             console.log('[AuthContext] Storing native Google access token for Drive');
             setNativeGoogleAccessToken(accessToken);
           }
-          
+
           // Use the ID token to sign in with Supabase
           const { data, error } = await supabase.auth.signInWithIdToken({
             provider: 'google',
             token: idToken,
           });
-          
+
           if (error) throw error;
-          
+
           if (data.user) {
             await createSession(data.user.id);
             await logActivity(data.user.id, 'auth.login', 'user', data.user.id);
           }
-          
+
           localStorage.setItem('isFirstLogin', 'true');
         }
       } catch (error) {
@@ -228,7 +229,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } else {
       // Web flow using OAuth redirect with Drive scope
       const redirectUrl = `${window.location.origin}/dashboard`;
-      
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -238,7 +239,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) throw error;
-      
+
       localStorage.setItem('isFirstLogin', 'true');
     }
   };
@@ -256,7 +257,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('[AuthContext] Returning native Google access token');
         return nativeGoogleAccessToken;
       }
-      
+
       // Fall back to Supabase session token (for web)
       const { data: { session: currentSession } } = await supabase.auth.getSession();
       return currentSession?.provider_token || null;
@@ -273,7 +274,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('[AuthContext] authenticateGoogleForDrive called on web - use linkIdentity instead');
       return null;
     }
-    
+
     try {
       console.log('[AuthContext] Authenticating with Google for Drive access...');
       const response = await SocialLogin.login({
@@ -282,18 +283,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           scopes: ['profile', 'email', 'https://www.googleapis.com/auth/drive'],
         }
       });
-      
+
       if (response.provider === 'google' && response.result) {
         const result = response.result as any;
         const accessToken = result.accessToken?.token || result.authentication?.accessToken;
-        
+
         if (accessToken) {
           console.log('[AuthContext] Got Google access token for Drive');
           setNativeGoogleAccessToken(accessToken);
           return accessToken;
         }
       }
-      
+
       console.log('[AuthContext] No access token received from Google');
       return null;
     } catch (error) {
@@ -313,7 +314,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
-    
+
     setUser(null);
     setProfile(null);
     setSession(null);
@@ -342,7 +343,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const resetPassword = async (email: string) => {
     const redirectUrl = `${window.location.origin}/reset-password`;
-    
+
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: redirectUrl,
     });

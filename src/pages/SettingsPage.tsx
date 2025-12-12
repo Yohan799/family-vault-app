@@ -1,4 +1,4 @@
-import { Lock, Mail, Shield, Bell, HelpCircle, LogOut, Trash2, LockKeyhole, Home, ChevronRight, Vault, Settings, Globe, Fingerprint, KeyRound, MonitorSmartphone, CloudUpload } from "lucide-react";
+import { Lock, Mail, Bell, HelpCircle, LogOut, Trash2, Home, ChevronRight, Vault, Settings, Globe, Fingerprint, KeyRound, MonitorSmartphone } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Switch } from "@/components/ui/switch";
@@ -24,18 +24,8 @@ const SettingsPage = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isTogglingPush, setIsTogglingPush] = useState(false);
 
-  const getAutoLockLabel = (minutes: number | null | undefined): string => {
-    if (!minutes) return "5 minutes";
-    if (minutes < 1) {
-      const seconds = Math.round(minutes * 60);
-      return `${seconds} seconds`;
-    }
-    if (minutes === 1) return "1 minute";
-    return `${minutes} minutes`;
-  };
-
+  // Load push notification state from profile
   useEffect(() => {
-    // Load push notification state from profile
     if (profile) {
       setToggleStates({
         pushNotifications: profile.push_notifications_enabled ?? false,
@@ -183,8 +173,7 @@ const SettingsPage = () => {
     // Notifications
     { icon: Bell, title: t("settings.pushNotifications"), subtitle: isPushAvailable() ? t("settings.pushNotifications.subtitle") : t("settings.pushNotifications.mobileOnly"), toggle: "pushNotifications", color: "bg-amber-100" },
 
-    // Vault
-    { icon: LockKeyhole, title: t("settings.autoLockTimeout"), subtitle: getAutoLockLabel(profile?.auto_lock_minutes), path: "/auto-lock-timeout", color: "bg-emerald-100" },
+
 
     // Language
     { icon: Globe, title: t("settings.language"), subtitle: currentLanguage.nativeName, path: "/language-settings", color: "bg-orange-100" },

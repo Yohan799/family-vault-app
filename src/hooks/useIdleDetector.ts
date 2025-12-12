@@ -1,27 +1,59 @@
-import { useEffect, useRef, useCallback } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { getLocalLockPreference, type AppLockType } from '@/services/appLockService';
+import { Capacitor } from '@capacitor/core';
 
 interface UseIdleDetectorOptions {
     onIdle: (lockType: AppLockType) => void;
     enabled?: boolean;
 }
 
+// Storage key for auto-lock seconds (same as in AutoLockTimeout.tsx)
+const AUTO_LOCK_STORAGE_KEY = "auto_lock_seconds";
+
+// Get stored auto-lock seconds
+const getStoredAutoLockSeconds = async (): Promise<number | null> => {
+    if (Capacitor.isNativePlatform()) {
+        try {
+            const { Preferences } = await import("@capacitor/preferences");
+            const { value } = await Preferences.get({ key: AUTO_LOCK_STORAGE_KEY });
+            return value ? parseInt(value, 10) : null;
+        } catch {
+            return null;
+        }
+    }
+    const stored = localStorage.getItem(AUTO_LOCK_STORAGE_KEY);
+    return stored ? parseInt(stored, 10) : null;
+};
+
 /**
  * Hook to detect user inactivity and trigger auto-lock
  * Monitors mouse, keyboard, touch, and scroll events
  */
 export const useIdleDetector = ({ onIdle, enabled = true }: UseIdleDetectorOptions) => {
-    const { profile } = useAuth();
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
     const isIdleRef = useRef(false);
+    const [autoLockSeconds, setAutoLockSeconds] = useState<number | null>(null);
 
-    // Get timeout in milliseconds from profile (stored as minutes, can be fractional)
+    // Load auto-lock setting on mount
+    useEffect(() => {
+        getStoredAutoLockSeconds().then(setAutoLockSeconds);
+
+        // Listen for changes to auto-lock setting
+        const handleSettingChange = (event: CustomEvent<{ seconds: number }>) => {
+            setAutoLockSeconds(event.detail.seconds);
+        };
+
+        window.addEventListener('autoLockSettingChanged', handleSettingChange as EventListener);
+        return () => {
+            window.removeEventListener('autoLockSettingChanged', handleSettingChange as EventListener);
+        };
+    }, []);
+
+    // Get timeout in milliseconds
     const getTimeoutMs = useCallback(() => {
-        const minutes = profile?.auto_lock_minutes;
-        if (!minutes || minutes <= 0) return null;
-        return minutes * 60 * 1000; // Convert minutes to milliseconds
-    }, [profile?.auto_lock_minutes]);
+        if (!autoLockSeconds || autoLockSeconds <= 0) return null;
+        return autoLockSeconds * 1000; // Convert seconds to milliseconds
+    }, [autoLockSeconds]);
 
     // Reset idle timer on activity
     const resetTimer = useCallback(async () => {
@@ -102,3 +134,4 @@ export const useIdleDetector = ({ onIdle, enabled = true }: UseIdleDetectorOptio
 
     return { resetTimer, markActive };
 };
+

@@ -312,16 +312,10 @@ export const DocumentViewerModal = ({
                             <p className="text-muted-foreground mb-6 max-w-sm">
                                 Tap below to open this document in your device's viewer app.
                             </p>
-                            <div className="flex gap-3">
-                                <Button onClick={handleOpenExternal} className="gap-2">
-                                    <ExternalLink className="w-4 h-4" />
-                                    Open Document
-                                </Button>
-                                <Button variant="outline" onClick={handleDownload} className="gap-2">
-                                    <Download className="w-4 h-4" />
-                                    Download
-                                </Button>
-                            </div>
+                            <Button onClick={handleOpenExternal} className="gap-2">
+                                <ExternalLink className="w-4 h-4" />
+                                Open Document
+                            </Button>
                         </div>
                     )}
 
