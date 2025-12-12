@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { fetchDashboardStats, calculateReadinessScore, updateInactivityTrigger, type DashboardStats } from "@/services/dashboardService";
@@ -14,6 +14,14 @@ import { DashboardSkeleton } from "@/components/skeletons";
 import { getUnreadCount } from "@/services/notificationService";
 import { getQuickActionText } from "@/lib/categoryTranslations";
 
+// Memoized icon map (created once, not on every render)
+const iconMap: Record<string, any> = {
+  Vault,
+  UserPlus,
+  Shield,
+  Timer,
+  Plus,
+};
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -32,23 +40,27 @@ const Dashboard = () => {
   const lastToggleTime = useRef<number>(0);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
 
-  // Icon mapping for quick actions
-  const iconMap: Record<string, any> = {
-    Vault,
-    UserPlus,
-    Shield,
-    Timer,
-    Plus,
-  };
-
-  const readinessScore = calculateReadinessScore(
+  // Memoized readiness score
+  const readinessScore = useMemo(() => calculateReadinessScore(
     stats,
     profile?.two_factor_enabled || false,
     profile?.biometric_enabled || false
-  );
+  ), [stats, profile?.two_factor_enabled, profile?.biometric_enabled]);
+
+  // Memoized user display info
+  const { displayName, firstName, initials } = useMemo(() => {
+    const name = profile?.full_name || "User";
+    const first = name.split(' ')[0];
+    const init = name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+    return { displayName: name, firstName: first, initials: init };
+  }, [profile?.full_name]);
 
   useEffect(() => {
-    // Check if this is first login
     const isFirstLogin = localStorage.getItem("isFirstLogin");
     if (isFirstLogin === "true") {
       setShowTour(true);
@@ -56,60 +68,43 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    if (user) {
+    if (user?.id) {
       // Load all data in PARALLEL for faster loading
-      Promise.all([
-        loadDashboardStats(),
-        loadQuickActions(),
-        loadUnreadCount()
-      ]);
+      loadAllDashboardData();
     }
-  }, [user]);
+  }, [user?.id]);
 
-  const loadUnreadCount = async () => {
-    if (!user) return;
-    const count = await getUnreadCount(user.id);
-    setUnreadNotifications(count);
-  };
-
-  const loadDashboardStats = async () => {
-    if (!user) return;
-
+  const loadAllDashboardData = useCallback(async () => {
+    if (!user?.id) return;
+    
     setIsLoadingStats(true);
+    
     try {
-      const dashboardStats = await fetchDashboardStats(user.id);
+      // Run all data loading in parallel
+      const [dashboardStats, _, actions, unreadCount] = await Promise.all([
+        fetchDashboardStats(user.id),
+        initializeDefaultActions(user.id),
+        getQuickActions(user.id),
+        getUnreadCount(user.id)
+      ]);
+
       setStats(dashboardStats);
+      setQuickActions(actions.filter(a => a.is_enabled));
+      setUnreadNotifications(unreadCount);
     } catch (error) {
-      console.error('Error loading dashboard stats:', error);
+      console.error('Error loading dashboard data:', error);
     } finally {
       setIsLoadingStats(false);
     }
-  };
+  }, [user?.id]);
 
-  const loadQuickActions = async () => {
-    if (!user) return;
-
-    try {
-      // Initialize defaults if needed
-      await initializeDefaultActions(user.id);
-
-      // Fetch actions
-      const actions = await getQuickActions(user.id);
-      setQuickActions(actions.filter(a => a.is_enabled));
-    } catch (error) {
-      console.error('Error loading quick actions:', error);
-      // Fallback to empty array if error
-      setQuickActions([]);
-    }
-  };
-
-  const handleTourClose = () => {
+  const handleTourClose = useCallback(() => {
     setShowTour(false);
     localStorage.removeItem("isFirstLogin");
-  };
+  }, []);
 
-  const handleInactivityToggle = async (checked: boolean) => {
-    if (!user) return;
+  const handleInactivityToggle = useCallback(async (checked: boolean) => {
+    if (!user?.id) return;
 
     // Debounce rapid toggling
     const now = Date.now();
@@ -139,23 +134,11 @@ const Dashboard = () => {
         variant: "destructive",
       });
     }
-  };
+  }, [user?.id, stats.inactivityTriggerActive, toast, t]);
 
-
-  if (!profile) {
+  if (!profile || isLoadingStats) {
     return <DashboardSkeleton />;
   }
-
-  const displayName = profile.full_name || "User";
-  const firstName = displayName.split(' ')[0];
-  const initials = displayName
-    .split(' ')
-    .map(n => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-
-
 
   return (
     <>
@@ -237,15 +220,12 @@ const Dashboard = () => {
               ) : (
                 quickActions.map((action) => {
                   const Icon = iconMap[action.icon || 'Plus'] || Plus;
-                  const handleClick = () => {
-                    if (action.route) {
-                      navigate(action.route);
-                    }
-                  };
-
                   return (
-                    <button key={action.id} onClick={handleClick}
-                      className="w-full bg-card rounded-lg p-2.5 flex items-center gap-2.5 hover:bg-accent transition-colors">
+                    <button 
+                      key={action.id} 
+                      onClick={() => action.route && navigate(action.route)}
+                      className="w-full bg-card rounded-lg p-2.5 flex items-center gap-2.5 hover:bg-accent transition-colors"
+                    >
                       <div className="w-9 h-9 bg-accent rounded-full flex items-center justify-center flex-shrink-0">
                         <Icon className="w-4 h-4 text-primary" />
                       </div>
@@ -264,10 +244,6 @@ const Dashboard = () => {
               )}
             </div>
           </div>
-
-
-
-
         </div>
 
         {/* Feature Tour */}

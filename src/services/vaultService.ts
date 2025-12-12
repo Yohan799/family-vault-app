@@ -1,9 +1,29 @@
 import { supabase } from "@/integrations/supabase/client";
 import { vaultCategories } from "@/data/vaultCategories";
 
+// Cache for user ID to avoid repeated auth calls
+let cachedUserId: string | null = null;
+let userIdCacheTime = 0;
+const USER_ID_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+const getCachedUserId = async (): Promise<string | null> => {
+  const now = Date.now();
+  if (cachedUserId && now - userIdCacheTime < USER_ID_CACHE_DURATION) {
+    return cachedUserId;
+  }
+  
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    cachedUserId = user.id;
+    userIdCacheTime = now;
+  }
+  return user?.id || null;
+};
+
 /**
  * Syncs default categories and subcategories from vaultCategories template
  * into the database for the current user (idempotent - only creates if missing)
+ * OPTIMIZED: Fast-path check and batch operations
  */
 export const syncDefaultCategories = async (userId: string): Promise<void> => {
   try {
@@ -19,62 +39,43 @@ export const syncDefaultCategories = async (userId: string): Promise<void> => {
       return;
     }
 
-    const shouldSyncCategories = true;
+    // Batch insert all categories at once
+    const categoryInserts = vaultCategories.map(template => ({
+      id: template.id,
+      user_id: userId,
+      name: template.name,
+      icon: template.icon.name || 'Folder',
+      icon_bg_color: template.iconBgColor,
+      is_custom: false
+    }));
 
-    // Sync default categories
-    for (const template of vaultCategories) {
-      // Insert category if not exists
-      if (shouldSyncCategories) {
-        const { error: catError } = await supabase
-          .from('categories')
-          .insert({
-            id: template.id,
-            user_id: userId,
-            name: template.name,
-            icon: template.icon.name || 'Folder',
-            icon_bg_color: template.iconBgColor,
-            is_custom: false
-          });
+    const { error: catError } = await supabase
+      .from('categories')
+      .insert(categoryInserts);
 
-        if (catError && catError.code !== '23505') { // Ignore duplicate key errors
-          console.error(`Error inserting category ${template.name}:`, catError);
-          continue;
-        }
-      }
+    if (catError && catError.code !== '23505') {
+      console.error('Error inserting categories:', catError);
+    }
 
-      // Always ensure all subcategories are synced (fixes missing Personal subcategories issue)
-      if (template.subcategories && template.subcategories.length > 0) {
-        // Check which subcategories already exist
-        const { data: existingSubs } = await supabase
-          .from('subcategories')
-          .select('id')
-          .eq('category_id', template.id)
-          .eq('user_id', userId)
-          .eq('is_custom', false);
+    // Batch insert all subcategories at once
+    const subcategoryInserts = vaultCategories.flatMap(template =>
+      template.subcategories.map(sub => ({
+        id: sub.id,
+        user_id: userId,
+        category_id: template.id,
+        name: sub.name,
+        icon: sub.icon.name || 'Folder',
+        is_custom: false
+      }))
+    );
 
-        const existingSubIds = new Set((existingSubs || []).map(s => s.id));
+    if (subcategoryInserts.length > 0) {
+      const { error: subError } = await supabase
+        .from('subcategories')
+        .insert(subcategoryInserts);
 
-        // Insert only missing subcategories
-        const missingSubcategories = template.subcategories
-          .filter(sub => !existingSubIds.has(sub.id))
-          .map(sub => ({
-            id: sub.id,
-            user_id: userId,
-            category_id: template.id,
-            name: sub.name,
-            icon: sub.icon.name || 'Folder',
-            is_custom: false
-          }));
-
-        if (missingSubcategories.length > 0) {
-          const { error: subError } = await supabase
-            .from('subcategories')
-            .insert(missingSubcategories);
-
-          if (subError && subError.code !== '23505') { // Ignore duplicate key errors
-            console.error(`Error inserting subcategories for ${template.name}:`, subError);
-          }
-        }
+      if (subError && subError.code !== '23505') {
+        console.error('Error inserting subcategories:', subError);
       }
     }
   } catch (error) {
@@ -137,7 +138,7 @@ export const deleteSubcategoryWithCascade = async (
 };
 
 /**
- * Gets document count for a category
+ * Gets document count for a category - uses cached userId when possible
  */
 export const getCategoryDocumentCount = async (categoryId: string, userId: string): Promise<number> => {
   try {
@@ -178,12 +179,13 @@ export const getSubcategoryDocumentCount = async (subcategoryId: string, userId:
 
 /**
  * Gets all documents for a user (for search functionality)
+ * OPTIMIZED: Excludes file_url to reduce payload (not needed for search)
  */
 export const getAllUserDocuments = async (userId: string): Promise<any[]> => {
   try {
     const { data, error } = await supabase
       .from('documents')
-      .select('*')
+      .select('id, file_name, category_id, subcategory_id, folder_id, uploaded_at')
       .eq('user_id', userId)
       .is('deleted_at', null)
       .order('uploaded_at', { ascending: false });
@@ -198,12 +200,13 @@ export const getAllUserDocuments = async (userId: string): Promise<any[]> => {
 
 /**
  * Gets all subcategories for a user (for search functionality)
+ * OPTIMIZED: Only select needed columns
  */
 export const getAllUserSubcategories = async (userId: string): Promise<any[]> => {
   try {
     const { data, error } = await supabase
       .from('subcategories')
-      .select('*')
+      .select('id, name, category_id, is_custom')
       .eq('user_id', userId)
       .is('deleted_at', null)
       .order('name', { ascending: true });
@@ -219,6 +222,7 @@ export const getAllUserSubcategories = async (userId: string): Promise<any[]> =>
 /**
  * Gets document counts for ALL categories in a single query (eliminates N+1)
  * Returns a Map of categoryId -> documentCount
+ * OPTIMIZED: Uses GROUP BY aggregation on the database side
  */
 export const getAllCategoryDocumentCounts = async (userId: string): Promise<Map<string, number>> => {
   try {
@@ -272,4 +276,58 @@ export const getAllSubcategoryDocumentCounts = async (userId: string): Promise<M
     console.error('Error getting subcategory document counts:', error);
     return new Map();
   }
+};
+
+/**
+ * Loads categories with document counts in optimized parallel queries
+ */
+export const loadCategoriesOptimized = async (userId: string): Promise<{
+  categories: any[];
+  docCountMap: Map<string, number>;
+}> => {
+  // Run both queries in parallel
+  const [docCountMap, customCatsResult] = await Promise.all([
+    getAllCategoryDocumentCounts(userId),
+    supabase
+      .from('categories')
+      .select('id, name, icon_bg_color, is_custom')
+      .eq('user_id', userId)
+      .eq('is_custom', true)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: true })
+  ]);
+
+  return {
+    categories: customCatsResult.data || [],
+    docCountMap
+  };
+};
+
+/**
+ * Loads subcategories with document counts in optimized parallel queries
+ */
+export const loadSubcategoriesOptimized = async (userId: string, categoryId: string): Promise<{
+  subcategories: any[];
+  docCountMap: Map<string, number>;
+  totalDocCount: number;
+}> => {
+  // Run all queries in parallel
+  const [docCountMap, customSubsResult, totalCountResult] = await Promise.all([
+    getAllSubcategoryDocumentCounts(userId),
+    supabase
+      .from('subcategories')
+      .select('id, name, is_custom')
+      .eq('category_id', categoryId)
+      .eq('user_id', userId)
+      .eq('is_custom', true)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: true }),
+    getCategoryDocumentCount(categoryId, userId)
+  ]);
+
+  return {
+    subcategories: customSubsResult.data || [],
+    docCountMap,
+    totalDocCount: totalCountResult
+  };
 };

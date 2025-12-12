@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { vaultCategories } from "@/data/vaultCategories";
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { categoryNameSchema, sanitizeInput } from "@/lib/validation";
 import { AccessControlModal } from "@/components/vault/AccessControlModal";
@@ -12,19 +12,25 @@ import { ActionMenu, createCategoryActionMenu } from "@/components/vault/ActionM
 import { format } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getCategoryName } from "@/lib/categoryTranslations";
+import { useAuth } from "@/contexts/AuthContext";
+import { VaultHomeSkeleton } from "@/components/skeletons";
 
-import { syncDefaultCategories, getAllCategoryDocumentCounts, getAllUserDocuments, getAllUserSubcategories, deleteCategoryWithCascade } from "@/services/vaultService";
+import { syncDefaultCategories, loadCategoriesOptimized, deleteCategoryWithCascade, getAllUserDocuments, getAllUserSubcategories } from "@/services/vaultService";
 
 const VaultHome = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useLanguage();
+  const { user } = useAuth();
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [categoryName, setCategoryName] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [allDocuments, setAllDocuments] = useState<any[]>([]);
   const [allSubcategories, setAllSubcategories] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  
   // Initialize with hardcoded categories immediately for instant display
   const [customCategories, setCustomCategories] = useState<any[]>(
     vaultCategories.map((cat) => ({
@@ -43,47 +49,37 @@ const VaultHome = () => {
   });
   const [accessControlCategory, setAccessControlCategory] = useState<any | null>(null);
 
+  // Use userId from context instead of calling getUser() repeatedly
+  const userId = user?.id;
+
   useEffect(() => {
-    loadCategories();
-    loadAllDocuments();
-    loadAllSubcategories();
-  }, []);
-
-  // Real-time search with debounce
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (searchQuery.trim()) {
-        setIsSearching(true);
-        // Search is performed via useMemo below
-        setTimeout(() => setIsSearching(false), 100);
-      } else {
-        setIsSearching(false);
-      }
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
-
-  const loadAllDocuments = useCallback(async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const docs = await getAllUserDocuments(user.id);
-      setAllDocuments(docs);
-    } catch (error) {
-      console.error('Error loading documents:', error);
+    if (userId) {
+      loadAllData();
     }
-  }, []);
+  }, [userId]);
 
-  const loadAllSubcategories = useCallback(async () => {
+  // Optimized: Load all data in parallel
+  const loadAllData = useCallback(async () => {
+    if (!userId) return;
+    
+    setIsLoading(true);
+    
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      // Only sync once per session (check sessionStorage)
+      const syncKey = `vault_synced_${userId}`;
+      const needsSync = !sessionStorage.getItem(syncKey);
+      
+      // Run all data loading in parallel
+      const [_, docsResult, subsResult, catsResult] = await Promise.all([
+        needsSync ? syncDefaultCategories(userId).then(() => sessionStorage.setItem(syncKey, 'true')) : Promise.resolve(),
+        getAllUserDocuments(userId),
+        getAllUserSubcategories(userId),
+        loadCategoriesOptimized(userId)
+      ]);
 
-      const subs = await getAllUserSubcategories(user.id);
-
-      // Merge with hardcoded subcategories from vaultCategories
+      setAllDocuments(docsResult);
+      
+      // Merge subcategories with hardcoded ones
       const hardcodedSubs = vaultCategories.flatMap(cat =>
         cat.subcategories.map(sub => ({
           id: sub.id,
@@ -93,37 +89,14 @@ const VaultHome = () => {
           is_custom: false,
         }))
       );
-
-      // Combine database subcategories with hardcoded ones (database takes priority)
       const subMap = new Map();
       hardcodedSubs.forEach(sub => subMap.set(sub.id, sub));
-      subs.forEach(sub => subMap.set(sub.id, sub));
-
+      subsResult.forEach(sub => subMap.set(sub.id, sub));
       setAllSubcategories(Array.from(subMap.values()));
-    } catch (error) {
-      console.error('Error loading subcategories:', error);
-    }
-  }, []);
 
-  const loadCategories = useCallback(async (skipSync = false) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        navigate("/signin");
-        return;
-      }
-
-      // Only sync once per session (check sessionStorage)
-      const syncKey = `vault_synced_${user.id}`;
-      if (!skipSync && !sessionStorage.getItem(syncKey)) {
-        await syncDefaultCategories(user.id);
-        sessionStorage.setItem(syncKey, 'true');
-      }
-
-      // Get ALL document counts in ONE query (eliminates N+1)
-      const docCountMap = await getAllCategoryDocumentCounts(user.id);
-
-      // Start with hardcoded default categories as the base
+      // Build categories with counts
+      const { categories: customCats, docCountMap } = catsResult;
+      
       const baseCategories = vaultCategories.map((cat) => ({
         id: cat.id,
         name: cat.name,
@@ -134,21 +107,7 @@ const VaultHome = () => {
         isCustom: false,
       }));
 
-      // Query custom categories from database
-      const { data: customCatsData, error } = await supabase
-        .from('categories')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('is_custom', true)
-        .is('deleted_at', null)
-        .order('created_at', { ascending: true });
-
-      if (error) {
-        console.error("Error loading custom categories:", error);
-      }
-
-      // Add custom categories with counts from the map (no extra DB calls!)
-      const customCats = (customCatsData || []).map((cat: any) => ({
+      const customCatsWithCounts = customCats.map((cat: any) => ({
         id: cat.id,
         name: cat.name,
         icon: Folder,
@@ -158,31 +117,34 @@ const VaultHome = () => {
         isCustom: true
       }));
 
-      // Merge: defaults + custom categories
-      const allCats = [...baseCategories, ...customCats];
-
-      setCustomCategories(allCats);
+      setCustomCategories([...baseCategories, ...customCatsWithCounts]);
     } catch (error) {
-      console.error('Error loading categories:', error);
+      console.error('Error loading vault data:', error);
       toast({
         title: "Error",
-        description: "Failed to load categories. Showing default categories.",
+        description: "Failed to load vault data",
         variant: "destructive"
       });
-      // Fallback to hardcoded defaults on error
-      setCustomCategories(vaultCategories.map((cat) => ({
-        id: cat.id,
-        name: cat.name,
-        icon: cat.icon,
-        iconBgColor: cat.iconBgColor,
-        documentCount: 0,
-        subcategories: [],
-        isCustom: false,
-      })));
+    } finally {
+      setIsLoading(false);
     }
-  }, [navigate, toast]);
+  }, [userId, toast]);
 
-  const handleAddCategory = async () => {
+  // Debounced search effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchQuery.trim()) {
+        setIsSearching(true);
+        setTimeout(() => setIsSearching(false), 100);
+      } else {
+        setIsSearching(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const handleAddCategory = useCallback(async () => {
     const sanitizedName = sanitizeInput(categoryName);
     const validation = categoryNameSchema.safeParse(sanitizedName);
 
@@ -210,13 +172,12 @@ const VaultHome = () => {
     }
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("User not authenticated");
+      if (!userId) throw new Error("User not authenticated");
 
       const { data, error } = await supabase
         .from('categories')
         .insert({
-          user_id: user.id,
+          user_id: userId,
           name: validation.data,
           is_custom: true,
           icon_bg_color: "bg-yellow-100"
@@ -226,6 +187,18 @@ const VaultHome = () => {
 
       if (error) throw error;
 
+      // Optimistic update
+      const newCategory = {
+        id: data.id,
+        name: data.name,
+        icon: Folder,
+        iconBgColor: "bg-yellow-100",
+        documentCount: 0,
+        subcategories: [],
+        isCustom: true
+      };
+      setCustomCategories(prev => [...prev, newCategory]);
+
       toast({
         title: "Category created!",
         description: `${validation.data} has been added to your vault`
@@ -233,7 +206,6 @@ const VaultHome = () => {
 
       setCategoryName("");
       setShowAddDialog(false);
-      loadCategories();
     } catch (error) {
       console.error('Error adding category:', error);
       toast({
@@ -242,12 +214,11 @@ const VaultHome = () => {
         variant: "destructive"
       });
     }
-  };
+  }, [categoryName, customCategories, userId, toast]);
 
-  const handleDeleteClick = (category: any, e: React.MouseEvent) => {
+  const handleDeleteClick = useCallback((category: any, e: React.MouseEvent) => {
     e.stopPropagation();
 
-    // Prevent deletion of default categories
     if (!category.isCustom) {
       toast({
         title: "Cannot delete",
@@ -258,26 +229,23 @@ const VaultHome = () => {
     }
 
     setDeleteConfirm({ show: true, category });
-  };
+  }, [toast]);
 
-  const confirmDelete = async () => {
-    if (!deleteConfirm.category) return;
+  const confirmDelete = useCallback(async () => {
+    if (!deleteConfirm.category || !userId) return;
 
     const categoryId = deleteConfirm.category.id;
-    const categoryName = deleteConfirm.category.name;
+    const catName = deleteConfirm.category.name;
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("User not authenticated");
+      await deleteCategoryWithCascade(categoryId, userId);
 
-      await deleteCategoryWithCascade(categoryId, user.id);
-
-      // Update state immediately (optimistic update)
+      // Optimistic update
       setCustomCategories(prev => prev.filter(c => c.id !== categoryId));
 
       toast({
         title: "Category deleted",
-        description: `${categoryName} and all related content have been removed`
+        description: `${catName} and all related content have been removed`
       });
 
       setDeleteConfirm({ show: false, category: null });
@@ -289,11 +257,15 @@ const VaultHome = () => {
         variant: "destructive"
       });
     }
-  };
+  }, [deleteConfirm.category, userId, toast]);
 
-  const totalDocuments = customCategories.reduce((sum, cat) => sum + cat.documentCount, 0);
+  // Memoized calculations
+  const totalDocuments = useMemo(() => 
+    customCategories.reduce((sum, cat) => sum + cat.documentCount, 0), 
+    [customCategories]
+  );
 
-  // Perform comprehensive search and filter results
+  // Memoized search results
   const filteredResults = useMemo(() => {
     if (!searchQuery.trim()) {
       return customCategories.map(cat => ({
@@ -310,19 +282,15 @@ const VaultHome = () => {
     customCategories.forEach((category) => {
       const categoryMatches = category.name.toLowerCase().includes(query);
 
-      // Find matching subcategories for this category
       const matchingSubcategories = allSubcategories.filter(sub =>
         sub.category_id === category.id && sub.name.toLowerCase().includes(query)
       );
 
-      // Find matching documents (at category level or subcategory level)
       const matchingDocs = allDocuments.filter((doc) => {
         if (doc.category_id !== category.id) return false;
 
-        // Match by document name
         const nameMatch = doc.file_name?.toLowerCase().includes(query);
 
-        // Match by upload date (flexible parsing)
         let dateMatch = false;
         if (doc.uploaded_at) {
           try {
@@ -344,7 +312,6 @@ const VaultHome = () => {
         return nameMatch || dateMatch;
       });
 
-      // Include category if it matches or has matching subcategories or documents
       if (categoryMatches || matchingSubcategories.length > 0 || matchingDocs.length > 0) {
         results.push({
           category: category,
@@ -358,9 +325,9 @@ const VaultHome = () => {
     return results;
   }, [searchQuery, customCategories, allDocuments, allSubcategories]);
 
-  const allCategories = searchQuery ? filteredResults : filteredResults.map(r => r.category);
-
-
+  if (isLoading) {
+    return <VaultHomeSkeleton />;
+  }
 
   return (
     <>
@@ -372,6 +339,7 @@ const VaultHome = () => {
           <div className="relative mt-6">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
+              ref={searchInputRef}
               placeholder={t("vault.searchPlaceholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -474,18 +442,34 @@ const VaultHome = () => {
                       </div>
                     )}
 
-                    {/* Expanded Results: Matching Documents (show first 3) */}
+                    {/* Expanded Results: Matching Documents */}
                     {searchQuery && result.matchedDocuments && result.matchedDocuments.length > 0 && (
-                      <div className="ml-4 space-y-1">
+                      <div className="ml-4 space-y-2">
                         {result.matchedDocuments.slice(0, 3).map((doc: any) => (
-                          <div key={doc.id} className="flex items-center gap-2 text-sm text-[#626C71] py-1">
-                            <FileText className="w-4 h-4 flex-shrink-0" />
-                            <span className="truncate">{doc.file_name}</span>
-                          </div>
+                          <button
+                            key={doc.id}
+                            onClick={() => {
+                              const subcatId = doc.subcategory_id;
+                              if (subcatId) {
+                                navigate(`/vault/${category.id}/${subcatId}`);
+                              } else {
+                                navigate(`/vault/${category.id}`);
+                              }
+                            }}
+                            className="w-full bg-gray-50 rounded-xl p-3 flex items-center gap-3 hover:bg-gray-100 transition-colors"
+                          >
+                            <FileText className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                            <div className="flex-1 text-left min-w-0">
+                              <span className="font-medium text-[#1F2121] text-sm truncate block">{doc.file_name}</span>
+                              <span className="text-xs text-gray-500">
+                                {doc.uploaded_at && format(new Date(doc.uploaded_at), 'MMM dd, yyyy')}
+                              </span>
+                            </div>
+                          </button>
                         ))}
                         {result.matchedDocuments.length > 3 && (
-                          <p className="text-xs text-[#626C71] pl-6">
-                            +{result.matchedDocuments.length - 3} more
+                          <p className="text-xs text-gray-500 ml-2">
+                            +{result.matchedDocuments.length - 3} more documents
                           </p>
                         )}
                       </div>
@@ -494,13 +478,14 @@ const VaultHome = () => {
                 );
               })}
 
+              {/* Add Category Button (only when not searching) */}
               {!searchQuery && (
                 <button
                   onClick={() => setShowAddDialog(true)}
-                  className="w-full bg-[#F3E8FF] border-2 border-dashed border-[#6D28D9] rounded-2xl p-5 flex flex-col items-center justify-center hover:opacity-80 transition-opacity"
+                  className="bg-[#F3E8FF] border-2 border-dashed border-[#6D28D9] rounded-2xl p-4 flex flex-col items-center justify-center text-center hover:opacity-80 transition-opacity min-h-[140px]"
                 >
-                  <div className="w-14 h-14 bg-white/60 rounded-full flex items-center justify-center mb-3">
-                    <Plus className="w-7 h-7 text-[#6D28D9]" />
+                  <div className="w-12 h-12 bg-white/60 rounded-full flex items-center justify-center mb-2">
+                    <Plus className="w-6 h-6 text-[#6D28D9]" />
                   </div>
                   <h3 className="font-semibold text-[#1F2121]">{t("vault.addCategory")}</h3>
                 </button>
@@ -509,6 +494,7 @@ const VaultHome = () => {
           )}
         </div>
 
+        {/* Delete Confirmation Dialog */}
         {deleteConfirm.show && deleteConfirm.category && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
             <div className="bg-card rounded-3xl p-6 w-full max-w-md">
@@ -516,16 +502,16 @@ const VaultHome = () => {
                 <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
                   <AlertTriangle className="w-6 h-6 text-purple-600" />
                 </div>
-                <h2 className="text-xl font-bold text-foreground">{t("vault.deleteTitle")}</h2>
+                <h2 className="text-xl font-bold text-foreground">{t("vault.deleteCategory")}</h2>
               </div>
 
               <p className="text-foreground mb-2">
-                {t("vault.deleteConfirm")} <span className="font-semibold">{deleteConfirm.category.name}</span>?
+                {t("vault.deleteCategoryConfirm")} <span className="font-semibold">{getCategoryName(deleteConfirm.category.id, deleteConfirm.category.name, t)}</span>?
               </p>
 
               <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-6">
                 <p className="text-sm text-purple-800 font-medium">
-                  {deleteConfirm.category.documentCount} {t("common.documents")} {t("vault.willBeDeleted")}
+                  {deleteConfirm.category.documentCount} {deleteConfirm.category.documentCount === 1 ? t("common.document") : t("common.documents")} {t("vault.willBeDeleted")}
                 </p>
                 <p className="text-xs text-purple-600 mt-1">{t("vault.cannotUndo")}</p>
               </div>
@@ -549,6 +535,7 @@ const VaultHome = () => {
           </div>
         )}
 
+        {/* Add Category Dialog */}
         {showAddDialog && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
             <div className="bg-card rounded-3xl p-6 w-full max-w-md relative">
@@ -567,11 +554,12 @@ const VaultHome = () => {
                     {t("vault.categoryName")}
                   </label>
                   <Input
-                    placeholder={t("vault.categoryPlaceholder")}
+                    placeholder={t("vault.categoryNamePlaceholder")}
                     value={categoryName}
                     onChange={(e) => setCategoryName(e.target.value)}
                     className="bg-background border-border"
                     onKeyPress={(e) => e.key === 'Enter' && handleAddCategory()}
+                    autoFocus
                   />
                 </div>
 
@@ -585,9 +573,9 @@ const VaultHome = () => {
                   </Button>
                   <Button
                     onClick={handleAddCategory}
-                    className="flex-1"
+                    className="flex-1 bg-primary hover:bg-primary/90"
                   >
-                    {t("common.add")}
+                    {t("vault.create")}
                   </Button>
                 </div>
               </div>
@@ -595,38 +583,35 @@ const VaultHome = () => {
           </div>
         )}
 
+        {/* Bottom Navigation */}
+        <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
+          <div className="flex justify-around items-center h-16 max-w-md mx-auto">
+            <button onClick={() => navigate("/dashboard")} className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
+              <Home className="w-6 h-6" />
+              <span className="text-xs font-medium">{t("nav.home")}</span>
+            </button>
+            <button className="flex flex-col items-center gap-1 text-primary relative">
+              <Vault className="w-6 h-6" />
+              <span className="text-xs font-medium">{t("nav.vault")}</span>
+              <div className="absolute -bottom-2 w-12 h-1 bg-primary rounded-full" />
+            </button>
+            <button onClick={() => navigate("/settings")} className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
+              <Settings className="w-6 h-6" />
+              <span className="text-xs font-medium">{t("nav.settings")}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Access Control Modal */}
         {accessControlCategory && (
           <AccessControlModal
+            isOpen={!!accessControlCategory}
+            onClose={() => setAccessControlCategory(null)}
             resourceType="category"
             resourceId={accessControlCategory.id}
-            resourceName={accessControlCategory.name}
-            onClose={() => setAccessControlCategory(null)}
+            resourceName={getCategoryName(accessControlCategory.id, accessControlCategory.name, t)}
           />
         )}
-      </div>
-
-      <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
-        <div className="flex justify-around items-center h-16 max-w-md mx-auto">
-          <button
-            onClick={() => navigate("/dashboard")}
-            className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
-          >
-            <Home className="w-6 h-6" />
-            <span className="text-xs font-medium">{t("nav.home")}</span>
-          </button>
-          <button className="flex flex-col items-center gap-1 text-primary relative">
-            <Vault className="w-6 h-6" />
-            <span className="text-xs font-medium">{t("nav.vault")}</span>
-            <div className="absolute -bottom-2 w-12 h-1 bg-primary rounded-full" />
-          </button>
-          <button
-            onClick={() => navigate("/settings")}
-            className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
-          >
-            <Settings className="w-6 h-6" />
-            <span className="text-xs font-medium">{t("nav.settings")}</span>
-          </button>
-        </div>
       </div>
     </>
   );

@@ -5,24 +5,26 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useParams } from "react-router-dom";
 import { vaultCategories } from "@/data/vaultCategories";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { categoryNameSchema, sanitizeInput } from "@/lib/validation";
 import { AccessControlModal } from "@/components/vault/AccessControlModal";
 import { ActionMenu, createSubcategoryActionMenu } from "@/components/vault/ActionMenu";
 import { supabase } from "@/integrations/supabase/client";
-import { filterItems, debounce } from "@/lib/searchUtils";
+import { filterItems } from "@/lib/searchUtils";
 import { CategoryViewSkeleton } from "@/components/skeletons";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getCategoryName, getSubcategoryName } from "@/lib/categoryTranslations";
+import { useAuth } from "@/contexts/AuthContext";
 
-import { getAllSubcategoryDocumentCounts, getCategoryDocumentCount, deleteSubcategoryWithCascade } from "@/services/vaultService";
+import { loadSubcategoriesOptimized, deleteSubcategoryWithCascade } from "@/services/vaultService";
 
 const CategoryView = () => {
   const navigate = useNavigate();
   const { categoryId } = useParams();
   const { toast } = useToast();
   const { t } = useLanguage();
+  const { user } = useAuth();
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [subcategoryName, setSubcategoryName] = useState("");
   const [customSubcategories, setCustomSubcategories] = useState<any[]>([]);
@@ -37,122 +39,104 @@ const CategoryView = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
 
+  const userId = user?.id;
+
   // Debounce search query
   useEffect(() => {
-    const debouncedSearch = debounce((query: string) => {
-      setDebouncedQuery(query);
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
     }, 300);
-
-    debouncedSearch(searchQuery);
+    return () => clearTimeout(timer);
   }, [searchQuery]);
 
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
+    if (userId && categoryId) {
+      loadData();
+    }
+  }, [categoryId, userId]);
 
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          navigate("/vault");
-          return;
-        }
+  const loadData = useCallback(async () => {
+    if (!userId || !categoryId) return;
+    
+    setLoading(true);
 
-        // Check if this is a default category from hardcoded data
-        const defaultCategory = vaultCategories.find(cat => cat.id === categoryId);
+    try {
+      // Check if this is a default category from hardcoded data
+      const defaultCategory = vaultCategories.find(cat => cat.id === categoryId);
 
-        // Load category from database
-        const { data: categoryData, error: catError } = await supabase
-          .from('categories')
-          .select('*')
-          .eq('id', categoryId)
-          .eq('user_id', user.id)
-          .is('deleted_at', null)
-          .maybeSingle();
-
-        if (catError) {
-          console.error("Error loading category:", catError);
-        }
-
-        // Use hardcoded category if it's a default, otherwise use DB data
-        const foundCategory = defaultCategory ? {
+      // Load category from database if not default
+      let foundCategory: any = null;
+      
+      if (defaultCategory) {
+        foundCategory = {
           id: defaultCategory.id,
           name: defaultCategory.name,
           icon: defaultCategory.icon,
           iconBgColor: defaultCategory.iconBgColor,
-          documentCount: 0,
           subcategories: defaultCategory.subcategories,
           isCustom: false
-        } : categoryData ? {
-          id: categoryData.id,
-          name: categoryData.name,
-          icon: Folder,
-          iconBgColor: categoryData.icon_bg_color || "bg-yellow-100",
-          documentCount: 0,
-          subcategories: [],
-          isCustom: true
-        } : null;
-
-        if (!foundCategory) {
-          navigate("/vault");
-          return;
-        }
-
-        setCategory(foundCategory);
-
-        // Get ALL subcategory document counts in ONE query (eliminates N+1)
-        const subDocCountMap = await getAllSubcategoryDocumentCounts(user.id);
-
-        // Start with hardcoded subcategories if this is a default category
-        let baseSubcategories = defaultCategory ? defaultCategory.subcategories.map(sub => ({
-          id: sub.id,
-          name: sub.name,
-          icon: sub.icon,
-          documentCount: subDocCountMap.get(sub.id) || 0,  // Lookup from map
-          isCustom: false
-        })) : [];
-
-        // Load custom subcategories from database
-        const { data: customSubsData, error: subError } = await supabase
-          .from('subcategories')
-          .select('*')
-          .eq('category_id', categoryId)
-          .eq('user_id', user.id)
-          .eq('is_custom', true)
+        };
+      } else {
+        const { data: categoryData } = await supabase
+          .from('categories')
+          .select('id, name, icon_bg_color')
+          .eq('id', categoryId)
+          .eq('user_id', userId)
           .is('deleted_at', null)
-          .order('created_at', { ascending: true });
+          .maybeSingle();
 
-        if (subError) {
-          console.error("Error loading custom subcategories:", subError);
+        if (categoryData) {
+          foundCategory = {
+            id: categoryData.id,
+            name: categoryData.name,
+            icon: Folder,
+            iconBgColor: categoryData.icon_bg_color || "bg-yellow-100",
+            subcategories: [],
+            isCustom: true
+          };
         }
-
-        // Add custom subcategories with counts from map (no extra DB calls!)
-        const customSubs = (customSubsData || []).map((sub: any) => ({
-          id: sub.id,
-          name: sub.name,
-          icon: Folder,
-          documentCount: subDocCountMap.get(sub.id) || 0,  // Lookup from map
-          isCustom: true
-        }));
-
-        // Merge: defaults + custom subcategories
-        const allSubs = [...baseSubcategories, ...customSubs];
-        setCustomSubcategories(allSubs);
-
-        // Get total document count for this category
-        const docCount = await getCategoryDocumentCount(categoryId!, user.id);
-        setTotalDocumentCount(docCount);
-      } catch (error) {
-        console.error("Error loading category data:", error);
-        navigate("/vault");
       }
 
+      if (!foundCategory) {
+        navigate("/vault");
+        return;
+      }
+
+      setCategory(foundCategory);
+
+      // Load subcategories with counts in parallel
+      const { subcategories: customSubs, docCountMap, totalDocCount } = 
+        await loadSubcategoriesOptimized(userId, categoryId);
+
+      // Start with hardcoded subcategories if this is a default category
+      let baseSubcategories = defaultCategory ? defaultCategory.subcategories.map(sub => ({
+        id: sub.id,
+        name: sub.name,
+        icon: sub.icon,
+        documentCount: docCountMap.get(sub.id) || 0,
+        isCustom: false
+      })) : [];
+
+      // Add custom subcategories with counts
+      const customSubsWithCounts = customSubs.map((sub: any) => ({
+        id: sub.id,
+        name: sub.name,
+        icon: Folder,
+        documentCount: docCountMap.get(sub.id) || 0,
+        isCustom: true
+      }));
+
+      setCustomSubcategories([...baseSubcategories, ...customSubsWithCounts]);
+      setTotalDocumentCount(totalDocCount);
+    } catch (error) {
+      console.error("Error loading category data:", error);
+      navigate("/vault");
+    } finally {
       setLoading(false);
-    };
+    }
+  }, [categoryId, userId, navigate]);
 
-    loadData();
-  }, [categoryId, navigate]);
-
-  const handleAddSubcategory = async () => {
+  const handleAddSubcategory = useCallback(async () => {
     const sanitizedName = sanitizeInput(subcategoryName);
     const validation = categoryNameSchema.safeParse(sanitizedName);
 
@@ -180,13 +164,12 @@ const CategoryView = () => {
     }
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("User not authenticated");
+      if (!userId) throw new Error("User not authenticated");
 
       const { data, error } = await supabase
         .from('subcategories')
         .insert({
-          user_id: user.id,
+          user_id: userId,
           category_id: categoryId,
           name: validation.data,
           is_custom: true
@@ -196,7 +179,7 @@ const CategoryView = () => {
 
       if (error) throw error;
 
-      // Add the new subcategory to state immediately (optimistic update)
+      // Optimistic update
       const newSub = {
         id: data.id,
         name: data.name,
@@ -221,12 +204,11 @@ const CategoryView = () => {
         variant: "destructive"
       });
     }
-  };
+  }, [subcategoryName, customSubcategories, userId, categoryId, toast]);
 
-  const handleDeleteClick = (subcategory: any, e: React.MouseEvent) => {
+  const handleDeleteClick = useCallback((subcategory: any, e: React.MouseEvent) => {
     e.stopPropagation();
 
-    // Prevent deletion of default subcategories
     if (!subcategory.isCustom) {
       toast({
         title: "Cannot delete",
@@ -237,30 +219,24 @@ const CategoryView = () => {
     }
 
     setDeleteConfirm({ show: true, subcategory });
-  };
+  }, [toast]);
 
-  const confirmDelete = async () => {
-    if (!deleteConfirm.subcategory) return;
+  const confirmDelete = useCallback(async () => {
+    if (!deleteConfirm.subcategory || !userId || !categoryId) return;
 
     const subcategoryId = deleteConfirm.subcategory.id;
-    const subcategoryName = deleteConfirm.subcategory.name;
+    const subName = deleteConfirm.subcategory.name;
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("User not authenticated");
+      await deleteSubcategoryWithCascade(subcategoryId, categoryId, userId);
 
-      // Use cascade delete from vault service
-      await deleteSubcategoryWithCascade(subcategoryId, categoryId!, user.id);
-
-      // Update state immediately (remove from list)
+      // Optimistic update
       setCustomSubcategories(prev => prev.filter(s => s.id !== subcategoryId));
-
-      // Update total document count
       setTotalDocumentCount(prev => prev - (deleteConfirm.subcategory?.documentCount || 0));
 
       toast({
         title: "Subcategory deleted",
-        description: `${subcategoryName} and all related content have been removed`
+        description: `${subName} and all related content have been removed`
       });
 
       setDeleteConfirm({ show: false, subcategory: null });
@@ -272,9 +248,13 @@ const CategoryView = () => {
         variant: "destructive"
       });
     }
-  };
+  }, [deleteConfirm.subcategory, userId, categoryId, toast]);
 
-
+  // Memoized filtered subcategories
+  const filteredSubcategories = useMemo(() => 
+    filterItems(customSubcategories, debouncedQuery, { searchKeys: ['name'] }),
+    [customSubcategories, debouncedQuery]
+  );
 
   if (loading) {
     return <CategoryViewSkeleton />;
@@ -286,12 +266,6 @@ const CategoryView = () => {
   }
 
   const CategoryIcon = category?.icon || Folder;
-  const allSubcategories = customSubcategories;
-
-  // Filter subcategories based on search
-  const filteredSubcategories = filterItems(allSubcategories, debouncedQuery, {
-    searchKeys: ['name'],
-  });
 
   return (
     <>
@@ -353,7 +327,6 @@ const CategoryView = () => {
                       <p className="text-sm text-[#626C71]">{subcategory.documentCount} {t("common.documents")}</p>
                     </button>
 
-                    {/* Action Menu - Three dots with Manage Access and Delete */}
                     <div className="absolute top-2 right-2 z-10">
                       <ActionMenu
                         items={createSubcategoryActionMenu(
@@ -381,128 +354,124 @@ const CategoryView = () => {
           )}
         </div>
 
-
-        {
-          deleteConfirm.show && deleteConfirm.subcategory && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-              <div className="bg-card rounded-3xl p-6 w-full max-w-md">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                    <AlertTriangle className="w-6 h-6 text-purple-600" />
-                  </div>
-                  <h2 className="text-xl font-bold text-foreground">{t("subcategory.deleteTitle")}</h2>
+        {/* Delete Confirmation Dialog */}
+        {deleteConfirm.show && deleteConfirm.subcategory && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <div className="bg-card rounded-3xl p-6 w-full max-w-md">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                  <AlertTriangle className="w-6 h-6 text-purple-600" />
                 </div>
+                <h2 className="text-xl font-bold text-foreground">{t("subcategory.deleteTitle")}</h2>
+              </div>
 
-                <p className="text-foreground mb-2">
-                  {t("subcategory.deleteConfirm")} <span className="font-semibold">{getSubcategoryName(deleteConfirm.subcategory.id, deleteConfirm.subcategory.name, t)}</span>?
+              <p className="text-foreground mb-2">
+                {t("subcategory.deleteConfirm")} <span className="font-semibold">{getSubcategoryName(deleteConfirm.subcategory.id, deleteConfirm.subcategory.name, t)}</span>?
+              </p>
+
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-6">
+                <p className="text-sm text-purple-800 font-medium">
+                  {deleteConfirm.subcategory.documentCount} {deleteConfirm.subcategory.documentCount === 1 ? t("common.document") : t("common.documents")} {t("subcategory.willBeDeleted")}
                 </p>
+                <p className="text-xs text-purple-600 mt-1">{t("subcategory.cannotUndo")}</p>
+              </div>
 
-                <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-6">
-                  <p className="text-sm text-purple-800 font-medium">
-                    {deleteConfirm.subcategory.documentCount} {deleteConfirm.subcategory.documentCount === 1 ? t("common.document") : t("common.documents")} {t("subcategory.willBeDeleted")}
-                  </p>
-                  <p className="text-xs text-purple-600 mt-1">{t("subcategory.cannotUndo")}</p>
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setDeleteConfirm({ show: false, subcategory: null })}
+                  className="flex-1"
+                >
+                  {t("common.cancel")}
+                </Button>
+                <Button
+                  onClick={confirmDelete}
+                  className="flex-1 bg-purple-500 hover:bg-purple-600 text-white"
+                >
+                  {t("common.delete")}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Add Subcategory Dialog */}
+        {showAddDialog && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <div className="bg-card rounded-3xl p-6 w-full max-w-md relative">
+              <button
+                onClick={() => setShowAddDialog(false)}
+                className="absolute right-4 top-4 text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-6 h-6" />
+              </button>
+
+              <h2 className="text-2xl font-bold text-foreground mb-6">{t("subcategory.add")}</h2>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">
+                    {t("subcategory.name")}
+                  </label>
+                  <Input
+                    placeholder={t("subcategory.namePlaceholder")}
+                    value={subcategoryName}
+                    onChange={(e) => setSubcategoryName(e.target.value)}
+                    className="bg-background border-border"
+                    onKeyPress={(e) => e.key === 'Enter' && handleAddSubcategory()}
+                    autoFocus
+                  />
                 </div>
 
-                <div className="flex gap-3">
+                <div className="flex gap-3 pt-2">
                   <Button
                     variant="outline"
-                    onClick={() => setDeleteConfirm({ show: false, subcategory: null })}
+                    onClick={() => setShowAddDialog(false)}
                     className="flex-1"
                   >
                     {t("common.cancel")}
                   </Button>
                   <Button
-                    onClick={confirmDelete}
-                    className="flex-1 bg-purple-500 hover:bg-purple-600 text-white"
+                    onClick={handleAddSubcategory}
+                    className="flex-1 bg-primary hover:bg-primary/90"
                   >
-                    {t("common.delete")}
+                    {t("subcategory.create")}
                   </Button>
                 </div>
               </div>
             </div>
-          )
-        }
+          </div>
+        )}
 
-        {
-          showAddDialog && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-              <div className="bg-card rounded-3xl p-6 w-full max-w-md relative">
-                <button
-                  onClick={() => setShowAddDialog(false)}
-                  className="absolute right-4 top-4 text-muted-foreground hover:text-foreground"
-                >
-                  <X className="w-6 h-6" />
-                </button>
+        {/* Bottom Navigation */}
+        <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
+          <div className="flex justify-around items-center h-16 max-w-md mx-auto">
+            <button onClick={() => navigate("/dashboard")} className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
+              <Home className="w-6 h-6" />
+              <span className="text-xs font-medium">{t("nav.home")}</span>
+            </button>
+            <button onClick={() => navigate("/vault")} className="flex flex-col items-center gap-1 text-primary relative">
+              <VaultIcon className="w-6 h-6" />
+              <span className="text-xs font-medium">{t("nav.vault")}</span>
+              <div className="absolute -bottom-2 w-12 h-1 bg-primary rounded-full" />
+            </button>
+            <button onClick={() => navigate("/settings")} className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
+              <Settings className="w-6 h-6" />
+              <span className="text-xs font-medium">{t("nav.settings")}</span>
+            </button>
+          </div>
+        </div>
 
-                <h2 className="text-2xl font-bold text-foreground mb-6">{t("subcategory.add")}</h2>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium text-foreground mb-2 block">
-                      {t("subcategory.name")}
-                    </label>
-                    <Input
-                      placeholder={t("subcategory.namePlaceholder")}
-                      value={subcategoryName}
-                      onChange={(e) => setSubcategoryName(e.target.value)}
-                      className="bg-background border-border"
-                      onKeyPress={(e) => e.key === 'Enter' && handleAddSubcategory()}
-                    />
-                  </div>
-
-                  <div className="flex gap-3 pt-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowAddDialog(false)}
-                      className="flex-1"
-                    >
-                      {t("common.cancel")}
-                    </Button>
-                    <Button
-                      onClick={handleAddSubcategory}
-                      className="flex-1"
-                    >
-                      {t("common.add")}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
+        {/* Access Control Modal */}
         {accessControlSubcategory && (
           <AccessControlModal
+            isOpen={!!accessControlSubcategory}
+            onClose={() => setAccessControlSubcategory(null)}
             resourceType="subcategory"
             resourceId={accessControlSubcategory.id}
-            resourceName={accessControlSubcategory.name}
-            onClose={() => setAccessControlSubcategory(null)}
+            resourceName={getSubcategoryName(accessControlSubcategory.id, accessControlSubcategory.name, t)}
           />
         )}
-      </div>
-
-      <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
-        <div className="flex justify-around items-center h-16 max-w-md mx-auto">
-          <button
-            onClick={() => navigate("/dashboard")}
-            className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
-          >
-            <Home className="w-6 h-6" />
-            <span className="text-xs font-medium">Home</span>
-          </button>
-          <button className="flex flex-col items-center gap-1 text-primary relative">
-            <VaultIcon className="w-6 h-6" />
-            <span className="text-xs font-medium">Vault</span>
-            <div className="absolute -bottom-2 w-12 h-1 bg-primary rounded-full" />
-          </button>
-          <button
-            onClick={() => navigate("/settings")}
-            className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
-          >
-            <Settings className="w-6 h-6" />
-            <span className="text-xs font-medium">Settings</span>
-          </button>
-        </div>
       </div>
     </>
   );
