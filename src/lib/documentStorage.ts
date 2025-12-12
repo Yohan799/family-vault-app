@@ -16,6 +16,36 @@ export interface StoredDocument {
   externalSource?: string;
 }
 
+// Cache for user ID to avoid repeated auth calls
+let cachedUserId: string | null = null;
+let userIdCacheTime = 0;
+const USER_ID_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+const getCachedUserId = async (): Promise<string | null> => {
+  const now = Date.now();
+  if (cachedUserId && now - userIdCacheTime < USER_ID_CACHE_DURATION) {
+    return cachedUserId;
+  }
+  
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    cachedUserId = user.id;
+    userIdCacheTime = now;
+  }
+  return user?.id || null;
+};
+
+// Helper to extract path from URL or return path as-is
+const extractPath = (fileUrl: string): string => {
+  if (fileUrl?.startsWith('http')) {
+    const parts = fileUrl.split('/documents/');
+    if (parts.length === 2) {
+      return parts[1];
+    }
+  }
+  return fileUrl;
+};
+
 /**
  * Store document in Supabase Storage and Database
  */
@@ -27,13 +57,13 @@ export const storeDocument = async (
   externalSource?: string
 ): Promise<StoredDocument> => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("User not authenticated");
+    const userId = await getCachedUserId();
+    if (!userId) throw new Error("User not authenticated");
 
     // Upload file to Supabase Storage
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
-    const filePath = `${user.id}/${categoryId}/${fileName}`;
+    const filePath = `${userId}/${categoryId}/${fileName}`;
 
     const { error: uploadError } = await supabase.storage
       .from('documents')
@@ -45,7 +75,7 @@ export const storeDocument = async (
     const { data, error } = await supabase
       .from('documents')
       .insert({
-        user_id: user.id,
+        user_id: userId,
         category_id: categoryId,
         subcategory_id: subcategoryId,
         folder_id: folderId,
@@ -83,7 +113,7 @@ export const storeDocument = async (
 };
 
 /**
- * Get documents for a specific location
+ * Get documents for a specific location - OPTIMIZED with batch signed URL generation
  */
 export const getDocuments = async (
   categoryId: string,
@@ -91,13 +121,13 @@ export const getDocuments = async (
   folderId?: string
 ): Promise<StoredDocument[]> => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return [];
+    const userId = await getCachedUserId();
+    if (!userId) return [];
 
     let query = supabase
       .from('documents')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .eq('category_id', categoryId)
       .is('deleted_at', null);
 
@@ -113,45 +143,47 @@ export const getDocuments = async (
     if (error) throw error;
 
     const docs = data || [];
+    if (docs.length === 0) return [];
 
-    // Generate signed URLs for each document
-    const documentsWithUrls: StoredDocument[] = await Promise.all(
-      docs.map(async (doc) => {
-        let path = doc.file_url as string;
+    // Extract all paths for batch URL generation
+    const paths = docs.map(doc => extractPath(doc.file_url as string)).filter(Boolean);
 
-        // Backward compatibility: if we stored a full URL earlier, extract the path
-        if (path?.startsWith('http')) {
-          const parts = path.split('/documents/');
-          if (parts.length === 2) {
-            path = parts[1];
+    // Generate signed URLs in BATCH (single API call instead of N calls)
+    let signedUrlMap = new Map<string, string>();
+    if (paths.length > 0) {
+      const { data: signedUrls } = await supabase.storage
+        .from('documents')
+        .createSignedUrls(paths, 60 * 60); // 1 hour
+
+      if (signedUrls) {
+        signedUrls.forEach((item, index) => {
+          if (item.signedUrl) {
+            signedUrlMap.set(paths[index], item.signedUrl);
           }
-        }
+        });
+      }
+    }
 
-        let signedUrl = '';
-        if (path) {
-          const { data: signed } = await supabase.storage
-            .from('documents')
-            .createSignedUrl(path, 60 * 60); // 1 hour
+    // Map documents with signed URLs from the batch result
+    const documentsWithUrls: StoredDocument[] = docs.map((doc) => {
+      const path = extractPath(doc.file_url as string);
+      const signedUrl = signedUrlMap.get(path) || '';
 
-          signedUrl = signed?.signedUrl || '';
-        }
-
-        return {
-          id: doc.id,
-          name: doc.file_name,
-          size: doc.file_size || 0,
-          type: doc.file_type || '',
-          date: doc.uploaded_at,
-          categoryId: doc.category_id || '',
-          subcategoryId: doc.subcategory_id || undefined,
-          folderId: doc.folder_id || undefined,
-          fileUrl: signedUrl,
-          viewCount: doc.view_count || 0,
-          downloadCount: doc.download_count || 0,
-          externalSource: doc.external_source || undefined,
-        } as StoredDocument;
-      })
-    );
+      return {
+        id: doc.id,
+        name: doc.file_name,
+        size: doc.file_size || 0,
+        type: doc.file_type || '',
+        date: doc.uploaded_at,
+        categoryId: doc.category_id || '',
+        subcategoryId: doc.subcategory_id || undefined,
+        folderId: doc.folder_id || undefined,
+        fileUrl: signedUrl,
+        viewCount: doc.view_count || 0,
+        downloadCount: doc.download_count || 0,
+        externalSource: doc.external_source || undefined,
+      };
+    });
 
     return documentsWithUrls;
   } catch (error) {
@@ -161,60 +193,63 @@ export const getDocuments = async (
 };
 
 /**
- * Get all documents for a category
+ * Get all documents for a category - OPTIMIZED with batch signed URL generation
  */
 export const getAllDocumentsInCategory = async (categoryId: string): Promise<StoredDocument[]> => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return [];
+    const userId = await getCachedUserId();
+    if (!userId) return [];
 
     const { data, error } = await supabase
       .from('documents')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .eq('category_id', categoryId)
       .is('deleted_at', null);
 
     if (error) throw error;
 
     const docs = data || [];
+    if (docs.length === 0) return [];
 
-    const documentsWithUrls: StoredDocument[] = await Promise.all(
-      docs.map(async (doc) => {
-        let path = doc.file_url as string;
+    // Extract all paths for batch URL generation
+    const paths = docs.map(doc => extractPath(doc.file_url as string)).filter(Boolean);
 
-        if (path?.startsWith('http')) {
-          const parts = path.split('/documents/');
-          if (parts.length === 2) {
-            path = parts[1];
+    // Generate signed URLs in BATCH
+    let signedUrlMap = new Map<string, string>();
+    if (paths.length > 0) {
+      const { data: signedUrls } = await supabase.storage
+        .from('documents')
+        .createSignedUrls(paths, 60 * 60);
+
+      if (signedUrls) {
+        signedUrls.forEach((item, index) => {
+          if (item.signedUrl) {
+            signedUrlMap.set(paths[index], item.signedUrl);
           }
-        }
+        });
+      }
+    }
 
-        let signedUrl = '';
-        if (path) {
-          const { data: signed } = await supabase.storage
-            .from('documents')
-            .createSignedUrl(path, 60 * 60);
+    const documentsWithUrls: StoredDocument[] = docs.map((doc) => {
+      const path = extractPath(doc.file_url as string);
+      const signedUrl = signedUrlMap.get(path) || '';
 
-          signedUrl = signed?.signedUrl || '';
-        }
-
-        return {
-          id: doc.id,
-          name: doc.file_name,
-          size: doc.file_size || 0,
-          type: doc.file_type || '',
-          date: doc.uploaded_at,
-          categoryId: doc.category_id || '',
-          subcategoryId: doc.subcategory_id || undefined,
-          folderId: doc.folder_id || undefined,
-          fileUrl: signedUrl,
-          viewCount: doc.view_count || 0,
-          downloadCount: doc.download_count || 0,
-          externalSource: doc.external_source || undefined,
-        } as StoredDocument;
-      })
-    );
+      return {
+        id: doc.id,
+        name: doc.file_name,
+        size: doc.file_size || 0,
+        type: doc.file_type || '',
+        date: doc.uploaded_at,
+        categoryId: doc.category_id || '',
+        subcategoryId: doc.subcategory_id || undefined,
+        folderId: doc.folder_id || undefined,
+        fileUrl: signedUrl,
+        viewCount: doc.view_count || 0,
+        downloadCount: doc.download_count || 0,
+        externalSource: doc.external_source || undefined,
+      };
+    });
 
     return documentsWithUrls;
   } catch (error) {
@@ -228,21 +263,15 @@ export const getAllDocumentsInCategory = async (categoryId: string): Promise<Sto
  */
 export const deleteDocument = async (documentId: string): Promise<{ success: boolean; error?: string }> => {
   try {
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError) {
-      console.error('Auth error:', authError);
-      return { success: false, error: 'Authentication failed' };
-    }
-
-    if (!user) {
+    const userId = await getCachedUserId();
+    if (!userId) {
       return { success: false, error: 'User not authenticated' };
     }
 
     // Use security definer function for atomic cascade deletion
     const { data, error } = await supabase.rpc('soft_delete_document', {
       _document_id: documentId,
-      _user_id: user.id
+      _user_id: userId
     });
 
     if (error) {
@@ -271,15 +300,16 @@ export interface DownloadResult {
  */
 export const downloadDocument = async (doc: StoredDocument): Promise<DownloadResult> => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("User not authenticated");
+    const userId = await getCachedUserId();
+    if (!userId) throw new Error("User not authenticated");
 
-    // Increment download count
-    await supabase
+    // Increment download count (fire and forget - don't block)
+    supabase
       .from('documents')
       .update({ download_count: doc.downloadCount + 1 })
       .eq('id', doc.id)
-      .eq('user_id', user.id);
+      .eq('user_id', userId)
+      .then(() => {});
 
     // Native APK download - use Filesystem plugin
     if (Capacitor.isNativePlatform()) {
@@ -367,27 +397,30 @@ export const downloadDocument = async (doc: StoredDocument): Promise<DownloadRes
 };
 
 /**
- * Increment view count
+ * Increment view count - fire and forget (non-blocking)
  */
 export const incrementViewCount = async (documentId: string): Promise<void> => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("User not authenticated");
+    const userId = await getCachedUserId();
+    if (!userId) return;
 
-    const { data } = await supabase
+    // Fire and forget - don't block UI
+    supabase
       .from('documents')
       .select('view_count')
       .eq('id', documentId)
-      .eq('user_id', user.id)
-      .single();
-
-    if (data) {
-      await supabase
-        .from('documents')
-        .update({ view_count: (data.view_count || 0) + 1 })
-        .eq('id', documentId)
-        .eq('user_id', user.id);
-    }
+      .eq('user_id', userId)
+      .single()
+      .then(({ data }) => {
+        if (data) {
+          supabase
+            .from('documents')
+            .update({ view_count: (data.view_count || 0) + 1 })
+            .eq('id', documentId)
+            .eq('user_id', userId)
+            .then(() => {});
+        }
+      });
   } catch (error) {
     console.error('Error incrementing view count:', error);
   }
@@ -414,8 +447,8 @@ export const renameDocument = async (
   newName: string
 ): Promise<{ success: boolean; error?: string }> => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: 'User not authenticated' };
+    const userId = await getCachedUserId();
+    if (!userId) return { success: false, error: 'User not authenticated' };
 
     if (!newName || newName.trim() === '') {
       return { success: false, error: 'File name cannot be empty' };
@@ -428,7 +461,7 @@ export const renameDocument = async (
         updated_at: new Date().toISOString()
       })
       .eq('id', documentId)
-      .eq('user_id', user.id);
+      .eq('user_id', userId);
 
     if (error) {
       console.error('Error renaming document:', error);
