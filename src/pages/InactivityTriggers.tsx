@@ -116,7 +116,7 @@ const InactivityTriggers = () => {
     return (
         <div className="min-h-screen bg-background pb-20">
             {/* Header */}
-            <div className="bg-primary/10 p-6 rounded-b-3xl">
+            <div className="bg-primary/10 p-6 pt-10 rounded-b-3xl">
                 <div className="flex items-center gap-4 mb-4">
                     <BackButton />
                     <div className="flex-1">
@@ -188,20 +188,63 @@ const InactivityTriggers = () => {
 
                         <div className="space-y-2">
                             <Label htmlFor="days">{t("inactivity.inactiveDaysThreshold")}</Label>
-                            <Input
-                                id="days"
-                                type="number"
-                                min="1"
-                                max="365"
-                                value={settings.inactiveDays}
-                                onChange={(e) =>
-                                    setSettings((prev) => ({
-                                        ...prev,
-                                        inactiveDays: parseInt(e.target.value) || 1,
-                                    }))
-                                }
-                                disabled={!settings.isActive}
-                            />
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-10 w-10 flex-shrink-0"
+                                    onClick={() => {
+                                        if (settings.inactiveDays > 1) {
+                                            setSettings((prev) => ({ ...prev, inactiveDays: prev.inactiveDays - 1 }));
+                                        }
+                                    }}
+                                    disabled={!settings.isActive || settings.inactiveDays <= 1}
+                                >
+                                    <span className="text-lg font-bold">−</span>
+                                </Button>
+                                <Input
+                                    id="days"
+                                    type="text"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
+                                    className="text-center text-lg font-semibold"
+                                    value={settings.inactiveDays === 0 ? "" : settings.inactiveDays.toString()}
+                                    onChange={(e) => {
+                                        const value = e.target.value.replace(/[^0-9]/g, "");
+                                        if (value === "") {
+                                            setSettings((prev) => ({ ...prev, inactiveDays: 0 }));
+                                        } else {
+                                            const num = parseInt(value, 10);
+                                            if (!isNaN(num) && num <= 365) {
+                                                setSettings((prev) => ({ ...prev, inactiveDays: num }));
+                                            }
+                                        }
+                                    }}
+                                    onBlur={() => {
+                                        if (settings.inactiveDays < 1) {
+                                            setSettings((prev) => ({ ...prev, inactiveDays: 1 }));
+                                        } else if (settings.inactiveDays > 365) {
+                                            setSettings((prev) => ({ ...prev, inactiveDays: 365 }));
+                                        }
+                                    }}
+                                    disabled={!settings.isActive}
+                                />
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-10 w-10 flex-shrink-0"
+                                    onClick={() => {
+                                        if (settings.inactiveDays < 365) {
+                                            setSettings((prev) => ({ ...prev, inactiveDays: prev.inactiveDays + 1 }));
+                                        }
+                                    }}
+                                    disabled={!settings.isActive || settings.inactiveDays >= 365}
+                                >
+                                    <span className="text-lg font-bold">+</span>
+                                </Button>
+                            </div>
                             <p className="text-xs text-muted-foreground">
                                 {t("inactivity.daysDescription")}
                             </p>

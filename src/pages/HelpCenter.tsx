@@ -76,7 +76,7 @@ const HelpCenter = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <div className="bg-primary/20 text-foreground p-6 rounded-b-3xl">
+      <div className="bg-primary/20 text-foreground p-6 pt-10 rounded-b-3xl">
         <div className="flex items-center gap-4">
           <BackButton to="/settings" />
           <h1 className="text-2xl font-bold">{t("help.title")}</h1>
@@ -92,7 +92,7 @@ const HelpCenter = () => {
             </div>
             <span className="text-xs font-medium text-foreground">{t("help.call")}</span>
           </a>
-          
+
           <a href="mailto:support@familyvault.com" className="bg-card rounded-2xl p-4 flex flex-col items-center gap-2 hover:bg-accent transition-colors">
             <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
               <Mail className="w-6 h-6 text-blue-600" />

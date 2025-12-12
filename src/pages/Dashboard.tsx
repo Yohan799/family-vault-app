@@ -76,9 +76,9 @@ const Dashboard = () => {
 
   const loadAllDashboardData = useCallback(async () => {
     if (!user?.id) return;
-    
+
     setIsLoadingStats(true);
-    
+
     try {
       // Run all data loading in parallel
       const [dashboardStats, _, actions, unreadCount] = await Promise.all([
@@ -143,7 +143,7 @@ const Dashboard = () => {
   return (
     <>
       <div className="min-h-screen bg-background pb-24">
-        <div className="bg-primary/20 text-foreground p-4 rounded-b-3xl">
+        <div className="bg-primary/20 text-foreground p-4 pt-8 rounded-b-3xl">
           <div className="flex justify-between items-start mb-3">
             <div>
               <p className="text-xs text-muted-foreground mb-0.5">{t("dashboard.welcome")}</p>
@@ -221,8 +221,8 @@ const Dashboard = () => {
                 quickActions.map((action) => {
                   const Icon = iconMap[action.icon || 'Plus'] || Plus;
                   return (
-                    <button 
-                      key={action.id} 
+                    <button
+                      key={action.id}
                       onClick={() => action.route && navigate(action.route)}
                       className="w-full bg-card rounded-lg p-2.5 flex items-center gap-2.5 hover:bg-accent transition-colors"
                     >

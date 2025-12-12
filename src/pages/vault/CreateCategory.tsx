@@ -49,7 +49,7 @@ const CreateCategory = () => {
   return (
     <div className="min-h-screen bg-[#FCFCF9]">
       {/* Header */}
-      <div className="bg-[#FCFCF9] p-6 border-b">
+      <div className="bg-[#FCFCF9] p-6 pt-10 border-b">
         <div className="flex items-center gap-4">
           <button onClick={() => navigate(-1)} className="p-1">
             <ArrowLeft className="w-6 h-6 text-[#1F2121]" />
@@ -80,16 +80,14 @@ const CreateCategory = () => {
                 <button
                   key={item.id}
                   onClick={() => setSelectedIcon(item.id)}
-                  className={`w-14 h-14 rounded-xl flex items-center justify-center transition-all ${
-                    selectedIcon === item.id
+                  className={`w-14 h-14 rounded-xl flex items-center justify-center transition-all ${selectedIcon === item.id
                       ? "bg-[#6D28D9] border-2 border-[#6D28D9]"
                       : "bg-white border-2 border-border"
-                  }`}
+                    }`}
                 >
                   <Icon
-                    className={`w-6 h-6 ${
-                      selectedIcon === item.id ? "text-white" : "text-muted-foreground"
-                    }`}
+                    className={`w-6 h-6 ${selectedIcon === item.id ? "text-white" : "text-muted-foreground"
+                      }`}
                   />
                 </button>
               );
@@ -105,9 +103,8 @@ const CreateCategory = () => {
               <button
                 key={color.id}
                 onClick={() => setSelectedColor(color.id)}
-                className={`w-12 h-12 rounded-full ${color.bg} ${
-                  selectedColor === color.id ? "ring-4 ring-offset-2 ring-primary" : ""
-                }`}
+                className={`w-12 h-12 rounded-full ${color.bg} ${selectedColor === color.id ? "ring-4 ring-offset-2 ring-primary" : ""
+                  }`}
               />
             ))}
           </div>

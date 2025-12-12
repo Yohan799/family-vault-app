@@ -51,7 +51,7 @@ const EmailPreferences = () => {
 
     const newEmails = [...emails, newEmail];
     const additionalEmails = newEmails.filter(e => e !== primaryEmail);
-    
+
     const { error } = await supabase
       .from("profiles")
       .update({ additional_emails: additionalEmails })
@@ -78,7 +78,7 @@ const EmailPreferences = () => {
 
   const handleDeleteEmail = async (index: number) => {
     const emailToDelete = emails[index];
-    
+
     if (emails.length === 1) {
       toast({
         title: t("emailPrefs.cannotDelete"),
@@ -92,10 +92,10 @@ const EmailPreferences = () => {
       const newEmails = emails.filter((_, i) => i !== index);
       const newPrimaryEmail = newEmails[0];
       const newAdditionalEmails = newEmails.slice(1);
-      
+
       const { error } = await supabase
         .from("profiles")
-        .update({ 
+        .update({
           email: newPrimaryEmail,
           additional_emails: newAdditionalEmails
         })
@@ -122,7 +122,7 @@ const EmailPreferences = () => {
 
     const newEmails = emails.filter((_, i) => i !== index);
     const additionalEmails = newEmails.filter(e => e !== primaryEmail);
-    
+
     const { error } = await supabase
       .from("profiles")
       .update({ additional_emails: additionalEmails })
@@ -156,10 +156,10 @@ const EmailPreferences = () => {
 
     const newAdditionalEmails = emails.filter(e => e !== email && e !== primaryEmail);
     newAdditionalEmails.push(primaryEmail);
-    
+
     const { error } = await supabase
       .from("profiles")
-      .update({ 
+      .update({
         email: email,
         additional_emails: newAdditionalEmails
       })
@@ -186,7 +186,7 @@ const EmailPreferences = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background pb-safe">
-        <div className="bg-primary/20 text-foreground p-4 sm:p-6 rounded-b-3xl">
+        <div className="bg-primary/20 text-foreground p-4 pt-10 sm:p-6 sm:pt-10 rounded-b-3xl">
           <div className="flex items-center gap-3">
             <BackButton to="/settings" />
             <h1 className="text-xl sm:text-2xl font-bold">{t("emailPrefs.title")}</h1>
@@ -201,7 +201,7 @@ const EmailPreferences = () => {
 
   return (
     <div className="min-h-screen bg-background pb-safe">
-      <div className="bg-primary/20 text-foreground p-4 sm:p-6 rounded-b-3xl">
+      <div className="bg-primary/20 text-foreground p-4 pt-10 sm:p-6 sm:pt-10 rounded-b-3xl">
         <div className="flex items-center gap-3">
           <BackButton to="/settings" />
           <h1 className="text-xl sm:text-2xl font-bold">{t("emailPrefs.title")}</h1>

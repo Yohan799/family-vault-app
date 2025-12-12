@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 const CategoryViewSkeleton = () => {
     return (
         <div className="min-h-screen bg-[#FCFCF9] pb-20">
-            <div className="bg-[#FCFCF9] p-6">
+            <div className="bg-[#FCFCF9] p-6 pt-10">
                 <div className="flex items-center gap-4 mb-4">
                     <Skeleton className="w-6 h-6 rounded" />
                     <div className="flex-1 text-center -ml-10">

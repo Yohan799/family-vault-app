@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
         <!-- Customize your theme here. -->
@@ -15,10 +14,11 @@
         <item name="android:background">@null</item>
     </style>
 
-    <!-- Launch theme - centered logo splash -->
+    <!-- Launch theme for Android 12+ (API 31+) - uses new splash screen API -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="android:windowBackground">@drawable/splash_background</item>
         <item name="windowSplashScreenBackground">@color/splashBackground</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash</item>
         <item name="windowSplashScreenIconBackgroundColor">@color/splashBackground</item>
         <item name="android:fitsSystemWindows">true</item>
     </style>

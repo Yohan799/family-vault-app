@@ -57,7 +57,7 @@ const Notifications = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <div className="bg-primary text-primary-foreground p-6">
+      <div className="bg-primary text-primary-foreground p-6 pt-10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")} className="text-primary-foreground">

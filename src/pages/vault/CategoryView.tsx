@@ -57,7 +57,7 @@ const CategoryView = () => {
 
   const loadData = useCallback(async () => {
     if (!userId || !categoryId) return;
-    
+
     setLoading(true);
 
     try {
@@ -66,7 +66,7 @@ const CategoryView = () => {
 
       // Load category from database if not default
       let foundCategory: any = null;
-      
+
       if (defaultCategory) {
         foundCategory = {
           id: defaultCategory.id,
@@ -105,7 +105,7 @@ const CategoryView = () => {
       setCategory(foundCategory);
 
       // Load subcategories with counts in parallel
-      const { subcategories: customSubs, docCountMap, totalDocCount } = 
+      const { subcategories: customSubs, docCountMap, totalDocCount } =
         await loadSubcategoriesOptimized(userId, categoryId);
 
       // Start with hardcoded subcategories if this is a default category
@@ -251,7 +251,7 @@ const CategoryView = () => {
   }, [deleteConfirm.subcategory, userId, categoryId, toast]);
 
   // Memoized filtered subcategories
-  const filteredSubcategories = useMemo(() => 
+  const filteredSubcategories = useMemo(() =>
     filterItems(customSubcategories, debouncedQuery, { searchKeys: ['name'] }),
     [customSubcategories, debouncedQuery]
   );
@@ -270,7 +270,7 @@ const CategoryView = () => {
   return (
     <>
       <div className="min-h-screen bg-[#FCFCF9] pb-20">
-        <div className="bg-[#FCFCF9] p-6">
+        <div className="bg-[#FCFCF9] p-6 pt-10">
           <div className="flex items-center gap-4 mb-4">
             <BackButton />
             <div className="flex-1 text-center -ml-10">
@@ -435,7 +435,7 @@ const CategoryView = () => {
                     onClick={handleAddSubcategory}
                     className="flex-1 bg-primary hover:bg-primary/90"
                   >
-                    {t("subcategory.create")}
+                    {t("common.create")}
                   </Button>
                 </div>
               </div>

@@ -28,7 +28,7 @@ const BackupHistory = () => {
 
   const loadBackups = async () => {
     if (!user) return;
-    
+
     try {
       setIsLoading(true);
       const data = await fetchBackups(user.id);
@@ -78,7 +78,7 @@ const BackupHistory = () => {
 
     try {
       const signedUrl = await downloadBackupFile(selectedBackup.file_path);
-      
+
       // Download the file
       const link = document.createElement('a');
       link.href = signedUrl;
@@ -105,7 +105,7 @@ const BackupHistory = () => {
   const handleDownload = async (backup: Backup) => {
     try {
       const signedUrl = await downloadBackupFile(backup.file_path);
-      
+
       const link = document.createElement('a');
       link.href = signedUrl;
       link.download = `backup_${format(new Date(backup.created_at), 'yyyy-MM-dd')}.json`;
@@ -133,7 +133,7 @@ const BackupHistory = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="bg-primary/20 text-foreground p-6 rounded-b-3xl">
+      <div className="bg-primary/20 text-foreground p-6 pt-10 rounded-b-3xl">
         <div className="flex items-center gap-4">
           <BackButton to="/settings" />
           <h1 className="text-2xl font-bold">Backup History</h1>
@@ -195,7 +195,7 @@ const BackupHistory = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="flex gap-2">
                   <Button
                     variant="outline"

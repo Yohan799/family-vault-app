@@ -197,7 +197,7 @@ const SettingsPage = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="bg-primary/20 text-foreground p-6 rounded-b-3xl mb-4">
+      <div className="bg-primary/20 text-foreground p-6 pt-10 rounded-b-3xl mb-4">
         <div className="text-center">
           <h1 className="text-2xl font-bold">{t("settings.title")}</h1>
           <p className="text-sm text-muted-foreground mt-1">{t("settings.subtitle")}</p>

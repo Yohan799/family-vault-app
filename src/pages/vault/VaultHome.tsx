@@ -30,7 +30,7 @@ const VaultHome = () => {
   const [allSubcategories, setAllSubcategories] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  
+
   // Initialize with hardcoded categories immediately for instant display
   const [customCategories, setCustomCategories] = useState<any[]>(
     vaultCategories.map((cat) => ({
@@ -61,14 +61,14 @@ const VaultHome = () => {
   // Optimized: Load all data in parallel
   const loadAllData = useCallback(async () => {
     if (!userId) return;
-    
+
     setIsLoading(true);
-    
+
     try {
       // Only sync once per session (check sessionStorage)
       const syncKey = `vault_synced_${userId}`;
       const needsSync = !sessionStorage.getItem(syncKey);
-      
+
       // Run all data loading in parallel
       const [_, docsResult, subsResult, catsResult] = await Promise.all([
         needsSync ? syncDefaultCategories(userId).then(() => sessionStorage.setItem(syncKey, 'true')) : Promise.resolve(),
@@ -78,7 +78,7 @@ const VaultHome = () => {
       ]);
 
       setAllDocuments(docsResult);
-      
+
       // Merge subcategories with hardcoded ones
       const hardcodedSubs = vaultCategories.flatMap(cat =>
         cat.subcategories.map(sub => ({
@@ -96,7 +96,7 @@ const VaultHome = () => {
 
       // Build categories with counts
       const { categories: customCats, docCountMap } = catsResult;
-      
+
       const baseCategories = vaultCategories.map((cat) => ({
         id: cat.id,
         name: cat.name,
@@ -260,8 +260,8 @@ const VaultHome = () => {
   }, [deleteConfirm.category, userId, toast]);
 
   // Memoized calculations
-  const totalDocuments = useMemo(() => 
-    customCategories.reduce((sum, cat) => sum + cat.documentCount, 0), 
+  const totalDocuments = useMemo(() =>
+    customCategories.reduce((sum, cat) => sum + cat.documentCount, 0),
     [customCategories]
   );
 
@@ -332,7 +332,7 @@ const VaultHome = () => {
   return (
     <>
       <div className="min-h-screen bg-[#FCFCF9] pb-20">
-        <div className="bg-[#FCFCF9] p-6">
+        <div className="bg-[#FCFCF9] p-6 pt-10">
           <h1 className="text-2xl font-bold text-center text-[#1F2121]">{t("vault.title")}</h1>
           <p className="text-center text-[#626C71] text-sm mt-1">{totalDocuments} {t("common.documents")}</p>
 
@@ -575,7 +575,7 @@ const VaultHome = () => {
                     onClick={handleAddCategory}
                     className="flex-1 bg-primary hover:bg-primary/90"
                   >
-                    {t("vault.create")}
+                    {t("common.create")}
                   </Button>
                 </div>
               </div>

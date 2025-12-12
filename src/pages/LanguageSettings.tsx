@@ -22,7 +22,7 @@ const LanguageSettings = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-primary/20 text-foreground p-6 rounded-b-3xl">
+      <div className="bg-primary/20 text-foreground p-6 pt-10 rounded-b-3xl">
         <div className="flex items-center gap-4">
           <BackButton />
           <div>
@@ -41,16 +41,14 @@ const LanguageSettings = () => {
             <button
               key={lang.code}
               onClick={() => handleLanguageSelect(lang.code)}
-              className={`w-full bg-card rounded-xl p-4 flex items-center gap-4 transition-colors ${
-                isSelected
+              className={`w-full bg-card rounded-xl p-4 flex items-center gap-4 transition-colors ${isSelected
                   ? "ring-2 ring-primary bg-primary/5"
                   : "hover:bg-accent"
-              }`}
+                }`}
             >
               <div
-                className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                  isSelected ? "bg-primary text-primary-foreground" : "bg-muted"
-                }`}
+                className={`w-12 h-12 rounded-full flex items-center justify-center ${isSelected ? "bg-primary text-primary-foreground" : "bg-muted"
+                  }`}
               >
                 <Globe className="w-6 h-6" />
               </div>

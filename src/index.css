@@ -37,7 +37,7 @@ All colors MUST be HSL.
     --ring: 265 100% 60%;
 
     --radius: 1rem;
-    
+
     --vault-purple: 265 100% 60%;
     --vault-purple-light: 265 80% 95%;
     --vault-purple-dark: 265 100% 50%;
@@ -118,5 +118,10 @@ All colors MUST be HSL.
     /* Ensure consistent font rendering */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Safe area insets for devices with notches/status bars */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
   }
 }
