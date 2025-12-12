@@ -810,6 +810,7 @@ const SubcategoryView = () => {
 
         {accessControlDocument && (
           <AccessControlModal
+            isOpen={!!accessControlDocument}
             resourceType="document"
             resourceId={accessControlDocument.id}
             resourceName={accessControlDocument.name}
