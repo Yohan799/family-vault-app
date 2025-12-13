@@ -28,21 +28,21 @@ const Welcome = () => {
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4 overflow-hidden">
-      <div className="flex flex-col items-center text-center max-w-sm sm:max-w-md">
-        {/* Logo - Larger responsive sizing */}
+      <div className="flex flex-col items-center text-center max-w-xs sm:max-w-sm">
+        {/* Logo - Responsive sizing */}
         <img 
           src={splashLogo} 
           alt="Family Vault Logo" 
-          className="w-[140px] sm:w-[160px] md:w-[200px] h-auto mb-8 object-contain"
+          className="w-24 sm:w-[120px] md:w-[140px] h-auto mb-6 object-contain"
         />
         
-        {/* Title - Larger responsive font sizing */}
-        <h1 className="text-[28px] sm:text-[32px] md:text-4xl font-bold text-foreground leading-tight">
+        {/* Title - Responsive font sizing */}
+        <h1 className="text-[22px] sm:text-2xl md:text-[26px] font-semibold text-foreground leading-tight">
           {t("welcome.title")}
         </h1>
         
-        {/* Subtitle - Larger responsive font sizing */}
-        <p className="text-base sm:text-lg md:text-xl font-normal text-muted-foreground leading-relaxed mt-3 max-w-[320px] sm:max-w-[400px]">
+        {/* Subtitle - Responsive font sizing */}
+        <p className="text-sm sm:text-[15px] md:text-base font-normal text-muted-foreground leading-relaxed mt-2 max-w-[280px] sm:max-w-[320px]">
           {t("welcome.subtitle")}
         </p>
       </div>
