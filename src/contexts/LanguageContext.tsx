@@ -647,7 +647,7 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Welcome & Auth
     "welcome.title": "Welcome to Family Vault",
-    "welcome.subtitle": "Your Digital Vault & Legacy Planner",
+    "welcome.subtitle": "Your Secure Digital Vault & Legacy Planner",
 
     // Onboarding
     "onboarding.skip": "Skip",
@@ -1309,7 +1309,7 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Welcome & Auth
     "welcome.title": "Family Vault కు స్వాగతం",
-    "welcome.subtitle": "మీ డిజిటల్ వాల్ట్ & లెగసీ ప్లానర్",
+    "welcome.subtitle": "మీ సురక్షిత డిజిటల్ వాల్ట్ & లెగసీ ప్లానర్",
 
     // Onboarding
     "onboarding.skip": "దాటవేయండి",
@@ -1700,6 +1700,10 @@ const translations: Record<Language, Record<string, string>> = {
     "quickAction.timeCapsule.subtitle": "ಭವಿಷ್ಯದ ಸಂದೇಶಗಳನ್ನು ಶೆಡ್ಯೂಲ್ ಮಾಡಿ",
     "quickAction.inactivity.title": "ನಿಷ್ಕ್ರಿಯತೆ ಟ್ರಿಗ್ಗರ್",
     "quickAction.inactivity.subtitle": "ತುರ್ತು ಪ್ರವೇಶ ಸೆಟಪ್ ಮಾಡಿ",
+
+    // Welcome & Auth
+    "welcome.title": "Family Vault ಗೆ ಸ್ವಾಗತ",
+    "welcome.subtitle": "ನಿಮ್ಮ ಸುರಕ್ಷಿತ ಡಿಜಿಟಲ್ ವಾಲ್ಟ್ & ಲೆಗಸಿ ಪ್ಲಾನರ್",
   },
   hi: {
     // Common
@@ -2068,6 +2072,10 @@ const translations: Record<Language, Record<string, string>> = {
     "quickAction.timeCapsule.subtitle": "भविष्य के संदेश शेड्यूल करें",
     "quickAction.inactivity.title": "निष्क्रियता ट्रिगर",
     "quickAction.inactivity.subtitle": "आपातकालीन पहुंच सेटअप करें",
+
+    // Welcome & Auth
+    "welcome.title": "Family Vault में आपका स्वागत है",
+    "welcome.subtitle": "आपका सुरक्षित डिजिटल वॉल्ट और लेगेसी प्लानर",
 
     // Vault Categories
     "category.realEstate": "रियल एस्टेट",
@@ -2479,6 +2487,10 @@ const translations: Record<Language, Record<string, string>> = {
     "quickAction.timeCapsule.subtitle": "எதிர்கால செய்திகளை திட்டமிடுங்கள்",
     "quickAction.inactivity.title": "செயலற்ற தூண்டுதல்",
     "quickAction.inactivity.subtitle": "அவசர அணுகலை அமைக்கவும்",
+
+    // Welcome & Auth
+    "welcome.title": "Family Vault க்கு வரவேற்கிறோம்",
+    "welcome.subtitle": "உங்கள் பாதுகாப்பான டிஜிட்டல் வால்ட் & லெகசி பிளானர்",
 
     // Vault Categories
     "category.realEstate": "ரியல் எஸ்டேட்",

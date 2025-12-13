@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import logo from "@/assets/logo_fv.jpg";
+import splashLogo from "@/assets/splash_logo.png";
 
 const Welcome = () => {
   const navigate = useNavigate();
@@ -19,30 +19,32 @@ const Welcome = () => {
     // Only start timer if not authenticated
     if (!isLoading && !user) {
       const timer = setTimeout(() => {
-        navigate("/onboarding");
-      }, 1700);
+        navigate("/onboarding", { replace: true });
+      }, 3000);
 
       return () => clearTimeout(timer);
     }
   }, [navigate, user, isLoading]);
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="text-center space-y-6 max-w-md">
-        <div className="flex justify-center">
-          <div className="w-28 h-28 bg-white rounded-3xl shadow-lg flex items-center justify-center p-4">
-            <img src={logo} alt="Family Vault Logo" className="w-full h-full object-contain" />
-          </div>
-        </div>
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4 overflow-hidden">
+      <div className="flex flex-col items-center text-center max-w-xs sm:max-w-sm">
+        {/* Logo - Responsive sizing */}
+        <img 
+          src={splashLogo} 
+          alt="Family Vault Logo" 
+          className="w-24 sm:w-[120px] md:w-[140px] h-auto mb-6 object-contain"
+        />
         
-        <div className="space-y-2">
-          <h1 className="text-4xl font-bold text-foreground">
-            {t("welcome.title")}
-          </h1>
-          <p className="text-muted-foreground text-lg">
-            {t("welcome.subtitle")}
-          </p>
-        </div>
+        {/* Title - Responsive font sizing */}
+        <h1 className="text-[22px] sm:text-2xl md:text-[26px] font-semibold text-foreground leading-tight">
+          {t("welcome.title")}
+        </h1>
+        
+        {/* Subtitle - Responsive font sizing */}
+        <p className="text-sm sm:text-[15px] md:text-base font-normal text-muted-foreground leading-relaxed mt-2 max-w-[280px] sm:max-w-[320px]">
+          {t("welcome.subtitle")}
+        </p>
       </div>
     </div>
   );
