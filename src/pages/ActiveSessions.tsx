@@ -101,7 +101,7 @@ const ActiveSessions = () => {
 
   return (
     <div className="min-h-screen bg-background pb-16">
-      <div className="bg-primary/20 text-foreground p-4 pt-10 rounded-b-3xl">
+      <div className="bg-primary/20 text-foreground p-4 pt-14 rounded-b-3xl">
         <div className="flex items-center gap-3">
           <BackButton to="/settings" />
           <h1 className="text-xl font-bold text-foreground">{t("sessions.title")}</h1>

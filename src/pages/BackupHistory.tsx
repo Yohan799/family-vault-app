@@ -133,7 +133,7 @@ const BackupHistory = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="bg-primary/20 text-foreground p-6 pt-10 rounded-b-3xl">
+      <div className="bg-primary/20 text-foreground p-6 pt-14 rounded-b-3xl">
         <div className="flex items-center gap-4">
           <BackButton to="/settings" />
           <h1 className="text-2xl font-bold">Backup History</h1>

@@ -17,7 +17,7 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 250 15% 15%;
 
-    --primary: 265 100% 60%;
+    --primary: 220 100% 60%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 250 60% 95%;
@@ -26,21 +26,21 @@ All colors MUST be HSL.
     --muted: 250 40% 96%;
     --muted-foreground: 250 10% 50%;
 
-    --accent: 265 80% 95%;
-    --accent-foreground: 265 100% 60%;
+    --accent: 220 80% 95%;
+    --accent-foreground: 220 100% 60%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 250 30% 90%;
     --input: 250 30% 94%;
-    --ring: 265 100% 60%;
+    --ring: 220 100% 60%;
 
     --radius: 1rem;
 
-    --vault-purple: 265 100% 60%;
-    --vault-purple-light: 265 80% 95%;
-    --vault-purple-dark: 265 100% 50%;
+    --vault-blue: 220 100% 60%;
+    --vault-blue-light: 220 80% 95%;
+    --vault-blue-dark: 220 100% 50%;
     --vault-bg: 250 100% 97%;
 
     --sidebar-background: 0 0% 98%;
@@ -70,7 +70,7 @@ All colors MUST be HSL.
     --popover: 250 25% 12%;
     --popover-foreground: 250 10% 95%;
 
-    --primary: 265 100% 60%;
+    --primary: 220 100% 60%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 250 20% 18%;
@@ -80,14 +80,14 @@ All colors MUST be HSL.
     --muted-foreground: 250 10% 70%;
 
     --accent: 250 20% 18%;
-    --accent-foreground: 265 100% 60%;
+    --accent-foreground: 220 100% 60%;
 
     --destructive: 0 62.8% 50%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 250 20% 20%;
     --input: 250 20% 20%;
-    --ring: 265 100% 60%;
+    --ring: 220 100% 60%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;

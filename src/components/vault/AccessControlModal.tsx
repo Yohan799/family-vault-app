@@ -103,7 +103,7 @@ export const AccessControlModal: React.FC<AccessControlProps> = ({
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-full sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
                 {/* Header */}
-                <div className="bg-gradient-to-r from-purple-600 to-purple-700 p-4 sm:p-6 text-white">
+                <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 sm:p-6 text-white">
                     <div className="flex items-center justify-between mb-1 sm:mb-2">
                         <div className="flex items-center gap-2 sm:gap-3">
                             <Shield className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -116,7 +116,7 @@ export const AccessControlModal: React.FC<AccessControlProps> = ({
                             <X className="w-5 h-5 sm:w-6 sm:h-6" />
                         </button>
                     </div>
-                    <p className="text-purple-100 text-xs sm:text-sm truncate">
+                    <p className="text-blue-100 text-xs sm:text-sm truncate">
                         {getResourceTypeLabel()}: <span className="font-semibold">{resourceName}</span>
                     </p>
                 </div>
@@ -125,21 +125,21 @@ export const AccessControlModal: React.FC<AccessControlProps> = ({
                 <div className="flex-1 overflow-y-auto p-4 sm:p-6">
                     {loading ? (
                         <div className="flex items-center justify-center py-8 sm:py-12">
-                            <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-purple-600"></div>
+                            <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-blue-600"></div>
                         </div>
                     ) : accessSummary ? (
                         <>
                             {/* Summary */}
-                            <div className="bg-purple-50 rounded-xl p-3 sm:p-4 mb-4 sm:mb-6">
+                            <div className="bg-blue-50 rounded-xl p-3 sm:p-4 mb-4 sm:mb-6">
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="text-xs sm:text-sm text-gray-600">Access Summary</p>
-                                        <p className="text-xl sm:text-2xl font-bold text-purple-600">
+                                        <p className="text-xl sm:text-2xl font-bold text-blue-600">
                                             {accessSummary.nomineesWithAccess} / {accessSummary.totalNominees}
                                         </p>
                                         <p className="text-xs sm:text-sm text-gray-500">nominees with access</p>
                                     </div>
-                                    <Shield className="w-10 h-10 sm:w-12 sm:h-12 text-purple-600 opacity-20" />
+                                    <Shield className="w-10 h-10 sm:w-12 sm:h-12 text-blue-600 opacity-20" />
                                 </div>
                             </div>
 
@@ -202,7 +202,7 @@ export const AccessControlModal: React.FC<AccessControlProps> = ({
                                                         className="w-9 h-9 sm:w-12 sm:h-12 rounded-full object-cover flex-shrink-0"
                                                     />
                                                 ) : (
-                                                    <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white font-bold text-sm sm:text-lg flex-shrink-0">
+                                                    <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-sm sm:text-lg flex-shrink-0">
                                                         {nominee.nomineeName.charAt(0).toUpperCase()}
                                                     </div>
                                                 )}
@@ -252,7 +252,7 @@ export const AccessControlModal: React.FC<AccessControlProps> = ({
                 <div className="border-t border-gray-200 p-4 sm:p-6 bg-gray-50">
                     <button
                         onClick={onClose}
-                        className="w-full px-4 sm:px-6 py-2.5 sm:py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition-all text-sm sm:text-base"
+                        className="w-full px-4 sm:px-6 py-2.5 sm:py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all text-sm sm:text-base"
                     >
                         Done
                     </button>

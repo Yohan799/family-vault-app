@@ -48,9 +48,9 @@ export default {
           foreground: "hsl(var(--card-foreground))",
         },
         vault: {
-          purple: "hsl(var(--vault-purple))",
-          "purple-light": "hsl(var(--vault-purple-light))",
-          "purple-dark": "hsl(var(--vault-purple-dark))",
+          blue: "hsl(var(--vault-blue))",
+          "blue-light": "hsl(var(--vault-blue-light))",
+          "blue-dark": "hsl(var(--vault-blue-dark))",
           bg: "hsl(var(--vault-bg))",
         },
         sidebar: {

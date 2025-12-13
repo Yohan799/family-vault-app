@@ -166,7 +166,7 @@ const SettingsPage = () => {
     { icon: Mail, title: t("settings.emailPreferences"), subtitle: t("settings.emailPreferences.subtitle"), path: "/email-preferences", color: "bg-indigo-100" },
 
     // Security
-    { icon: KeyRound, title: t("settings.twoFactorAuth"), subtitle: profile?.two_factor_enabled ? t("settings.twoFactorAuth.enabled") : t("settings.twoFactorAuth.subtitle"), path: "/two-factor-setup", color: "bg-purple-100" },
+    { icon: KeyRound, title: t("settings.twoFactorAuth"), subtitle: profile?.two_factor_enabled ? t("settings.twoFactorAuth.enabled") : t("settings.twoFactorAuth.subtitle"), path: "/two-factor-setup", color: "bg-blue-100" },
     { icon: Fingerprint, title: t("settings.appLock"), subtitle: profile?.app_lock_type ? `${t("settings.appLock.active")} (${profile.app_lock_type})` : t("settings.appLock.subtitle"), path: "/app-lock-setup", color: "bg-violet-100" },
     { icon: MonitorSmartphone, title: t("settings.activeSessions"), subtitle: t("settings.activeSessions.subtitle"), path: "/active-sessions", color: "bg-rose-100" },
 
@@ -197,7 +197,7 @@ const SettingsPage = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="bg-primary/20 text-foreground p-6 pt-10 rounded-b-3xl mb-4">
+      <div className="bg-primary/20 text-foreground p-6 pt-14 rounded-b-3xl mb-4">
         <div className="text-center">
           <h1 className="text-2xl font-bold">{t("settings.title")}</h1>
           <p className="text-sm text-muted-foreground mt-1">{t("settings.subtitle")}</p>

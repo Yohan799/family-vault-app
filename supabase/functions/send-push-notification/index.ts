@@ -114,7 +114,7 @@ async function sendFcmNotification(
   title: string,
   body: string,
   data?: Record<string, string>
-): Promise<boolean> {
+): Promise<{ success: boolean; errorCode?: string }> {
   const projectId = "my-family-vault-ddc11";
 
   const message = {
@@ -148,19 +148,27 @@ async function sendFcmNotification(
   );
 
   if (!response.ok) {
-    const error = await response.text();
-    console.error("FCM send failed:", error);
-    return false;
+    const errorText = await response.text();
+    console.error("FCM send failed:", errorText);
+
+    // Parse error to get error code
+    try {
+      const errorJson = JSON.parse(errorText);
+      const errorCode = errorJson?.error?.details?.[0]?.errorCode || "UNKNOWN";
+      return { success: false, errorCode };
+    } catch {
+      return { success: false, errorCode: "UNKNOWN" };
+    }
   }
 
   console.log("FCM notification sent successfully");
-  return true;
+  return { success: true };
 }
 
 // Validate authorization - returns user_id if authorized, null otherwise
 async function validateAuthorization(req: Request, targetUserId: string): Promise<{ authorized: boolean; reason?: string }> {
   const authHeader = req.headers.get("Authorization");
-  
+
   if (!authHeader) {
     return { authorized: false, reason: "Missing authorization header" };
   }
@@ -274,9 +282,25 @@ serve(async (req) => {
 
     // Send to all user's devices
     let successCount = 0;
+    const tokensToDelete: string[] = [];
+
     for (const { token } of tokens) {
-      const success = await sendFcmNotification(accessToken, token, title, body, data);
-      if (success) successCount++;
+      const result = await sendFcmNotification(accessToken, token, title, body, data);
+      if (result.success) {
+        successCount++;
+      } else if (result.errorCode === "UNREGISTERED" || result.errorCode === "INVALID_ARGUMENT") {
+        // Token is invalid, mark for deletion
+        console.log(`Token invalid (${result.errorCode}), marking for deletion:`, token.substring(0, 20) + "...");
+        tokensToDelete.push(token);
+      }
+    }
+
+    // Clean up invalid tokens
+    if (tokensToDelete.length > 0) {
+      console.log(`Deleting ${tokensToDelete.length} invalid tokens`);
+      for (const token of tokensToDelete) {
+        await supabase.from("device_tokens").delete().eq("token", token);
+      }
     }
 
     console.log(`Sent ${successCount}/${tokens.length} notifications`);
@@ -286,6 +310,7 @@ serve(async (req) => {
         success: true,
         sent: successCount,
         total: tokens.length,
+        cleaned: tokensToDelete.length,
         saved: true
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }

@@ -129,8 +129,17 @@ const SignUp = () => {
     }
   };
 
+  // Show loading while checking auth state
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   // Don't render form if already authenticated
-  if (!authLoading && user) {
+  if (user) {
     return null;
   }
 

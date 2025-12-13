@@ -1,5 +1,6 @@
 import { createRoot } from "react-dom/client";
 import { SocialLogin } from '@capgo/capacitor-social-login';
+import { LocalNotifications } from '@capacitor/local-notifications';
 import App from "./App.tsx";
 import "./index.css";
 import { initializePushNotifications, isPushAvailable } from "@/services/pushNotificationService";
@@ -13,9 +14,35 @@ SocialLogin.initialize({
 
 // Initialize push notifications on native platforms
 if (isPushAvailable()) {
+  // Request local notification permissions for foreground display
+  LocalNotifications.requestPermissions().then(permission => {
+    console.log('Local notification permission:', permission.display);
+  });
+
   initializePushNotifications(
-    (notification) => {
-      console.log('Push notification received:', notification.title);
+    async (notification) => {
+      console.log('Push notification received in foreground:', notification.title);
+
+      // When app is in foreground, FCM doesn't show system notification
+      // So we create a local notification to display it
+      try {
+        await LocalNotifications.schedule({
+          notifications: [
+            {
+              id: Date.now(),
+              title: notification.title || 'Family Vault',
+              body: notification.body || '',
+              sound: 'default',
+              smallIcon: 'ic_stat_icon_config_sample',
+              largeIcon: 'ic_launcher',
+              channelId: 'default',
+            }
+          ]
+        });
+        console.log('Local notification shown for foreground push');
+      } catch (err) {
+        console.error('Error showing local notification:', err);
+      }
     },
     (action) => {
       console.log('Push notification tapped:', action.notification.title);

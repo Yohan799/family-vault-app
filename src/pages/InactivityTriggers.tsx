@@ -116,7 +116,7 @@ const InactivityTriggers = () => {
     return (
         <div className="min-h-screen bg-background pb-20">
             {/* Header */}
-            <div className="bg-primary/10 p-6 pt-10 rounded-b-3xl">
+            <div className="bg-primary/10 p-6 pt-14 rounded-b-3xl">
                 <div className="flex items-center gap-4 mb-4">
                     <BackButton />
                     <div className="flex-1">

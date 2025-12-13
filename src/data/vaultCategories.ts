@@ -40,7 +40,7 @@ export const vaultCategories: Category[] = [
     id: "medical",
     name: "Medical",
     icon: Briefcase,
-    iconBgColor: "bg-purple-100",
+    iconBgColor: "bg-blue-100",
     documentCount: 0,
     subcategories: [
       { id: "prescription", name: "Prescription", icon: Pill, documentCount: 0 },

@@ -143,7 +143,7 @@ const Dashboard = () => {
   return (
     <>
       <div className="min-h-screen bg-background pb-24">
-        <div className="bg-primary/20 text-foreground p-4 pt-8 rounded-b-3xl">
+        <div className="bg-primary/20 text-foreground p-4 pt-14 rounded-b-3xl">
           <div className="flex justify-between items-start mb-3">
             <div>
               <p className="text-xs text-muted-foreground mb-0.5">{t("dashboard.welcome")}</p>

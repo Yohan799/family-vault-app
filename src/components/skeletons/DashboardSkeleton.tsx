@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 const DashboardSkeleton = () => {
   return (
     <div className="min-h-screen bg-background pb-16">
-      <div className="bg-primary/20 text-foreground p-4 rounded-b-3xl">
+      <div className="bg-primary/20 text-foreground p-4 pt-14 rounded-b-3xl">
         <div className="flex justify-between items-start mb-3">
           <div>
             <Skeleton className="h-3 w-16 mb-1" />

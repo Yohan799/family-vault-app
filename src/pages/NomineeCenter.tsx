@@ -180,6 +180,20 @@ const NomineeCenter = () => {
 
         if (error) throw error;
 
+        // Optimistic update - immediately update the local state
+        setNominees(prev => prev.map(n =>
+          n.id === editingId
+            ? {
+              ...n,
+              full_name: formData.fullName,
+              relation: formData.relation,
+              email: formData.email,
+              phone: formData.phone || null,
+              avatar_url: formData.avatarUrl
+            }
+            : n
+        ));
+
         toast({
           title: t("toast.updated"),
           description: `${formData.fullName} ${t("toast.updated").toLowerCase()}`
@@ -329,7 +343,7 @@ const NomineeCenter = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="bg-primary/20 text-foreground p-4 pt-10 sm:p-6 sm:pt-10 rounded-b-3xl">
+      <div className="bg-primary/20 text-foreground p-4 pt-14 sm:p-6 sm:pt-14 rounded-b-3xl">
         <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
           <BackButton />
           <div className="flex-1 text-center -ml-9 sm:-ml-10">

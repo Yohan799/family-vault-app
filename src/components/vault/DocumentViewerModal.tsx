@@ -150,6 +150,8 @@ export const DocumentViewerModal = ({
             try {
                 const { Filesystem, Directory } = await import('@capacitor/filesystem');
                 const response = await fetch(documentUrl);
+                if (!response.ok) throw new Error('Failed to fetch file');
+
                 const blob = await response.blob();
 
                 const base64 = await new Promise<string>((resolve, reject) => {
@@ -169,13 +171,34 @@ export const DocumentViewerModal = ({
                     directory: Directory.Documents,
                 });
 
-                alert(`File saved to Documents/${fileName}`);
+                alert(`✓ File saved to Documents/${fileName}`);
             } catch (err) {
                 console.error('Download error:', err);
-                window.open(documentUrl, '_blank');
+                alert('Failed to download file. Please try again.');
             }
         } else {
-            window.open(documentUrl, '_blank');
+            // Web: Use proper download with anchor element
+            try {
+                const response = await fetch(documentUrl);
+                if (!response.ok) throw new Error('Failed to fetch file');
+
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = documentName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                // Clean up the object URL after download
+                setTimeout(() => URL.revokeObjectURL(url), 100);
+            } catch (err) {
+                console.error('Download error:', err);
+                // Fallback: open in new tab if blob download fails
+                window.open(documentUrl, '_blank');
+            }
         }
     };
 

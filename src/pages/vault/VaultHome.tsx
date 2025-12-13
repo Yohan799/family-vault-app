@@ -332,7 +332,7 @@ const VaultHome = () => {
   return (
     <>
       <div className="min-h-screen bg-[#FCFCF9] pb-20">
-        <div className="bg-[#FCFCF9] p-6 pt-10">
+        <div className="bg-[#FCFCF9] p-6 pt-14">
           <h1 className="text-2xl font-bold text-center text-[#1F2121]">{t("vault.title")}</h1>
           <p className="text-center text-[#626C71] text-sm mt-1">{totalDocuments} {t("common.documents")}</p>
 
@@ -364,8 +364,8 @@ const VaultHome = () => {
         <div className="px-6">
           {filteredResults.length === 0 && searchQuery ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <div className="w-16 h-16 bg-[#F3E8FF] rounded-full flex items-center justify-center mb-4">
-                <FileX className="w-8 h-8 text-[#6D28D9]" />
+              <div className="w-16 h-16 bg-[#DBEAFE] rounded-full flex items-center justify-center mb-4">
+                <FileX className="w-8 h-8 text-[#2563EB]" />
               </div>
               <h3 className="text-lg font-semibold text-[#1F2121] mb-2">{t("vault.noResults")}</h3>
               <p className="text-sm text-[#626C71] max-w-xs">
@@ -391,7 +391,7 @@ const VaultHome = () => {
                     <div className="relative h-full">
                       <button
                         onClick={() => navigate(`/vault/${category.id}`)}
-                        className={`w-full bg-[#F3E8FF] rounded-2xl hover:opacity-80 transition-opacity ${searchQuery
+                        className={`w-full bg-[#DBEAFE] rounded-2xl hover:opacity-80 transition-opacity ${searchQuery
                           ? "p-4 flex items-center gap-4"
                           : "p-4 h-full flex flex-col items-center justify-between text-center min-h-[140px]"
                           }`}
@@ -399,7 +399,7 @@ const VaultHome = () => {
                         <div className={searchQuery ? "" : "flex flex-col items-center"}>
                           <div className={`${category.iconBgColor} rounded-full flex items-center justify-center flex-shrink-0 ${searchQuery ? "w-14 h-14" : "w-12 h-12"
                             }`}>
-                            <Icon className={`text-[#6D28D9] ${searchQuery ? "w-7 h-7" : "w-6 h-6"}`} />
+                            <Icon className={`text-[#2563EB] ${searchQuery ? "w-7 h-7" : "w-6 h-6"}`} />
                           </div>
                           <div className={searchQuery ? "flex-1 text-left" : "w-full mt-2"}>
                             <h3 className={`font-semibold text-[#1F2121] line-clamp-2 ${searchQuery ? "text-lg" : "text-base"}`}>
@@ -433,9 +433,9 @@ const VaultHome = () => {
                           <button
                             key={sub.id}
                             onClick={() => navigate(`/vault/${category.id}/${sub.id}`)}
-                            className="w-full bg-purple-50 rounded-xl p-3 flex items-center gap-3 hover:bg-purple-100 transition-colors"
+                            className="w-full bg-blue-50 rounded-xl p-3 flex items-center gap-3 hover:bg-blue-100 transition-colors"
                           >
-                            <Folder className="w-5 h-5 text-[#6D28D9] flex-shrink-0" />
+                            <Folder className="w-5 h-5 text-[#2563EB] flex-shrink-0" />
                             <span className="font-medium text-[#1F2121] text-sm">{sub.name}</span>
                           </button>
                         ))}
@@ -482,10 +482,10 @@ const VaultHome = () => {
               {!searchQuery && (
                 <button
                   onClick={() => setShowAddDialog(true)}
-                  className="bg-[#F3E8FF] border-2 border-dashed border-[#6D28D9] rounded-2xl p-4 flex flex-col items-center justify-center text-center hover:opacity-80 transition-opacity min-h-[140px]"
+                  className="bg-[#DBEAFE] border-2 border-dashed border-[#2563EB] rounded-2xl p-4 flex flex-col items-center justify-center text-center hover:opacity-80 transition-opacity min-h-[140px]"
                 >
                   <div className="w-12 h-12 bg-white/60 rounded-full flex items-center justify-center mb-2">
-                    <Plus className="w-6 h-6 text-[#6D28D9]" />
+                    <Plus className="w-6 h-6 text-[#2563EB]" />
                   </div>
                   <h3 className="font-semibold text-[#1F2121]">{t("vault.addCategory")}</h3>
                 </button>
@@ -499,8 +499,8 @@ const VaultHome = () => {
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
             <div className="bg-card rounded-3xl p-6 w-full max-w-md">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                  <AlertTriangle className="w-6 h-6 text-purple-600" />
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                  <AlertTriangle className="w-6 h-6 text-blue-600" />
                 </div>
                 <h2 className="text-xl font-bold text-foreground">{t("vault.deleteCategory")}</h2>
               </div>
@@ -509,11 +509,11 @@ const VaultHome = () => {
                 {t("vault.deleteCategoryConfirm")} <span className="font-semibold">{getCategoryName(deleteConfirm.category.id, deleteConfirm.category.name, t)}</span>?
               </p>
 
-              <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-6">
-                <p className="text-sm text-purple-800 font-medium">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
+                <p className="text-sm text-blue-800 font-medium">
                   {deleteConfirm.category.documentCount} {deleteConfirm.category.documentCount === 1 ? t("common.document") : t("common.documents")} {t("vault.willBeDeleted")}
                 </p>
-                <p className="text-xs text-purple-600 mt-1">{t("vault.cannotUndo")}</p>
+                <p className="text-xs text-blue-600 mt-1">{t("vault.cannotUndo")}</p>
               </div>
 
               <div className="flex gap-3">
@@ -526,7 +526,7 @@ const VaultHome = () => {
                 </Button>
                 <Button
                   onClick={confirmDelete}
-                  className="flex-1 bg-purple-500 hover:bg-purple-600 text-white"
+                  className="flex-1 bg-blue-500 hover:bg-blue-600 text-white"
                 >
                   {t("common.delete")}
                 </Button>

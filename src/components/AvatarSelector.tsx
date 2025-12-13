@@ -6,7 +6,7 @@ import { Camera } from "lucide-react";
 // Predefined avatar options with emoji/icon designs
 export const AVATAR_OPTIONS = [
   { id: "avatar-1", emoji: "👤", bg: "bg-blue-100", color: "text-blue-600" },
-  { id: "avatar-2", emoji: "👨", bg: "bg-purple-100", color: "text-purple-600" },
+  { id: "avatar-2", emoji: "👨", bg: "bg-blue-100", color: "text-blue-600" },
   { id: "avatar-3", emoji: "👩", bg: "bg-pink-100", color: "text-pink-600" },
   { id: "avatar-4", emoji: "👴", bg: "bg-orange-100", color: "text-orange-600" },
   { id: "avatar-5", emoji: "👵", bg: "bg-red-100", color: "text-red-600" },
@@ -61,9 +61,8 @@ export const AvatarSelector = ({ selectedAvatar, onSelectAvatar }: AvatarSelecto
                 onSelectAvatar(avatar.id);
                 setOpen(false);
               }}
-              className={`w-14 h-14 rounded-full ${avatar.bg} flex items-center justify-center transition-all hover:scale-110 ${
-                selectedAvatar === avatar.id ? "ring-2 ring-primary ring-offset-2" : ""
-              }`}
+              className={`w-14 h-14 rounded-full ${avatar.bg} flex items-center justify-center transition-all hover:scale-110 ${selectedAvatar === avatar.id ? "ring-2 ring-primary ring-offset-2" : ""
+                }`}
             >
               <span className={`text-2xl ${avatar.color}`}>{avatar.emoji}</span>
             </button>

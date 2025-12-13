@@ -48,7 +48,7 @@ export const AccessIndicator: React.FC<AccessIndicatorProps> = ({
         return nomineeCount > 0 ? (
             <button
                 onClick={onClick}
-                className="flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium hover:bg-purple-200 transition-colors"
+                className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium hover:bg-blue-200 transition-colors"
                 title={`${nomineeCount} nominee${nomineeCount !== 1 ? 's' : ''} have access`}
             >
                 <Shield className="w-3 h-3" />
@@ -61,8 +61,8 @@ export const AccessIndicator: React.FC<AccessIndicatorProps> = ({
         <button
             onClick={onClick}
             className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-all ${nomineeCount > 0
-                    ? 'bg-purple-100 text-purple-700 hover:bg-purple-200'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
         >
             {nomineeCount > 0 ? (

@@ -66,11 +66,11 @@ export const UploadDocumentModal = ({
   const handleScanDocument = async () => {
     setUploadingSource("scan");
     setIsUploading(true);
-    
+
     try {
       console.log("[Scanner] Starting document scan...");
       const result = await scanDocument();
-      
+
       if (!result) {
         console.log("[Scanner] Scan cancelled or returned null");
         toast({
@@ -200,7 +200,7 @@ export const UploadDocumentModal = ({
     try {
       const { storeDocument } = await import('@/lib/documentStorage');
       await storeDocument(file, categoryId, subcategoryId, folderId, 'google_drive');
-      
+
       toast({
         title: "Upload successful",
         description: `${file.name} has been added from Google Drive`,
@@ -250,8 +250,8 @@ export const UploadDocumentModal = ({
       icon: Camera,
       title: t("document.scanDocument"),
       subtitle: t("document.scanSubtitle"),
-      iconBg: "bg-purple-100 dark:bg-purple-900/30",
-      iconColor: "text-purple-600 dark:text-purple-400",
+      iconBg: "bg-blue-100 dark:bg-blue-900/30",
+      iconColor: "text-blue-600 dark:text-blue-400",
       onClick: handleScanDocument,
     },
     {
@@ -295,13 +295,12 @@ export const UploadDocumentModal = ({
                   key={option.id}
                   onClick={option.onClick}
                   disabled={isUploading}
-                  className={`w-full flex items-center gap-4 p-4 rounded-xl transition-all duration-200 min-h-[72px] ${
-                    isDisabled
+                  className={`w-full flex items-center gap-4 p-4 rounded-xl transition-all duration-200 min-h-[72px] ${isDisabled
                       ? "opacity-50 cursor-not-allowed bg-muted/30"
                       : isLoading
-                      ? "bg-primary/10 border-2 border-primary"
-                      : "bg-muted/50 hover:bg-muted hover:scale-[1.02] active:scale-[0.98]"
-                  }`}
+                        ? "bg-primary/10 border-2 border-primary"
+                        : "bg-muted/50 hover:bg-muted hover:scale-[1.02] active:scale-[0.98]"
+                    }`}
                 >
                   <div className={`w-12 h-12 rounded-full flex items-center justify-center ${option.iconBg}`}>
                     {isLoading ? (

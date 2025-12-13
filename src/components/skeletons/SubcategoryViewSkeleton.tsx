@@ -23,7 +23,7 @@ const SubcategoryViewSkeleton = () => {
                 <Skeleton className="h-5 w-16 mb-3" />
                 <div className="grid grid-cols-2 gap-3">
                     {[...Array(2)].map((_, i) => (
-                        <div key={i} className="bg-[#F3E8FF] rounded-2xl p-5 flex flex-col items-center">
+                        <div key={i} className="bg-[#DBEAFE] rounded-2xl p-5 flex flex-col items-center">
                             <Skeleton className="w-14 h-14 rounded-full mb-3" />
                             <Skeleton className="h-4 w-20 mb-1" />
                             <Skeleton className="h-3 w-16" />

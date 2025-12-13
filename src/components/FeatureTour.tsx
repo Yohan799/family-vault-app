@@ -48,8 +48,8 @@ const tourSteps: TourStep[] = [
         title: "Time Capsule",
         description: "Create messages and memories to be delivered at a future date. Leave behind words of wisdom, love letters, or important instructions.",
         icon: Clock,
-        iconColor: "text-purple-500",
-        iconBg: "bg-purple-500/10",
+        iconColor: "text-blue-500",
+        iconBg: "bg-blue-500/10",
     },
     {
         title: "You're All Set!",
@@ -106,10 +106,10 @@ const FeatureTour = ({ isOpen, onClose }: FeatureTourProps) => {
                             <div
                                 key={index}
                                 className={`h-1 flex-1 rounded-full transition-all duration-300 ${index === currentStep
-                                        ? "bg-primary"
-                                        : index < currentStep
-                                            ? "bg-primary/50"
-                                            : "bg-muted"
+                                    ? "bg-primary"
+                                    : index < currentStep
+                                        ? "bg-primary/50"
+                                        : "bg-muted"
                                     }`}
                             />
                         ))}

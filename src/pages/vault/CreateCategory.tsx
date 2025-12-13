@@ -26,7 +26,7 @@ const CreateCategory = () => {
     { bg: "bg-yellow-400", id: 2 },
     { bg: "bg-green-400", id: 3 },
     { bg: "bg-blue-400", id: 4 },
-    { bg: "bg-purple-400", id: 5 },
+    { bg: "bg-blue-400", id: 5 },
   ];
 
   const handleCreate = () => {
@@ -49,7 +49,7 @@ const CreateCategory = () => {
   return (
     <div className="min-h-screen bg-[#FCFCF9]">
       {/* Header */}
-      <div className="bg-[#FCFCF9] p-6 pt-10 border-b">
+      <div className="bg-[#FCFCF9] p-6 pt-14 border-b">
         <div className="flex items-center gap-4">
           <button onClick={() => navigate(-1)} className="p-1">
             <ArrowLeft className="w-6 h-6 text-[#1F2121]" />
@@ -81,8 +81,8 @@ const CreateCategory = () => {
                   key={item.id}
                   onClick={() => setSelectedIcon(item.id)}
                   className={`w-14 h-14 rounded-xl flex items-center justify-center transition-all ${selectedIcon === item.id
-                      ? "bg-[#6D28D9] border-2 border-[#6D28D9]"
-                      : "bg-white border-2 border-border"
+                    ? "bg-[#2563EB] border-2 border-[#2563EB]"
+                    : "bg-white border-2 border-border"
                     }`}
                 >
                   <Icon
@@ -115,14 +115,14 @@ const CreateCategory = () => {
       <div className="fixed bottom-0 left-0 right-0 p-6 bg-[#FCFCF9] space-y-3">
         <Button
           onClick={handleCreate}
-          className="w-full h-14 bg-[#6D28D9] hover:bg-[#6D28D9]/90 text-white rounded-full text-base font-semibold"
+          className="w-full h-14 bg-[#2563EB] hover:bg-[#2563EB]/90 text-white rounded-full text-base font-semibold"
         >
           + Create Category
         </Button>
         <Button
           variant="outline"
           onClick={() => navigate(-1)}
-          className="w-full h-14 border-2 border-[#6D28D9] text-[#6D28D9] rounded-full text-base font-semibold hover:bg-transparent"
+          className="w-full h-14 border-2 border-[#2563EB] text-[#2563EB] rounded-full text-base font-semibold hover:bg-transparent"
         >
           Cancel
         </Button>

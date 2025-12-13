@@ -299,7 +299,7 @@ const TimeCapsule = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="bg-primary/20 text-foreground p-6 pt-10 rounded-b-3xl">
+      <div className="bg-primary/20 text-foreground p-6 pt-14 rounded-b-3xl">
         <div className="flex items-center gap-4 mb-6">
           <BackButton />
           <div className="flex-1 text-center -ml-10">
@@ -531,56 +531,92 @@ const TimeCapsule = () => {
               )}
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {capsules.map((capsule) => (
-                <div key={capsule.id} className="bg-card rounded-2xl p-4 flex justify-between items-start gap-3 overflow-hidden">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <h3 className="font-semibold text-foreground truncate max-w-[180px]">{capsule.title}</h3>
-                      {capsule.status === 'released' && (
-                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full flex-shrink-0">Released</span>
-                      )}
-                      {capsule.attachment_url && <span className="text-xs flex-shrink-0">📎</span>}
+                <div
+                  key={capsule.id}
+                  className={`bg-card rounded-2xl p-4 border-l-4 ${capsule.status === 'released'
+                      ? 'border-l-green-500'
+                      : 'border-l-blue-500'
+                    }`}
+                >
+                  {/* Header Row: Status Badge + Actions */}
+                  <div className="flex items-center justify-between mb-2">
+                    <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${capsule.status === 'released'
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-blue-100 text-blue-700'
+                      }`}>
+                      {capsule.status === 'released' ? '✓ Released' : '⏳ Scheduled'}
+                    </span>
+
+                    {capsule.status !== 'released' && (
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setFormData({
+                              title: capsule.title,
+                              message: capsule.message,
+                              releaseDate: capsule.release_date,
+                              recipientEmail: capsule.recipient_email,
+                              phone: capsule.phone || '',
+                              attachmentFile: null
+                            });
+                            setEditingId(capsule.id);
+                            setShowCreateForm(true);
+                          }}
+                          className="h-8 w-8 hover:bg-blue-100 hover:text-blue-600"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setDeleteDialog({ open: true, capsule })}
+                          className="h-8 w-8 hover:bg-red-100 hover:text-red-600"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Title + Attachment */}
+                  <div className="flex items-start gap-2 mb-2">
+                    <h3 className="font-bold text-foreground text-base flex-1">{capsule.title}</h3>
+                    {capsule.attachment_url && (
+                      <span className="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full flex-shrink-0">
+                        📎 Attachment
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Message Preview */}
+                  {capsule.message && (
+                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2 bg-muted/30 rounded-lg p-2">
+                      "{capsule.message}"
+                    </p>
+                  )}
+
+                  {/* Details Row */}
+                  <div className="flex flex-col gap-1.5 text-sm">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Clock className="w-4 h-4 flex-shrink-0" />
+                      <span className="font-medium">
+                        {capsule.status === 'released' ? 'Released:' : 'Releases:'} {new Date(capsule.release_date).toLocaleDateString('en-US', {
+                          weekday: 'short',
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        })}
+                      </span>
                     </div>
-                    <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{capsule.message}</p>
-                    <div className="flex gap-2 text-xs text-muted-foreground flex-wrap">
-                      <span>Release: {new Date(capsule.release_date).toLocaleDateString()}</span>
-                      <span>•</span>
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Send className="w-4 h-4 flex-shrink-0" />
                       <span className="truncate">{capsule.recipient_email}</span>
                     </div>
                   </div>
-
-                  {capsule.status !== 'released' && (
-                    <div className="flex gap-1 flex-shrink-0">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          setFormData({
-                            title: capsule.title,
-                            message: capsule.message,
-                            releaseDate: capsule.release_date,
-                            recipientEmail: capsule.recipient_email,
-                            phone: capsule.phone || '',
-                            attachmentFile: null
-                          });
-                          setEditingId(capsule.id);
-                          setShowCreateForm(true);
-                        }}
-                        className="h-10 w-10 hover:bg-blue-100 hover:text-blue-600 touch-manipulation"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setDeleteDialog({ open: true, capsule })}
-                        className="h-10 w-10 hover:bg-red-100 hover:text-red-600 touch-manipulation"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  )}
                 </div>
               ))}
             </div>

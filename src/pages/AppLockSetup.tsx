@@ -111,7 +111,7 @@ const AppLockSetup = () => {
     <div className="min-h-screen bg-background p-4 pb-20">
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-3 pt-10">
+        <div className="flex items-center gap-3 pt-14">
           <BackButton to="/settings" />
           <h1 className="text-2xl font-bold text-foreground">{t("appLock.title")}</h1>
         </div>

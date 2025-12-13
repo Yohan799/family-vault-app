@@ -270,7 +270,7 @@ const CategoryView = () => {
   return (
     <>
       <div className="min-h-screen bg-[#FCFCF9] pb-20">
-        <div className="bg-[#FCFCF9] p-6 pt-10">
+        <div className="bg-[#FCFCF9] p-6 pt-14">
           <div className="flex items-center gap-4 mb-4">
             <BackButton />
             <div className="flex-1 text-center -ml-10">
@@ -316,11 +316,11 @@ const CategoryView = () => {
                   <div key={subcategory.id} className="relative h-full">
                     <button
                       onClick={() => navigate(`/vault/${categoryId}/${subcategory.id}`)}
-                      className="w-full h-full bg-[#F3E8FF] rounded-2xl p-5 flex flex-col items-center justify-between hover:opacity-80 transition-opacity min-h-[160px]"
+                      className="w-full h-full bg-[#DBEAFE] rounded-2xl p-5 flex flex-col items-center justify-between hover:opacity-80 transition-opacity min-h-[160px]"
                     >
                       <div className="flex flex-col items-center">
                         <div className="w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center mb-3">
-                          <SubIcon className="w-7 h-7 text-[#6D28D9]" />
+                          <SubIcon className="w-7 h-7 text-[#2563EB]" />
                         </div>
                         <h3 className="font-semibold text-[#1F2121] text-center mb-1 line-clamp-2">{getSubcategoryName(subcategory.id, subcategory.name, t)}</h3>
                       </div>
@@ -342,10 +342,10 @@ const CategoryView = () => {
               {!debouncedQuery && (
                 <button
                   onClick={() => setShowAddDialog(true)}
-                  className="bg-[#F3E8FF] border-2 border-dashed border-[#6D28D9] rounded-2xl p-5 flex flex-col items-center justify-center hover:opacity-80 transition-opacity min-h-[160px]"
+                  className="bg-[#DBEAFE] border-2 border-dashed border-[#2563EB] rounded-2xl p-5 flex flex-col items-center justify-center hover:opacity-80 transition-opacity min-h-[160px]"
                 >
                   <div className="w-14 h-14 bg-white/60 rounded-full flex items-center justify-center mb-3">
-                    <Plus className="w-7 h-7 text-[#6D28D9]" />
+                    <Plus className="w-7 h-7 text-[#2563EB]" />
                   </div>
                   <h3 className="font-semibold text-[#1F2121]">{t("subcategory.add")}</h3>
                 </button>
@@ -359,8 +359,8 @@ const CategoryView = () => {
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
             <div className="bg-card rounded-3xl p-6 w-full max-w-md">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                  <AlertTriangle className="w-6 h-6 text-purple-600" />
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                  <AlertTriangle className="w-6 h-6 text-blue-600" />
                 </div>
                 <h2 className="text-xl font-bold text-foreground">{t("subcategory.deleteTitle")}</h2>
               </div>
@@ -369,11 +369,11 @@ const CategoryView = () => {
                 {t("subcategory.deleteConfirm")} <span className="font-semibold">{getSubcategoryName(deleteConfirm.subcategory.id, deleteConfirm.subcategory.name, t)}</span>?
               </p>
 
-              <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-6">
-                <p className="text-sm text-purple-800 font-medium">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
+                <p className="text-sm text-blue-800 font-medium">
                   {deleteConfirm.subcategory.documentCount} {deleteConfirm.subcategory.documentCount === 1 ? t("common.document") : t("common.documents")} {t("subcategory.willBeDeleted")}
                 </p>
-                <p className="text-xs text-purple-600 mt-1">{t("subcategory.cannotUndo")}</p>
+                <p className="text-xs text-blue-600 mt-1">{t("subcategory.cannotUndo")}</p>
               </div>
 
               <div className="flex gap-3">
@@ -386,7 +386,7 @@ const CategoryView = () => {
                 </Button>
                 <Button
                   onClick={confirmDelete}
-                  className="flex-1 bg-purple-500 hover:bg-purple-600 text-white"
+                  className="flex-1 bg-blue-500 hover:bg-blue-600 text-white"
                 >
                   {t("common.delete")}
                 </Button>

@@ -38,7 +38,7 @@ const Onboarding = () => {
 
     // Check if onboarding was already completed
     const onboardingComplete = localStorage.getItem('onboardingComplete');
-    if (onboardingComplete === 'true' && !user) {
+    if (onboardingComplete === 'true' && !user && !isLoading) {
       navigate("/signup", { replace: true });
     }
   }, [navigate, user, isLoading]);
@@ -58,6 +58,15 @@ const Onboarding = () => {
     localStorage.setItem('onboardingComplete', 'true');
     navigate("/signup");
   };
+
+  // Show loading while checking auth state - prevents flash of onboarding for signed-in users
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   const step = onboardingSteps[currentStep];
   const Icon = step.icon;
@@ -94,9 +103,8 @@ const Onboarding = () => {
             {onboardingSteps.map((_, index) => (
               <div
                 key={index}
-                className={`h-1 rounded-full transition-all ${
-                  index === currentStep ? "w-8 bg-primary" : "w-1 bg-border"
-                }`}
+                className={`h-1 rounded-full transition-all ${index === currentStep ? "w-8 bg-primary" : "w-1 bg-border"
+                  }`}
               />
             ))}
           </div>
