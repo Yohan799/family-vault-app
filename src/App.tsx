@@ -11,6 +11,7 @@ import { AppLockGate } from "@/components/AppLockGate";
 import { Capacitor } from "@capacitor/core";
 
 // Lazy load all pages for code splitting
+const Welcome = lazy(() => import("./pages/Welcome"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 const SignUp = lazy(() => import("./pages/SignUp"));
 const SignIn = lazy(() => import("./pages/SignIn"));
@@ -80,7 +81,7 @@ const BackButtonHandler = () => {
       import("@capacitor/app").then(({ App }) => {
         App.addListener("backButton", ({ canGoBack }) => {
           const currentPath = location.pathname;
-          const authPaths = ['/', '/onboarding', '/signup', '/signin', '/forgot-password', '/password-reset-otp', '/reset-password', '/verify-email-pending', '/verify-email'];
+          const authPaths = ['/', '/welcome', '/onboarding', '/signup', '/signin', '/forgot-password', '/password-reset-otp', '/reset-password', '/verify-email-pending', '/verify-email'];
 
           // If authenticated and on auth page, minimize app instead of going back
           if (user && authPaths.includes(currentPath)) {
@@ -119,7 +120,8 @@ const App = () => (
               <BackButtonHandler />
               <Suspense fallback={<PageLoader />}>
                 <Routes>
-                  <Route path="/" element={<Onboarding />} />
+                  <Route path="/" element={<Welcome />} />
+                  <Route path="/welcome" element={<Welcome />} />
                   <Route path="/onboarding" element={<Onboarding />} />
                   <Route path="/signup" element={<SignUp />} />
                   <Route path="/signin" element={<SignIn />} />
