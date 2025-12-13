@@ -47,9 +47,44 @@ export const registerDevice = async (userId: string): Promise<boolean> => {
       return false;
     }
 
-    // Register with FCM
+    // Create a promise that resolves when we get the registration token
+    const tokenPromise = new Promise<string>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error('Token registration timeout'));
+      }, 10000); // 10 second timeout
+
+      // Listen for the token
+      PushNotifications.addListener('registration', (token) => {
+        clearTimeout(timeout);
+        console.log('FCM token received:', token.value.substring(0, 20) + '...');
+        resolve(token.value);
+      });
+
+      // Listen for errors
+      PushNotifications.addListener('registrationError', (error) => {
+        clearTimeout(timeout);
+        console.error('FCM registration error:', error);
+        reject(new Error(error.error || 'Registration failed'));
+      });
+    });
+
+    // Trigger FCM registration
     await PushNotifications.register();
-    return true;
+    console.log('PushNotifications.register() called, waiting for token...');
+
+    // Wait for the token
+    const token = await tokenPromise;
+    console.log('Token received, saving to database for user:', userId);
+
+    // Save token to database
+    const saved = await saveDeviceToken(userId, token);
+    if (saved) {
+      console.log('Device token saved successfully!');
+    } else {
+      console.error('Failed to save device token to database');
+    }
+
+    return saved;
   } catch (error) {
     console.error('Error registering device:', error);
     return false;

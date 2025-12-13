@@ -108,22 +108,19 @@ const AppLockSetup = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-4 pb-20">
-      <div className="max-w-2xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center gap-3 pt-14">
+    <div className="min-h-screen bg-background pb-20">
+      {/* Header */}
+      <div className="bg-primary/20 text-foreground p-6 pt-14 rounded-b-3xl mb-4">
+        <div className="flex items-center gap-3">
           <BackButton to="/settings" />
-          <h1 className="text-2xl font-bold text-foreground">{t("appLock.title")}</h1>
+          <div>
+            <h1 className="text-2xl font-bold">{t("appLock.title")}</h1>
+            <p className="text-sm text-muted-foreground mt-1">{t("appLock.description")}</p>
+          </div>
         </div>
+      </div>
 
-        {/* Description */}
-        <div className="bg-accent/50 rounded-xl p-4">
-          <p className="text-sm text-muted-foreground">
-            {t("appLock.description")}
-          </p>
-        </div>
-
-        {/* Lock Options */}
+      <div className="px-4 max-w-2xl mx-auto space-y-6">        {/* Lock Options */}
         <div className="space-y-3">
           {/* Biometric Lock Toggle */}
           <div className="bg-card rounded-2xl p-5">

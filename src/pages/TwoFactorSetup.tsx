@@ -80,15 +80,19 @@ const TwoFactorSetup = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-4 pb-20">
-      <div className="max-w-2xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center gap-3 pt-14">
+    <div className="min-h-screen bg-background pb-20">
+      {/* Header */}
+      <div className="bg-primary/20 text-foreground p-6 pt-14 rounded-b-3xl mb-4">
+        <div className="flex items-center gap-3">
           <BackButton to="/settings" />
-          <h1 className="text-2xl font-bold text-foreground">{t("twoFactorSetup.title")}</h1>
+          <div>
+            <h1 className="text-2xl font-bold">{t("twoFactorSetup.title")}</h1>
+            <p className="text-sm text-muted-foreground mt-1">{t("twoFactorSetup.secureAccount")}</p>
+          </div>
         </div>
+      </div>
 
-        {/* 2FA Card */}
+      <div className="px-4 max-w-2xl mx-auto space-y-6">        {/* 2FA Card */}
         <div className="bg-card rounded-2xl p-6 space-y-6 shadow-sm">
           <div className="flex justify-center">
             <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center">

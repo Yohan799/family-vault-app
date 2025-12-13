@@ -397,9 +397,9 @@ const VaultHome = () => {
                           }`}
                       >
                         <div className={searchQuery ? "" : "flex flex-col items-center"}>
-                          <div className={`${category.iconBgColor} rounded-full flex items-center justify-center flex-shrink-0 ${searchQuery ? "w-14 h-14" : "w-12 h-12"
+                          <div className={`flex items-center justify-center flex-shrink-0 ${searchQuery ? "w-14 h-14" : "w-12 h-12"
                             }`}>
-                            <Icon className={`text-[#2563EB] ${searchQuery ? "w-7 h-7" : "w-6 h-6"}`} />
+                            <Icon className={`text-[#2563EB] ${searchQuery ? "w-8 h-8" : "w-7 h-7"}`} />
                           </div>
                           <div className={searchQuery ? "flex-1 text-left" : "w-full mt-2"}>
                             <h3 className={`font-semibold text-[#1F2121] line-clamp-2 ${searchQuery ? "text-lg" : "text-base"}`}>
@@ -484,8 +484,8 @@ const VaultHome = () => {
                   onClick={() => setShowAddDialog(true)}
                   className="bg-[#DBEAFE] border-2 border-dashed border-[#2563EB] rounded-2xl p-4 flex flex-col items-center justify-center text-center hover:opacity-80 transition-opacity min-h-[140px]"
                 >
-                  <div className="w-12 h-12 bg-white/60 rounded-full flex items-center justify-center mb-2">
-                    <Plus className="w-6 h-6 text-[#2563EB]" />
+                  <div className="w-12 h-12 flex items-center justify-center mb-2">
+                    <Plus className="w-7 h-7 text-[#2563EB]" />
                   </div>
                   <h3 className="font-semibold text-[#1F2121]">{t("vault.addCategory")}</h3>
                 </button>
@@ -584,7 +584,7 @@ const VaultHome = () => {
         )}
 
         {/* Bottom Navigation */}
-        <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
+        <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50">
           <div className="flex justify-around items-center h-16 max-w-md mx-auto">
             <button onClick={() => navigate("/dashboard")} className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
               <Home className="w-6 h-6" />

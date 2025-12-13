@@ -60,9 +60,11 @@ const Dashboard = () => {
     return { displayName: name, firstName: first, initials: init };
   }, [profile?.full_name]);
 
+  // Show tour immediately on first login (only if tour not completed before)
   useEffect(() => {
     const isFirstLogin = localStorage.getItem("isFirstLogin");
-    if (isFirstLogin === "true") {
+    const tourCompleted = localStorage.getItem("tourCompleted");
+    if (isFirstLogin === "true" && tourCompleted !== "true") {
       setShowTour(true);
     }
   }, []);
@@ -101,6 +103,7 @@ const Dashboard = () => {
   const handleTourClose = useCallback(() => {
     setShowTour(false);
     localStorage.removeItem("isFirstLogin");
+    localStorage.setItem("tourCompleted", "true");
   }, []);
 
   const handleInactivityToggle = useCallback(async (checked: boolean) => {
@@ -145,7 +148,7 @@ const Dashboard = () => {
       <div className="min-h-screen bg-background pb-24">
         <div className="bg-primary/20 text-foreground p-4 pt-14 rounded-b-3xl">
           <div className="flex justify-between items-start mb-3">
-            <div>
+            <div id="tour-greeting">
               <p className="text-xs text-muted-foreground mb-0.5">{t("dashboard.welcome")}</p>
               <h1 className="text-xl font-bold text-foreground">{firstName}</h1>
             </div>
@@ -169,7 +172,7 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className="bg-card rounded-xl p-3 text-center">
+          <div id="tour-readiness-score" className="bg-card rounded-xl p-3 text-center">
             <div className="relative inline-flex items-center justify-center mb-1">
               <svg className="w-14 h-14 transform -rotate-90">
                 <circle cx="28" cy="28" r="24" stroke="currentColor" strokeWidth="5" fill="none" className="text-muted" />
@@ -223,6 +226,7 @@ const Dashboard = () => {
                   return (
                     <button
                       key={action.id}
+                      id={`tour-${action.action_key}`}
                       onClick={() => action.route && navigate(action.route)}
                       className="w-full bg-card rounded-lg p-2.5 flex items-center gap-2.5 hover:bg-accent transition-colors"
                     >
@@ -250,7 +254,7 @@ const Dashboard = () => {
         <FeatureTour isOpen={showTour} onClose={handleTourClose} />
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
+      <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50">
         <div className="flex justify-around items-center h-16 max-w-md mx-auto">
           <button className="flex flex-col items-center gap-1 text-primary relative">
             <Home className="w-6 h-6" />
@@ -272,3 +276,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+

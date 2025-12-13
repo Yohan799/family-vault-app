@@ -275,7 +275,7 @@ const InactivityTrigger = () => {
             </div>
 
             {/* Bottom Navigation */}
-            <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
+            <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50">
                 <div className="flex justify-around items-center h-16 max-w-md mx-auto">
                     <button
                         onClick={() => navigate("/dashboard")}

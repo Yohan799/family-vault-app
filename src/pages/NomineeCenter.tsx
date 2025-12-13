@@ -236,6 +236,11 @@ const NomineeCenter = () => {
 
       if (insertError) throw insertError;
 
+      // Optimistic update - immediately add new nominee to local state
+      if (newNominee) {
+        setNominees(prev => [...prev, newNominee]);
+      }
+
       toast({
         title: t("toast.success"),
         description: `${formData.fullName} ${t("nominee.add").toLowerCase()}`,
@@ -588,7 +593,7 @@ const NomineeCenter = () => {
       />
 
       {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
+      <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50">
         <div className="flex justify-around items-center h-16 max-w-md mx-auto">
           <button
             onClick={() => navigate("/dashboard")}

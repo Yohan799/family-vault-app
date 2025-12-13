@@ -87,6 +87,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (session?.user) {
           // Create session on login
           if (event === 'SIGNED_IN') {
+            // Check if this is a NEW user (created within last 60 seconds)
+            const createdAt = new Date(session.user.created_at).getTime();
+            const now = Date.now();
+            const isNewUser = (now - createdAt) < 60000; // 60 seconds
+            if (isNewUser) {
+              localStorage.setItem('isFirstLogin', 'true');
+            }
+
             setTimeout(() => {
               createSession(session.user.id).catch(err =>
                 console.error('Failed to create session:', err)
@@ -221,7 +229,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             await logActivity(data.user.id, 'auth.login', 'user', data.user.id);
           }
 
-          localStorage.setItem('isFirstLogin', 'true');
+          // Only show feature tour for NEW signups (user created in last 60 seconds)
+          if (data.user) {
+            const createdAt = new Date(data.user.created_at).getTime();
+            const now = Date.now();
+            const isNewUser = (now - createdAt) < 60000; // 60 seconds
+            if (isNewUser) {
+              localStorage.setItem('isFirstLogin', 'true');
+            }
+          }
         }
       } catch (error) {
         console.error('Native Google Sign-In error:', error);
@@ -241,7 +257,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) throw error;
 
-      localStorage.setItem('isFirstLogin', 'true');
+      // Note: For web OAuth, isFirstLogin will be set by onAuthStateChange if it's a new user
     }
   };
 

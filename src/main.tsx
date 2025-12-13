@@ -19,6 +19,22 @@ if (isPushAvailable()) {
     console.log('Local notification permission:', permission.display);
   });
 
+  // Create the 'default' channel for Local Notifications (Android 8+)
+  // This is REQUIRED for notifications to display
+  LocalNotifications.createChannel({
+    id: 'default',
+    name: 'Default Notifications',
+    description: 'Family Vault notifications',
+    importance: 5, // IMPORTANCE_HIGH
+    visibility: 1, // PUBLIC
+    sound: 'default',
+    vibration: true,
+  }).then(() => {
+    console.log('Local notification channel created');
+  }).catch(err => {
+    console.log('Channel already exists or error:', err);
+  });
+
   initializePushNotifications(
     async (notification) => {
       console.log('Push notification received in foreground:', notification.title);
@@ -26,20 +42,22 @@ if (isPushAvailable()) {
       // When app is in foreground, FCM doesn't show system notification
       // So we create a local notification to display it
       try {
+        // Use modulo to ensure ID fits in 32-bit signed integer (max: 2147483647)
+        const notificationId = Math.floor(Math.random() * 2147483647);
+
         await LocalNotifications.schedule({
           notifications: [
             {
-              id: Date.now(),
+              id: notificationId,
               title: notification.title || 'Family Vault',
               body: notification.body || '',
               sound: 'default',
-              smallIcon: 'ic_stat_icon_config_sample',
-              largeIcon: 'ic_launcher',
+              smallIcon: 'ic_notification', // Monochrome icon in drawable
               channelId: 'default',
             }
           ]
         });
-        console.log('Local notification shown for foreground push');
+        console.log('Local notification shown for foreground push, id:', notificationId);
       } catch (err) {
         console.error('Error showing local notification:', err);
       }

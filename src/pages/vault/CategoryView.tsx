@@ -319,8 +319,8 @@ const CategoryView = () => {
                       className="w-full h-full bg-[#DBEAFE] rounded-2xl p-5 flex flex-col items-center justify-between hover:opacity-80 transition-opacity min-h-[160px]"
                     >
                       <div className="flex flex-col items-center">
-                        <div className="w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center mb-3">
-                          <SubIcon className="w-7 h-7 text-[#2563EB]" />
+                        <div className="w-14 h-14 flex items-center justify-center mb-3">
+                          <SubIcon className="w-8 h-8 text-[#2563EB]" />
                         </div>
                         <h3 className="font-semibold text-[#1F2121] text-center mb-1 line-clamp-2">{getSubcategoryName(subcategory.id, subcategory.name, t)}</h3>
                       </div>
@@ -344,8 +344,8 @@ const CategoryView = () => {
                   onClick={() => setShowAddDialog(true)}
                   className="bg-[#DBEAFE] border-2 border-dashed border-[#2563EB] rounded-2xl p-5 flex flex-col items-center justify-center hover:opacity-80 transition-opacity min-h-[160px]"
                 >
-                  <div className="w-14 h-14 bg-white/60 rounded-full flex items-center justify-center mb-3">
-                    <Plus className="w-7 h-7 text-[#2563EB]" />
+                  <div className="w-14 h-14 flex items-center justify-center mb-3">
+                    <Plus className="w-8 h-8 text-[#2563EB]" />
                   </div>
                   <h3 className="font-semibold text-[#1F2121]">{t("subcategory.add")}</h3>
                 </button>
@@ -444,7 +444,7 @@ const CategoryView = () => {
         )}
 
         {/* Bottom Navigation */}
-        <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
+        <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50">
           <div className="flex justify-around items-center h-16 max-w-md mx-auto">
             <button onClick={() => navigate("/dashboard")} className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
               <Home className="w-6 h-6" />

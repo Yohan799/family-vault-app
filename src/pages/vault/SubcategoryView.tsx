@@ -533,8 +533,8 @@ const SubcategoryView = () => {
                     className="w-full h-full bg-[#DBEAFE] rounded-2xl p-5 flex flex-col items-center justify-between hover:opacity-80 transition-opacity min-h-[160px]"
                   >
                     <div className="flex flex-col items-center">
-                      <div className="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mb-3">
-                        <Folder className="w-7 h-7 text-[#2563EB]" />
+                      <div className="w-14 h-14 flex items-center justify-center mb-3">
+                        <Folder className="w-8 h-8 text-[#2563EB]" />
                       </div>
                       <h3 className="font-semibold text-[#1F2121] text-center mb-1 line-clamp-2">{folder.name}</h3>
                     </div>
@@ -558,8 +558,8 @@ const SubcategoryView = () => {
                   onClick={() => setShowAddFolderDialog(true)}
                   className="bg-[#DBEAFE] border-2 border-dashed border-[#2563EB] rounded-2xl p-5 flex flex-col items-center justify-center hover:opacity-80 transition-opacity min-h-[160px]"
                 >
-                  <div className="w-14 h-14 bg-white/60 rounded-full flex items-center justify-center mb-3">
-                    <Plus className="w-7 h-7 text-[#2563EB]" />
+                  <div className="w-14 h-14 flex items-center justify-center mb-3">
+                    <Plus className="w-8 h-8 text-[#2563EB]" />
                   </div>
                   <h3 className="font-semibold text-[#1F2121]">{t("folder.addFolder")}</h3>
                 </button>
@@ -574,8 +574,8 @@ const SubcategoryView = () => {
               onClick={() => setShowAddFolderDialog(true)}
               className="w-full bg-[#DBEAFE] border-2 border-dashed border-[#2563EB] rounded-2xl p-6 flex flex-col items-center justify-center hover:opacity-80 transition-opacity"
             >
-              <div className="w-16 h-16 bg-white/60 rounded-full flex items-center justify-center mb-3">
-                <Plus className="w-8 h-8 text-[#2563EB]" />
+              <div className="w-16 h-16 flex items-center justify-center mb-3">
+                <Plus className="w-10 h-10 text-[#2563EB]" />
               </div>
               <h3 className="font-semibold text-[#1F2121] mb-1">{t("folder.createFolder")}</h3>
               <p className="text-sm text-[#626C71]">{t("folder.organizeDocuments")}</p>
@@ -830,7 +830,7 @@ const SubcategoryView = () => {
         />
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
+      <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50">
         <div className="flex justify-around items-center h-16 max-w-md mx-auto">
           <button
             onClick={() => navigate("/dashboard")}

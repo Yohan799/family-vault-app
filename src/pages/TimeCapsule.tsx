@@ -38,7 +38,8 @@ const TimeCapsule = () => {
     releaseDate: "",
     recipientEmail: "",
     phone: "",
-    attachmentFile: null as File | null
+    attachmentFile: null as File | null,
+    existingAttachmentUrl: null as string | null
   });
 
   useEffect(() => {
@@ -249,7 +250,7 @@ const TimeCapsule = () => {
       }
 
       await loadCapsules();
-      setFormData({ title: "", message: "", releaseDate: "", recipientEmail: "", phone: "", attachmentFile: null });
+      setFormData({ title: "", message: "", releaseDate: "", recipientEmail: "", phone: "", attachmentFile: null, existingAttachmentUrl: null });
       setEditingId(null);
       setShowCreateForm(false);
     } catch (error) {
@@ -408,6 +409,21 @@ const TimeCapsule = () => {
                       Remove
                     </Button>
                   </div>
+                ) : formData.existingAttachmentUrl ? (
+                  <div className="text-center">
+                    <p className="text-sm text-foreground mb-2">📎 Existing attachment</p>
+                    <p className="text-xs text-muted-foreground mb-2 truncate max-w-[200px] mx-auto">
+                      {formData.existingAttachmentUrl.split('/').pop()}
+                    </p>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setFormData({ ...formData, existingAttachmentUrl: null })}
+                    >
+                      Remove & Add New
+                    </Button>
+                  </div>
                 ) : (
                   <>
                     <Camera className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
@@ -536,15 +552,15 @@ const TimeCapsule = () => {
                 <div
                   key={capsule.id}
                   className={`bg-card rounded-2xl p-4 border-l-4 ${capsule.status === 'released'
-                      ? 'border-l-green-500'
-                      : 'border-l-blue-500'
+                    ? 'border-l-green-500'
+                    : 'border-l-blue-500'
                     }`}
                 >
                   {/* Header Row: Status Badge + Actions */}
                   <div className="flex items-center justify-between mb-2">
                     <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${capsule.status === 'released'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-blue-100 text-blue-700'
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-blue-100 text-blue-700'
                       }`}>
                       {capsule.status === 'released' ? '✓ Released' : '⏳ Scheduled'}
                     </span>
@@ -561,7 +577,8 @@ const TimeCapsule = () => {
                               releaseDate: capsule.release_date,
                               recipientEmail: capsule.recipient_email,
                               phone: capsule.phone || '',
-                              attachmentFile: null
+                              attachmentFile: null,
+                              existingAttachmentUrl: capsule.attachment_url || null
                             });
                             setEditingId(capsule.id);
                             setShowCreateForm(true);
@@ -638,7 +655,7 @@ const TimeCapsule = () => {
         </div>
 
         {/* Bottom Navigation */}
-        <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
+        <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50">
           <div className="flex justify-around items-center h-16 max-w-md mx-auto">
             <button
               onClick={() => navigate("/dashboard")}
@@ -702,3 +719,4 @@ const TimeCapsule = () => {
 };
 
 export default TimeCapsule;
+

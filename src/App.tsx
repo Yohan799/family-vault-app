@@ -69,6 +69,30 @@ const PageLoader = () => (
   </div>
 );
 
+// Redirect authenticated users away from onboarding/auth pages
+const AuthRedirect = ({ children }: { children: React.ReactNode }) => {
+  const { user, isLoading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isLoading && user) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [user, isLoading, navigate]);
+
+  // Show loading while checking auth
+  if (isLoading) {
+    return <PageLoader />;
+  }
+
+  // If user is logged in, don't render children (will redirect)
+  if (user) {
+    return <PageLoader />;
+  }
+
+  return <>{children}</>;
+};
+
 // Back button handler component
 const BackButtonHandler = () => {
   const navigate = useNavigate();
@@ -119,10 +143,10 @@ const App = () => (
               <BackButtonHandler />
               <Suspense fallback={<PageLoader />}>
                 <Routes>
-                  <Route path="/" element={<Onboarding />} />
-                  <Route path="/onboarding" element={<Onboarding />} />
-                  <Route path="/signup" element={<SignUp />} />
-                  <Route path="/signin" element={<SignIn />} />
+                  <Route path="/" element={<AuthRedirect><Onboarding /></AuthRedirect>} />
+                  <Route path="/onboarding" element={<AuthRedirect><Onboarding /></AuthRedirect>} />
+                  <Route path="/signup" element={<AuthRedirect><SignUp /></AuthRedirect>} />
+                  <Route path="/signin" element={<AuthRedirect><SignIn /></AuthRedirect>} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
                   <Route path="/password-reset-otp" element={<PasswordResetOTP />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
