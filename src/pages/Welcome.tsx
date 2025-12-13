@@ -33,7 +33,7 @@ const Welcome = () => {
         <img 
           src={splashLogo} 
           alt="Family Vault Logo" 
-          className="w-[200px] sm:w-[240px] md:w-[280px] h-auto mb-8 object-contain"
+          className="w-[140px] sm:w-[160px] md:w-[200px] h-auto mb-8 object-contain"
         />
         
         {/* Title - Larger responsive font sizing */}
