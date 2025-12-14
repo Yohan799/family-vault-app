@@ -6,12 +6,11 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { fetchDashboardStats, calculateReadinessScore, updateInactivityTrigger, type DashboardStats } from "@/services/dashboardService";
+import { calculateReadinessScore, updateInactivityTrigger, type DashboardStats } from "@/services/dashboardService";
 import FeatureTour from "@/components/FeatureTour";
 import { useToast } from "@/hooks/use-toast";
-import { getQuickActions, initializeDefaultActions, type QuickAction } from "@/services/quickActionsService";
+import { useDashboardStats, useQuickActions, useUnreadNotifications, useInvalidateDashboard } from "@/hooks/useDashboardData";
 import { DashboardSkeleton } from "@/components/skeletons";
-import { getUnreadCount } from "@/services/notificationService";
 import { getQuickActionText } from "@/lib/categoryTranslations";
 
 // Memoized icon map (created once, not on every render)
@@ -29,20 +28,23 @@ const Dashboard = () => {
   const { t } = useLanguage();
   const { toast } = useToast();
   const [showTour, setShowTour] = useState(false);
-  const [stats, setStats] = useState<DashboardStats>({
-    documents: 0,
-    nominees: 0,
-    timeCapsules: 0,
-    inactivityTriggerActive: false,
-  });
-  const [isLoadingStats, setIsLoadingStats] = useState(true);
-  const [quickActions, setQuickActions] = useState<QuickAction[]>([]);
   const lastToggleTime = useRef<number>(0);
-  const [unreadNotifications, setUnreadNotifications] = useState(0);
+
+  // React Query hooks for cached data fetching
+  const { data: stats, isLoading: isLoadingStats } = useDashboardStats(user?.id);
+  const { data: quickActions = [] } = useQuickActions(user?.id);
+  const { data: unreadNotifications = 0 } = useUnreadNotifications(user?.id);
+  const { invalidateStats } = useInvalidateDashboard();
+
+  // Local state for optimistic inactivity toggle
+  const [localInactivityState, setLocalInactivityState] = useState<boolean | null>(null);
+
+  // Derive effective inactivity state (local override or from cache)
+  const effectiveInactivityActive = localInactivityState ?? stats?.inactivityTriggerActive ?? false;
 
   // Memoized readiness score
   const readinessScore = useMemo(() => calculateReadinessScore(
-    stats,
+    stats || { documents: 0, nominees: 0, timeCapsules: 0, inactivityTriggerActive: false },
     profile?.two_factor_enabled || false,
     profile?.biometric_enabled || false
   ), [stats, profile?.two_factor_enabled, profile?.biometric_enabled]);
@@ -69,36 +71,12 @@ const Dashboard = () => {
     }
   }, []);
 
+  // Reset local state when cache updates
   useEffect(() => {
-    if (user?.id) {
-      // Load all data in PARALLEL for faster loading
-      loadAllDashboardData();
+    if (stats?.inactivityTriggerActive !== undefined) {
+      setLocalInactivityState(null);
     }
-  }, [user?.id]);
-
-  const loadAllDashboardData = useCallback(async () => {
-    if (!user?.id) return;
-
-    setIsLoadingStats(true);
-
-    try {
-      // Run all data loading in parallel
-      const [dashboardStats, _, actions, unreadCount] = await Promise.all([
-        fetchDashboardStats(user.id),
-        initializeDefaultActions(user.id),
-        getQuickActions(user.id),
-        getUnreadCount(user.id)
-      ]);
-
-      setStats(dashboardStats);
-      setQuickActions(actions.filter(a => a.is_enabled));
-      setUnreadNotifications(unreadCount);
-    } catch (error) {
-      console.error('Error loading dashboard data:', error);
-    } finally {
-      setIsLoadingStats(false);
-    }
-  }, [user?.id]);
+  }, [stats?.inactivityTriggerActive]);
 
   const handleTourClose = useCallback(() => {
     setShowTour(false);
@@ -116,9 +94,9 @@ const Dashboard = () => {
     }
     lastToggleTime.current = now;
 
-    // Optimistic update
-    const previousState = stats.inactivityTriggerActive;
-    setStats(prev => ({ ...prev, inactivityTriggerActive: checked }));
+    // Optimistic update via local state
+    const previousState = effectiveInactivityActive;
+    setLocalInactivityState(checked);
 
     // Show toast immediately
     toast({
@@ -128,16 +106,18 @@ const Dashboard = () => {
 
     try {
       await updateInactivityTrigger(user.id, checked);
+      // Invalidate cache to get fresh data
+      invalidateStats(user.id);
     } catch (error) {
       console.error('Error updating inactivity trigger:', error);
       // Revert on error
-      setStats(prev => ({ ...prev, inactivityTriggerActive: previousState }));
+      setLocalInactivityState(previousState);
       toast({
         title: t("toast.error"),
         variant: "destructive",
       });
     }
-  }, [user?.id, stats.inactivityTriggerActive, toast, t]);
+  }, [user?.id, effectiveInactivityActive, toast, t, invalidateStats]);
 
   if (!profile || isLoadingStats) {
     return <DashboardSkeleton />;
@@ -191,24 +171,24 @@ const Dashboard = () => {
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-card rounded-lg p-2.5 text-center flex flex-col items-center justify-center h-20">
               <FileText className="w-5 h-5 text-primary mb-1.5" />
-              <span className="text-xs font-medium text-foreground truncate">{stats.documents} {t("dashboard.docs")}</span>
+              <span className="text-xs font-medium text-foreground truncate">{stats?.documents ?? 0} {t("dashboard.docs")}</span>
             </div>
 
             <div className="bg-card rounded-lg p-2.5 text-center flex flex-col items-center justify-center h-20">
               <Users className="w-5 h-5 text-primary mb-1.5" />
-              <span className="text-xs font-medium text-foreground truncate">{stats.nominees} {t("dashboard.nominees")}</span>
+              <span className="text-xs font-medium text-foreground truncate">{stats?.nominees ?? 0} {t("dashboard.nominees")}</span>
             </div>
 
             <div className="bg-card rounded-lg p-2.5 text-center flex flex-col items-center justify-center h-20">
               <Clock className="w-5 h-5 text-primary mb-1.5" />
-              <span className="text-xs font-medium text-foreground truncate">{stats.timeCapsules} {t("dashboard.capsules")}</span>
+              <span className="text-xs font-medium text-foreground truncate">{stats?.timeCapsules ?? 0} {t("dashboard.capsules")}</span>
             </div>
 
             <div className="bg-card rounded-lg p-2.5 text-center flex flex-col items-center justify-center h-20">
               <Shield className="w-5 h-5 text-primary mb-0.5" />
               <span className="text-[10px] font-medium text-foreground truncate mb-0.5">{t("dashboard.trigger")}</span>
               <Switch
-                checked={stats.inactivityTriggerActive}
+                checked={effectiveInactivityActive}
                 onCheckedChange={handleInactivityToggle}
                 className="scale-75"
               />

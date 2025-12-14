@@ -502,7 +502,7 @@ const TimeCapsule = () => {
                 onClick={() => {
                   setShowCreateForm(false);
                   setEditingId(null);
-                  setFormData({ title: "", message: "", releaseDate: "", recipientEmail: "", phone: "", attachmentFile: null });
+                  setFormData({ title: "", message: "", releaseDate: "", recipientEmail: "", phone: "", attachmentFile: null, existingAttachmentUrl: null });
                 }}
                 className="w-full sm:flex-1 rounded-xl h-12 border-border min-h-[48px]"
                 disabled={loading}

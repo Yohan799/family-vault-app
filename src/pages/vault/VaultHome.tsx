@@ -7,15 +7,13 @@ import { vaultCategories } from "@/data/vaultCategories";
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { categoryNameSchema, sanitizeInput } from "@/lib/validation";
-import { AccessControlModal } from "@/components/vault/AccessControlModal";
-import { ActionMenu, createCategoryActionMenu } from "@/components/vault/ActionMenu";
 import { format } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getCategoryName } from "@/lib/categoryTranslations";
 import { useAuth } from "@/contexts/AuthContext";
 import { VaultHomeSkeleton } from "@/components/skeletons";
-
-import { syncDefaultCategories, loadCategoriesOptimized, deleteCategoryWithCascade, getAllUserDocuments, getAllUserSubcategories } from "@/services/vaultService";
+import { useCategories, useAllDocuments, useAllSubcategories, useInvalidateVault } from "@/hooks/useVaultData";
+import { deleteCategoryWithCascade } from "@/services/vaultService";
 
 const VaultHome = () => {
   const navigate = useNavigate();
@@ -26,109 +24,20 @@ const VaultHome = () => {
   const [categoryName, setCategoryName] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
-  const [allDocuments, setAllDocuments] = useState<any[]>([]);
-  const [allSubcategories, setAllSubcategories] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Initialize with hardcoded categories immediately for instant display
-  const [customCategories, setCustomCategories] = useState<any[]>(
-    vaultCategories.map((cat) => ({
-      id: cat.id,
-      name: cat.name,
-      icon: cat.icon,
-      iconBgColor: cat.iconBgColor,
-      documentCount: 0,
-      subcategories: [],
-      isCustom: false,
-    }))
-  );
+  // React Query hooks for cached data fetching
+  const { data: customCategories = [], isLoading, isPending } = useCategories(user?.id);
+  const { data: allDocuments = [] } = useAllDocuments(user?.id);
+  const { data: allSubcategories = [] } = useAllSubcategories(user?.id);
+  const { invalidateCategories } = useInvalidateVault();
+
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; category: any | null }>({
     show: false,
     category: null
   });
-  const [accessControlCategory, setAccessControlCategory] = useState<any | null>(null);
 
-  // Use userId from context instead of calling getUser() repeatedly
   const userId = user?.id;
-
-  useEffect(() => {
-    if (userId) {
-      loadAllData();
-    }
-  }, [userId]);
-
-  // Optimized: Load all data in parallel
-  const loadAllData = useCallback(async () => {
-    if (!userId) return;
-
-    setIsLoading(true);
-
-    try {
-      // Only sync once per session (check sessionStorage)
-      const syncKey = `vault_synced_${userId}`;
-      const needsSync = !sessionStorage.getItem(syncKey);
-
-      // Run all data loading in parallel
-      const [_, docsResult, subsResult, catsResult] = await Promise.all([
-        needsSync ? syncDefaultCategories(userId).then(() => sessionStorage.setItem(syncKey, 'true')) : Promise.resolve(),
-        getAllUserDocuments(userId),
-        getAllUserSubcategories(userId),
-        loadCategoriesOptimized(userId)
-      ]);
-
-      setAllDocuments(docsResult);
-
-      // Merge subcategories with hardcoded ones
-      const hardcodedSubs = vaultCategories.flatMap(cat =>
-        cat.subcategories.map(sub => ({
-          id: sub.id,
-          name: sub.name,
-          icon: sub.icon,
-          category_id: cat.id,
-          is_custom: false,
-        }))
-      );
-      const subMap = new Map();
-      hardcodedSubs.forEach(sub => subMap.set(sub.id, sub));
-      subsResult.forEach(sub => subMap.set(sub.id, sub));
-      setAllSubcategories(Array.from(subMap.values()));
-
-      // Build categories with counts
-      const { categories: customCats, docCountMap } = catsResult;
-
-      const baseCategories = vaultCategories.map((cat) => ({
-        id: cat.id,
-        name: cat.name,
-        icon: cat.icon,
-        iconBgColor: cat.iconBgColor,
-        documentCount: docCountMap.get(cat.id) || 0,
-        subcategories: [],
-        isCustom: false,
-      }));
-
-      const customCatsWithCounts = customCats.map((cat: any) => ({
-        id: cat.id,
-        name: cat.name,
-        icon: Folder,
-        iconBgColor: cat.icon_bg_color || "bg-yellow-100",
-        documentCount: docCountMap.get(cat.id) || 0,
-        subcategories: [],
-        isCustom: true
-      }));
-
-      setCustomCategories([...baseCategories, ...customCatsWithCounts]);
-    } catch (error) {
-      console.error('Error loading vault data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load vault data",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [userId, toast]);
 
   // Debounced search effect
   useEffect(() => {
@@ -187,17 +96,8 @@ const VaultHome = () => {
 
       if (error) throw error;
 
-      // Optimistic update
-      const newCategory = {
-        id: data.id,
-        name: data.name,
-        icon: Folder,
-        iconBgColor: "bg-yellow-100",
-        documentCount: 0,
-        subcategories: [],
-        isCustom: true
-      };
-      setCustomCategories(prev => [...prev, newCategory]);
+      // Invalidate cache to refetch with new category
+      invalidateCategories(userId);
 
       toast({
         title: "Category created!",
@@ -214,7 +114,7 @@ const VaultHome = () => {
         variant: "destructive"
       });
     }
-  }, [categoryName, customCategories, userId, toast]);
+  }, [categoryName, customCategories, userId, toast, invalidateCategories]);
 
   const handleDeleteClick = useCallback((category: any, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -240,8 +140,8 @@ const VaultHome = () => {
     try {
       await deleteCategoryWithCascade(categoryId, userId);
 
-      // Optimistic update
-      setCustomCategories(prev => prev.filter(c => c.id !== categoryId));
+      // Invalidate cache to refetch without deleted category
+      invalidateCategories(userId);
 
       toast({
         title: "Category deleted",
@@ -257,7 +157,7 @@ const VaultHome = () => {
         variant: "destructive"
       });
     }
-  }, [deleteConfirm.category, userId, toast]);
+  }, [deleteConfirm.category, userId, toast, invalidateCategories]);
 
   // Memoized calculations
   const totalDocuments = useMemo(() =>
@@ -325,7 +225,7 @@ const VaultHome = () => {
     return results;
   }, [searchQuery, customCategories, allDocuments, allSubcategories]);
 
-  if (isLoading) {
+  if (isLoading || isPending || !user?.id) {
     return <VaultHomeSkeleton />;
   }
 
@@ -415,15 +315,7 @@ const VaultHome = () => {
                         </p>
                       </button>
 
-                      {/* Action Menu - Always show for all categories */}
-                      <div className="absolute top-2 right-2 z-10">
-                        <ActionMenu
-                          items={createCategoryActionMenu(
-                            () => setAccessControlCategory(category),
-                            category.isCustom ? () => handleDeleteClick(category, { stopPropagation: () => { } } as any) : undefined
-                          )}
-                        />
-                      </div>
+
                     </div>
 
                     {/* Expanded Results: Matching Subcategories */}
@@ -602,16 +494,7 @@ const VaultHome = () => {
           </div>
         </div>
 
-        {/* Access Control Modal */}
-        {accessControlCategory && (
-          <AccessControlModal
-            isOpen={!!accessControlCategory}
-            onClose={() => setAccessControlCategory(null)}
-            resourceType="category"
-            resourceId={accessControlCategory.id}
-            resourceName={getCategoryName(accessControlCategory.id, accessControlCategory.name, t)}
-          />
-        )}
+
       </div>
     </>
   );

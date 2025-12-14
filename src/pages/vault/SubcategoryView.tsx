@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useParams } from "react-router-dom";
 import { vaultCategories } from "@/data/vaultCategories";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { UploadDocumentModal } from "@/components/vault/UploadDocumentModal";
 import { DocumentOptionsModal } from "@/components/vault/DocumentOptionsModal";
@@ -20,7 +20,8 @@ import { SubcategoryViewSkeleton } from "@/components/skeletons";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getSubcategoryName } from "@/lib/categoryTranslations";
-
+import { useAuth } from "@/contexts/AuthContext";
+import { useSubcategoryViewData, useInvalidateVault } from "@/hooks/useVaultData";
 import { getDocuments, formatFileSize, deleteDocument, downloadDocument, incrementViewCount } from "@/lib/documentStorage";
 
 const SubcategoryView = () => {
@@ -28,17 +29,13 @@ const SubcategoryView = () => {
   const { categoryId, subcategoryId } = useParams();
   const { toast } = useToast();
   const { t } = useLanguage();
+  const { user } = useAuth();
   const [uploadOpen, setUploadOpen] = useState(false);
   const [optionsOpen, setOptionsOpen] = useState(false);
   const [lockOpen, setLockOpen] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState({ name: "", id: "" });
   const [showAddFolderDialog, setShowAddFolderDialog] = useState(false);
   const [folderName, setFolderName] = useState("");
-  const [nestedFolders, setNestedFolders] = useState<any[]>([]);
-  const [category, setCategory] = useState<any>(null);
-  const [subcategory, setSubcategory] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [documents, setDocuments] = useState<Array<{ id: string; name: string; size: string; date: string }>>([]);
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; folder: any | null }>({ show: false, folder: null });
   const [isDeletingFolder, setIsDeletingFolder] = useState(false);
   const [deleteDocConfirm, setDeleteDocConfirm] = useState<{ show: boolean; doc: any | null }>({ show: false, doc: null });
@@ -49,134 +46,70 @@ const SubcategoryView = () => {
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [renameOpen, setRenameOpen] = useState(false);
 
-  const loadData = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        navigate("/vault");
-        return;
-      }
+  const userId = user?.id;
 
-      // Check if default category first
-      const defaultCategory = vaultCategories.find(cat => cat.id === categoryId);
+  // React Query hook for cached data fetching
+  const { data: viewData, isLoading, isPending, refetch } = useSubcategoryViewData(userId, categoryId, subcategoryId);
+  const { invalidateSubcategoryView } = useInvalidateVault();
 
-      // Load category from database if not default
-      let foundCategory: any = null;
-      if (defaultCategory) {
-        foundCategory = {
-          id: defaultCategory.id,
-          name: defaultCategory.name,
-          icon: defaultCategory.icon,
-          iconBgColor: defaultCategory.iconBgColor,
-          subcategories: defaultCategory.subcategories,
-          isCustom: false
-        };
-      } else {
-        const { data: categoryData } = await supabase
-          .from('categories')
-          .select('*')
-          .eq('id', categoryId)
-          .eq('user_id', user.id)
-          .is('deleted_at', null)
-          .maybeSingle();
+  // Show loading if query is loading or waiting for userId
+  const loading = isLoading || isPending || !userId;
 
-        if (categoryData) {
-          foundCategory = {
-            id: categoryData.id,
-            name: categoryData.name,
-            icon: Folder,
-            iconBgColor: categoryData.icon_bg_color || "bg-yellow-100",
-            subcategories: [],
-            isCustom: true
-          };
-        }
-      }
+  // Extract data from hook result
+  const nestedFolders = viewData?.folders ?? [];
+  const documents = viewData?.documents ?? [];
 
-      if (!foundCategory) {
-        setLoading(false);
-        navigate("/vault");
-        return;
-      }
-      setCategory(foundCategory);
+  // Derive category and subcategory from hardcoded data or DB (memoized)
+  const { category, subcategory } = useMemo(() => {
+    if (!categoryId || !subcategoryId) return { category: null, subcategory: null };
 
-      // Check if default subcategory first
-      const defaultSub = defaultCategory?.subcategories?.find(sub => sub.id === subcategoryId);
+    const defaultCategory = vaultCategories.find(cat => cat.id === categoryId);
+    let cat: any = null;
+    let sub: any = null;
 
-      let foundSubcategory: any = null;
+    if (defaultCategory) {
+      cat = {
+        id: defaultCategory.id,
+        name: defaultCategory.name,
+        icon: defaultCategory.icon,
+        iconBgColor: defaultCategory.iconBgColor,
+        subcategories: defaultCategory.subcategories,
+        isCustom: false
+      };
+      const defaultSub = defaultCategory.subcategories.find(s => s.id === subcategoryId);
       if (defaultSub) {
-        foundSubcategory = {
+        sub = {
           id: defaultSub.id,
           name: defaultSub.name,
           icon: defaultSub.icon,
           isCustom: false
         };
-      } else {
-        const { data: subData } = await supabase
-          .from('subcategories')
-          .select('*')
-          .eq('id', subcategoryId)
-          .eq('user_id', user.id)
-          .is('deleted_at', null)
-          .maybeSingle();
-
-        if (subData) {
-          foundSubcategory = {
-            id: subData.id,
-            name: subData.name,
-            icon: Folder,
-            isCustom: true
-          };
-        }
       }
-
-      if (!foundSubcategory) {
-        setLoading(false);
-        navigate(`/vault/${categoryId}`);
-        return;
-      }
-      setSubcategory(foundSubcategory);
-
-      // Load folders from database
-      const { data: foldersData } = await supabase
-        .from('folders')
-        .select('*')
-        .eq('subcategory_id', subcategoryId)
-        .eq('user_id', user.id)
-        .is('parent_folder_id', null)
-        .is('deleted_at', null);
-
-      const folders = (foldersData || []).map(folder => ({
-        id: folder.id,
-        name: folder.name,
-        icon: Folder,
-        documentCount: 0,
-        isCustom: true
-      }));
-      setNestedFolders(folders);
-
-      // Load documents from Supabase
-      const storedDocs = await getDocuments(categoryId!, subcategoryId!);
-
-      // Format documents for display
-      const formattedDocs = storedDocs.map(doc => ({
-        id: doc.id,
-        name: doc.name,
-        size: formatFileSize(doc.size),
-        date: new Date(doc.date).toLocaleDateString(),
-      }));
-
-      setDocuments(formattedDocs);
-      setLoading(false);
-    } catch (error) {
-      console.error("Error loading subcategory data:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load subcategory data",
-        variant: "destructive"
-      });
-      setLoading(false);
     }
-  };
+
+    // For custom categories/subcategories, set basic info
+    if (!cat) {
+      cat = {
+        id: categoryId,
+        name: categoryId,
+        icon: Folder,
+        iconBgColor: "bg-yellow-100",
+        subcategories: [],
+        isCustom: true
+      };
+    }
+    if (!sub) {
+      sub = {
+        id: subcategoryId,
+        name: subcategoryId,
+        icon: Folder,
+        isCustom: true
+      };
+    }
+
+    return { category: cat, subcategory: sub };
+  }, [categoryId, subcategoryId]);
+
 
   // Debounce search query
   useEffect(() => {
@@ -186,10 +119,6 @@ const SubcategoryView = () => {
 
     debouncedSearch(searchQuery);
   }, [searchQuery]);
-
-  useEffect(() => {
-    loadData();
-  }, [categoryId, subcategoryId]);
 
   const handleAddFolder = async () => {
     const sanitizedName = sanitizeInput(folderName);
@@ -235,15 +164,10 @@ const SubcategoryView = () => {
 
       if (error) throw error;
 
-      const newFolder = {
-        id: newFolderData.id,
-        name: newFolderData.name,
-        icon: Folder,
-        documentCount: 0,
-        isCustom: true
-      };
-
-      setNestedFolders([...nestedFolders, newFolder]);
+      // Invalidate cache to refetch with new folder
+      if (userId && categoryId && subcategoryId) {
+        invalidateSubcategoryView(userId, categoryId, subcategoryId);
+      }
 
       toast({
         title: "Folder created!",
@@ -310,8 +234,10 @@ const SubcategoryView = () => {
 
       console.log('[SubcategoryView] Folder deleted successfully:', data);
 
-      const updated = nestedFolders.filter(f => f.id !== folderIdToDelete);
-      setNestedFolders(updated);
+      // Invalidate cache to refetch without deleted folder
+      if (userId && categoryId && subcategoryId) {
+        invalidateSubcategoryView(userId, categoryId, subcategoryId);
+      }
 
       toast({
         title: "Folder deleted",
@@ -435,8 +361,10 @@ const SubcategoryView = () => {
         return;
       }
 
-      // Update state immediately (optimistic update)
-      setDocuments(prev => prev.filter(d => d.id !== deleteDocConfirm.doc!.id));
+      // Invalidate cache to refetch without deleted document
+      if (userId && categoryId && subcategoryId) {
+        invalidateSubcategoryView(userId, categoryId, subcategoryId);
+      }
 
       toast({
         title: "Document deleted",
@@ -453,7 +381,7 @@ const SubcategoryView = () => {
       });
       setDeleteDocConfirm({ show: false, doc: null });
     }
-  }, [deleteDocConfirm.doc, toast]);
+  }, [deleteDocConfirm.doc, toast, userId, categoryId, subcategoryId, invalidateSubcategoryView]);
 
   if (loading) {
     return <SubcategoryViewSkeleton />;
@@ -776,7 +704,10 @@ const SubcategoryView = () => {
           subcategoryName={subcategory.name}
           categoryId={categoryId!}
           subcategoryId={subcategoryId!}
-          onUploadComplete={loadData}
+          onUploadComplete={() => {
+            // Directly refetch to ensure new document shows immediately
+            refetch();
+          }}
         />
 
         <DocumentOptionsModal
@@ -786,7 +717,7 @@ const SubcategoryView = () => {
           documentId={selectedDoc.id}
           categoryId={categoryId!}
           subcategoryId={subcategoryId!}
-          onDelete={loadData}
+          onDelete={refetch}
           onView={(fileUrl, name, type) => {
             setViewingDoc({ fileUrl, name, type });
             setViewerOpen(true);
@@ -799,7 +730,7 @@ const SubcategoryView = () => {
           onOpenChange={setRenameOpen}
           documentId={selectedDoc.id}
           currentName={selectedDoc.name}
-          onRenameSuccess={loadData}
+          onRenameSuccess={refetch}
         />
 
         <LockDocumentModal

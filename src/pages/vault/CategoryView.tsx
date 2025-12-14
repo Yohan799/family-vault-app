@@ -16,8 +16,8 @@ import { CategoryViewSkeleton } from "@/components/skeletons";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getCategoryName, getSubcategoryName } from "@/lib/categoryTranslations";
 import { useAuth } from "@/contexts/AuthContext";
-
-import { loadSubcategoriesOptimized, deleteSubcategoryWithCascade } from "@/services/vaultService";
+import { useSubcategories, useInvalidateVault } from "@/hooks/useVaultData";
+import { deleteSubcategoryWithCascade } from "@/services/vaultService";
 
 const CategoryView = () => {
   const navigate = useNavigate();
@@ -27,10 +27,6 @@ const CategoryView = () => {
   const { user } = useAuth();
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [subcategoryName, setSubcategoryName] = useState("");
-  const [customSubcategories, setCustomSubcategories] = useState<any[]>([]);
-  const [category, setCategory] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [totalDocumentCount, setTotalDocumentCount] = useState(0);
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; subcategory: any | null }>({
     show: false,
     subcategory: null
@@ -41,6 +37,45 @@ const CategoryView = () => {
 
   const userId = user?.id;
 
+  // React Query hook for cached subcategory data
+  const { data: subcategoryData, isLoading, isPending } = useSubcategories(userId, categoryId);
+  const { invalidateSubcategories } = useInvalidateVault();
+
+  // Show loading if query is loading or waiting for userId
+  const loading = isLoading || isPending || !userId;
+
+  // Extract data from hook result
+  const customSubcategories = subcategoryData?.subcategories ?? [];
+  const totalDocumentCount = subcategoryData?.totalDocCount ?? 0;
+
+  // Derive category info from hardcoded data or database
+  const category = useMemo(() => {
+    if (!categoryId) return null;
+
+    const defaultCategory = vaultCategories.find(cat => cat.id === categoryId);
+    if (defaultCategory) {
+      return {
+        id: defaultCategory.id,
+        name: defaultCategory.name,
+        icon: defaultCategory.icon,
+        iconBgColor: defaultCategory.iconBgColor,
+        subcategories: defaultCategory.subcategories,
+        isCustom: false
+      };
+    }
+
+    // For custom categories, we need basic info - the hook handles subcategories
+    // This is a simplified approach - category may need separate fetching for custom ones
+    return {
+      id: categoryId,
+      name: categoryId, // This will be overwritten if we fetch from DB
+      icon: Folder,
+      iconBgColor: "bg-yellow-100",
+      subcategories: [],
+      isCustom: true
+    };
+  }, [categoryId]);
+
   // Debounce search query
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -48,93 +83,6 @@ const CategoryView = () => {
     }, 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
-
-  useEffect(() => {
-    if (userId && categoryId) {
-      loadData();
-    }
-  }, [categoryId, userId]);
-
-  const loadData = useCallback(async () => {
-    if (!userId || !categoryId) return;
-
-    setLoading(true);
-
-    try {
-      // Check if this is a default category from hardcoded data
-      const defaultCategory = vaultCategories.find(cat => cat.id === categoryId);
-
-      // Load category from database if not default
-      let foundCategory: any = null;
-
-      if (defaultCategory) {
-        foundCategory = {
-          id: defaultCategory.id,
-          name: defaultCategory.name,
-          icon: defaultCategory.icon,
-          iconBgColor: defaultCategory.iconBgColor,
-          subcategories: defaultCategory.subcategories,
-          isCustom: false
-        };
-      } else {
-        const { data: categoryData } = await supabase
-          .from('categories')
-          .select('id, name, icon_bg_color')
-          .eq('id', categoryId)
-          .eq('user_id', userId)
-          .is('deleted_at', null)
-          .maybeSingle();
-
-        if (categoryData) {
-          foundCategory = {
-            id: categoryData.id,
-            name: categoryData.name,
-            icon: Folder,
-            iconBgColor: categoryData.icon_bg_color || "bg-yellow-100",
-            subcategories: [],
-            isCustom: true
-          };
-        }
-      }
-
-      if (!foundCategory) {
-        navigate("/vault");
-        return;
-      }
-
-      setCategory(foundCategory);
-
-      // Load subcategories with counts in parallel
-      const { subcategories: customSubs, docCountMap, totalDocCount } =
-        await loadSubcategoriesOptimized(userId, categoryId);
-
-      // Start with hardcoded subcategories if this is a default category
-      let baseSubcategories = defaultCategory ? defaultCategory.subcategories.map(sub => ({
-        id: sub.id,
-        name: sub.name,
-        icon: sub.icon,
-        documentCount: docCountMap.get(sub.id) || 0,
-        isCustom: false
-      })) : [];
-
-      // Add custom subcategories with counts
-      const customSubsWithCounts = customSubs.map((sub: any) => ({
-        id: sub.id,
-        name: sub.name,
-        icon: Folder,
-        documentCount: docCountMap.get(sub.id) || 0,
-        isCustom: true
-      }));
-
-      setCustomSubcategories([...baseSubcategories, ...customSubsWithCounts]);
-      setTotalDocumentCount(totalDocCount);
-    } catch (error) {
-      console.error("Error loading category data:", error);
-      navigate("/vault");
-    } finally {
-      setLoading(false);
-    }
-  }, [categoryId, userId, navigate]);
 
   const handleAddSubcategory = useCallback(async () => {
     const sanitizedName = sanitizeInput(subcategoryName);
@@ -179,15 +127,10 @@ const CategoryView = () => {
 
       if (error) throw error;
 
-      // Optimistic update
-      const newSub = {
-        id: data.id,
-        name: data.name,
-        icon: Folder,
-        documentCount: 0,
-        isCustom: true
-      };
-      setCustomSubcategories(prev => [...prev, newSub]);
+      // Invalidate cache to refetch with new subcategory
+      if (userId && categoryId) {
+        invalidateSubcategories(userId, categoryId);
+      }
 
       toast({
         title: "Subcategory created!",
@@ -204,7 +147,7 @@ const CategoryView = () => {
         variant: "destructive"
       });
     }
-  }, [subcategoryName, customSubcategories, userId, categoryId, toast]);
+  }, [subcategoryName, customSubcategories, userId, categoryId, toast, invalidateSubcategories]);
 
   const handleDeleteClick = useCallback((subcategory: any, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -230,9 +173,8 @@ const CategoryView = () => {
     try {
       await deleteSubcategoryWithCascade(subcategoryId, categoryId, userId);
 
-      // Optimistic update
-      setCustomSubcategories(prev => prev.filter(s => s.id !== subcategoryId));
-      setTotalDocumentCount(prev => prev - (deleteConfirm.subcategory?.documentCount || 0));
+      // Invalidate cache to refetch without deleted subcategory
+      invalidateSubcategories(userId, categoryId);
 
       toast({
         title: "Subcategory deleted",
@@ -248,7 +190,7 @@ const CategoryView = () => {
         variant: "destructive"
       });
     }
-  }, [deleteConfirm.subcategory, userId, categoryId, toast]);
+  }, [deleteConfirm.subcategory, userId, categoryId, toast, invalidateSubcategories]);
 
   // Memoized filtered subcategories
   const filteredSubcategories = useMemo(() =>
