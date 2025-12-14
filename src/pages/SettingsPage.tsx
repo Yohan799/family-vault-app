@@ -99,10 +99,9 @@ const SettingsPage = () => {
 
   const handleSignOut = async () => {
     try {
-      // Unregister device token before signing out
-      if (user && isPushAvailable()) {
-        await unregisterDevice(user.id);
-      }
+      // Note: We intentionally DO NOT delete device tokens on logout
+      // This allows push notifications for forgot password to work
+      // Device tokens are only removed when user explicitly disables push notifications
       await signOut();
       toast({ title: t("toast.signedOut"), description: t("toast.signedOut.description") });
       navigate("/signin");
