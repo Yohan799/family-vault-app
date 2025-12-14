@@ -68,8 +68,17 @@ const TwoFactorVerify = () => {
 
     setIsResending(true);
     try {
+      // Get the current session to pass the JWT token
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("Not authenticated. Please log in again.");
+      }
+
       const { error } = await supabase.functions.invoke("send-2fa-otp", {
         body: { email: profile.email, userId: user.id },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
       if (error) throw error;
