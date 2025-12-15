@@ -196,6 +196,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Validate JWT token from Authorization header
     const authHeader = req.headers.get("authorization");
+    console.log("Auth header present:", !!authHeader);
+    
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       console.error("Missing or invalid authorization header");
       return new Response(
@@ -205,18 +207,19 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const token = authHeader.replace("Bearer ", "");
+    console.log("Token length:", token.length, "Token prefix:", token.substring(0, 20) + "...");
 
     // Create a client with the user's token to validate it
     const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: `Bearer ${token}` } }
     });
 
-    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token);
 
     if (authError || !user) {
-      console.error("JWT validation failed:", authError?.message);
+      console.error("JWT validation failed:", authError?.message || "No user returned");
       return new Response(
-        JSON.stringify({ error: "Invalid or expired token" }),
+        JSON.stringify({ error: "Invalid or expired token. Please log out and log in again." }),
         { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
