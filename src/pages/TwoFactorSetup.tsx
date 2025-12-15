@@ -29,10 +29,26 @@ const TwoFactorSetup = () => {
     setIsLoading(true);
     try {
       // Get the current session to pass the JWT token
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        throw new Error("Not authenticated. Please log in again.");
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+      console.log("[2FA Setup] Session check:", {
+        hasSession: !!session,
+        hasAccessToken: !!session?.access_token,
+        sessionError: sessionError?.message,
+        userId: user.id
+      });
+
+      if (sessionError) {
+        console.error("[2FA Setup] Session error:", sessionError);
+        throw new Error(`Session error: ${sessionError.message}`);
       }
+
+      if (!session?.access_token) {
+        console.error("[2FA Setup] No access token found");
+        throw new Error("Session expired. Please log out and log in again.");
+      }
+
+      console.log("[2FA Setup] Calling send-2fa-otp with token:", session.access_token.substring(0, 20) + "...");
 
       const { data, error } = await supabase.functions.invoke("send-2fa-otp", {
         body: { email: profile.email, userId: user.id },
@@ -40,6 +56,8 @@ const TwoFactorSetup = () => {
           Authorization: `Bearer ${session.access_token}`,
         },
       });
+
+      console.log("[2FA Setup] Function response:", { data, error: error?.message });
 
       if (error) throw error;
 
