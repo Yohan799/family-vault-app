@@ -312,7 +312,7 @@ const NestedFolderView = () => {
   return (
     <>
       <div className="min-h-screen bg-[#FCFCF9] pb-20">
-        <div className="bg-[#FCFCF9] p-6 pt-14">
+        <div className="bg-[#FCFCF9] p-6 pt-4">
           <div className="flex items-center gap-4 mb-4">
             <BackButton to={`/vault/${categoryId}/${subcategoryId}`} />
             <div className="flex-1 text-center -ml-10">
@@ -359,7 +359,7 @@ const NestedFolderView = () => {
                 <div key={folder.id} className="relative">
                   <button
                     onClick={() => navigate(`/vault/${categoryId}/${subcategoryId}/${folder.id}`)}
-                    className="w-full bg-[#DBEAFE] rounded-2xl p-5 flex flex-col items-center justify-center hover:opacity-80 transition-opacity"
+                    className="w-full bg-[#DBEAFE] rounded-2xl p-5 flex flex-col items-center justify-center glass-folder"
                   >
                     <div className="w-14 h-14 bg-indigo-100 rounded-full flex items-center justify-center mb-3">
                       <Folder className="w-7 h-7 text-[#2563EB]" />
@@ -383,7 +383,7 @@ const NestedFolderView = () => {
               {canAddMore && !debouncedQuery && (
                 <button
                   onClick={() => setShowAddFolderDialog(true)}
-                  className="bg-[#DBEAFE] border-2 border-dashed border-[#2563EB] rounded-2xl p-5 flex flex-col items-center justify-center hover:opacity-80 transition-opacity"
+                  className="bg-[#DBEAFE] border-2 border-dashed border-[#2563EB] rounded-2xl p-5 flex flex-col items-center justify-center glass-add-button"
                 >
                   <div className="w-14 h-14 bg-white/60 rounded-full flex items-center justify-center mb-3">
                     <Plus className="w-7 h-7 text-[#2563EB]" />
@@ -399,7 +399,7 @@ const NestedFolderView = () => {
           <div className="px-6 mb-6">
             <button
               onClick={() => setShowAddFolderDialog(true)}
-              className="w-full bg-[#DBEAFE] border-2 border-dashed border-[#2563EB] rounded-2xl p-6 flex flex-col items-center justify-center hover:opacity-80 transition-opacity"
+              className="w-full bg-[#DBEAFE] border-2 border-dashed border-[#2563EB] rounded-2xl p-6 flex flex-col items-center justify-center glass-add-button"
             >
               <div className="w-16 h-16 bg-white/60 rounded-full flex items-center justify-center mb-3">
                 <Plus className="w-8 h-8 text-[#2563EB]" />

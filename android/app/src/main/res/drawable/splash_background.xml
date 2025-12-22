@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Background color - matches the splash image background -->
+    <!-- Background color - fills entire screen including gaps on tall devices -->
     <item android:drawable="@color/splashBackground" />
     
-    <!-- Centered logo -->
+    <!-- Splash image centered on screen without stretching -->
+    <!-- Center gravity preserves aspect ratio; white background fills gaps -->
     <item>
         <bitmap
             android:src="@drawable/splash"
-            android:gravity="center"/>
+            android:gravity="center" />
     </item>
 </layer-list>
+
+
+

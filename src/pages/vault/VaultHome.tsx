@@ -1,4 +1,4 @@
-import { Search, Filter, Home, Settings, Vault, Plus, Folder, X, AlertTriangle, FileX, FileText } from "lucide-react";
+import { Search, Plus, Folder, X, AlertTriangle, FileX, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { VaultHomeSkeleton } from "@/components/skeletons";
 import { useCategories, useAllDocuments, useAllSubcategories, useInvalidateVault } from "@/hooks/useVaultData";
 import { deleteCategoryWithCascade } from "@/services/vaultService";
+import BottomNavigation from "@/components/BottomNavigation";
 
 const VaultHome = () => {
   const navigate = useNavigate();
@@ -58,9 +59,9 @@ const VaultHome = () => {
     const validation = categoryNameSchema.safeParse(sanitizedName);
 
     if (!validation.success) {
-      const errorMessage = validation.error.errors[0]?.message || "Invalid category name";
+      const errorMessage = validation.error.errors[0]?.message || t("vault.invalidName");
       toast({
-        title: "Validation Error",
+        title: t("vault.validationError"),
         description: errorMessage,
         variant: "destructive"
       });
@@ -73,8 +74,8 @@ const VaultHome = () => {
 
     if (isDuplicate) {
       toast({
-        title: "Category already exists",
-        description: "This category name is already in use",
+        title: t("vault.categoryCreatedSuccess"),
+        description: t("vault.categoryAddedToVault"),
         variant: "destructive"
       });
       return;
@@ -100,8 +101,8 @@ const VaultHome = () => {
       invalidateCategories(userId);
 
       toast({
-        title: "Category created!",
-        description: `${validation.data} has been added to your vault`
+        title: t("vault.categoryCreatedSuccess"),
+        description: `${validation.data} ${t("vault.categoryAddedToVault")}`
       });
 
       setCategoryName("");
@@ -109,27 +110,27 @@ const VaultHome = () => {
     } catch (error) {
       console.error('Error adding category:', error);
       toast({
-        title: "Error",
-        description: "Failed to create category",
+        title: t("common.error"),
+        description: t("vault.createCategoryFailed"),
         variant: "destructive"
       });
     }
-  }, [categoryName, customCategories, userId, toast, invalidateCategories]);
+  }, [categoryName, customCategories, userId, toast, invalidateCategories, t]);
 
   const handleDeleteClick = useCallback((category: any, e: React.MouseEvent) => {
     e.stopPropagation();
 
     if (!category.isCustom) {
       toast({
-        title: "Cannot delete",
-        description: "Default categories cannot be deleted",
+        title: t("vault.cannotDeleteDefault"),
+        description: t("vault.defaultCannotDelete"),
         variant: "destructive"
       });
       return;
     }
 
     setDeleteConfirm({ show: true, category });
-  }, [toast]);
+  }, [toast, t]);
 
   const confirmDelete = useCallback(async () => {
     if (!deleteConfirm.category || !userId) return;
@@ -144,20 +145,20 @@ const VaultHome = () => {
       invalidateCategories(userId);
 
       toast({
-        title: "Category deleted",
-        description: `${catName} and all related content have been removed`
+        title: t("vault.categoryDeletedSuccess"),
+        description: `${catName} ${t("vault.categoryDeletedDesc")}`
       });
 
       setDeleteConfirm({ show: false, category: null });
     } catch (error) {
       console.error('Error deleting category:', error);
       toast({
-        title: "Error",
-        description: "Failed to delete category",
+        title: t("common.error"),
+        description: t("vault.deleteCategoryFailed"),
         variant: "destructive"
       });
     }
-  }, [deleteConfirm.category, userId, toast, invalidateCategories]);
+  }, [deleteConfirm.category, userId, toast, invalidateCategories, t]);
 
   // Memoized calculations
   const totalDocuments = useMemo(() =>
@@ -232,18 +233,18 @@ const VaultHome = () => {
   return (
     <>
       <div className="min-h-screen bg-[#FCFCF9] pb-20">
-        <div className="bg-[#FCFCF9] p-6 pt-14">
+        <div className="bg-[#FCFCF9] p-6 pt-4">
           <h1 className="text-2xl font-bold text-center text-[#1F2121]">{t("vault.title")}</h1>
           <p className="text-center text-[#626C71] text-sm mt-1">{totalDocuments} {t("common.documents")}</p>
 
           <div className="relative mt-6">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground transition-colors duration-200" />
             <Input
               ref={searchInputRef}
               placeholder={t("vault.searchPlaceholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 pr-12 h-12 bg-[#F5F5F5] border-none rounded-xl"
+              className="pl-12 pr-12 h-12 bg-card border-none rounded-xl shadow-premium-sm focus:shadow-premium-md"
             />
             {searchQuery && (
               <button
@@ -291,7 +292,7 @@ const VaultHome = () => {
                     <div className="relative h-full">
                       <button
                         onClick={() => navigate(`/vault/${category.id}`)}
-                        className={`w-full bg-[#DBEAFE] rounded-2xl hover:opacity-80 transition-opacity ${searchQuery
+                        className={`w-full bg-accent rounded-2xl glass-category ${searchQuery
                           ? "p-4 flex items-center gap-4"
                           : "p-4 h-full flex flex-col items-center justify-between text-center min-h-[140px]"
                           }`}
@@ -299,15 +300,15 @@ const VaultHome = () => {
                         <div className={searchQuery ? "" : "flex flex-col items-center"}>
                           <div className={`flex items-center justify-center flex-shrink-0 ${searchQuery ? "w-14 h-14" : "w-12 h-12"
                             }`}>
-                            <Icon className={`text-[#2563EB] ${searchQuery ? "w-8 h-8" : "w-7 h-7"}`} />
+                            <Icon className={`text-primary ${searchQuery ? "w-8 h-8" : "w-7 h-7"}`} />
                           </div>
                           <div className={searchQuery ? "flex-1 text-left" : "w-full mt-2"}>
-                            <h3 className={`font-semibold text-[#1F2121] line-clamp-2 ${searchQuery ? "text-lg" : "text-base"}`}>
+                            <h3 className={`font-semibold text-foreground line-clamp-2 ${searchQuery ? "text-lg" : "text-base"}`}>
                               {getCategoryName(category.id, category.name, t)}
                             </h3>
                           </div>
                         </div>
-                        <p className="text-sm text-[#626C71] mt-1">
+                        <p className="text-sm text-muted-foreground mt-1">
                           {searchQuery && result.totalMatches > 0
                             ? `${result.totalMatches} ${result.totalMatches === 1 ? t("vault.match") : t("vault.matches")}`
                             : `${category.documentCount} ${t("common.documents")}`
@@ -374,12 +375,12 @@ const VaultHome = () => {
               {!searchQuery && (
                 <button
                   onClick={() => setShowAddDialog(true)}
-                  className="bg-[#DBEAFE] border-2 border-dashed border-[#2563EB] rounded-2xl p-4 flex flex-col items-center justify-center text-center hover:opacity-80 transition-opacity min-h-[140px]"
+                  className="bg-accent border-2 border-dashed border-primary rounded-2xl p-4 flex flex-col items-center justify-center text-center glass-add-button min-h-[140px]"
                 >
                   <div className="w-12 h-12 flex items-center justify-center mb-2">
-                    <Plus className="w-7 h-7 text-[#2563EB]" />
+                    <Plus className="w-7 h-7 text-primary" />
                   </div>
-                  <h3 className="font-semibold text-[#1F2121]">{t("vault.addCategory")}</h3>
+                  <h3 className="font-semibold text-foreground">{t("vault.addCategory")}</h3>
                 </button>
               )}
             </div>
@@ -476,23 +477,7 @@ const VaultHome = () => {
         )}
 
         {/* Bottom Navigation */}
-        <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50">
-          <div className="flex justify-around items-center h-16 max-w-md mx-auto">
-            <button onClick={() => navigate("/dashboard")} className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
-              <Home className="w-6 h-6" />
-              <span className="text-xs font-medium">{t("nav.home")}</span>
-            </button>
-            <button className="flex flex-col items-center gap-1 text-primary relative">
-              <Vault className="w-6 h-6" />
-              <span className="text-xs font-medium">{t("nav.vault")}</span>
-              <div className="absolute -bottom-2 w-12 h-1 bg-primary rounded-full" />
-            </button>
-            <button onClick={() => navigate("/settings")} className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
-              <Settings className="w-6 h-6" />
-              <span className="text-xs font-medium">{t("nav.settings")}</span>
-            </button>
-          </div>
-        </div>
+        <BottomNavigation activeTab="vault" />
 
 
       </div>

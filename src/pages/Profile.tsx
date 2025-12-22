@@ -30,7 +30,7 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="bg-primary/20 text-foreground p-6 pt-14 rounded-b-3xl">
+      <div className="bg-primary/20 text-foreground p-6 pt-4 rounded-b-3xl">
         <div className="flex items-center gap-4 mb-8">
           <BackButton to="/settings" />
           <h1 className="text-2xl font-bold">{t("profile.title")}</h1>

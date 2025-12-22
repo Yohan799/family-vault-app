@@ -5,11 +5,13 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const BackupFrequency = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { profile, updateProfile } = useAuth();
+  const { t } = useLanguage();
   const [selected, setSelected] = useState("weekly");
 
   useEffect(() => {
@@ -19,11 +21,11 @@ const BackupFrequency = () => {
   }, [profile]);
 
   const options = [
-    { value: "regularly", label: "Regularly", subtitle: "Backup every day" },
-    { value: "weekly", label: "Weekly", subtitle: "Backup once a week" },
-    { value: "monthly", label: "Monthly", subtitle: "Backup once a month" },
-    { value: "manual", label: "Manual Backup", subtitle: "Only when you choose" },
-    { value: "automatic", label: "Automatic", subtitle: "Smart automatic backups" },
+    { value: "regularly", label: t("backupFrequency.regularly"), subtitle: t("backupFrequency.regularlyDesc") },
+    { value: "weekly", label: t("backupFrequency.weekly"), subtitle: t("backupFrequency.weeklyDesc") },
+    { value: "monthly", label: t("backupFrequency.monthly"), subtitle: t("backupFrequency.monthlyDesc") },
+    { value: "manual", label: t("backupFrequency.manual"), subtitle: t("backupFrequency.manualDesc") },
+    { value: "automatic", label: t("backupFrequency.automatic"), subtitle: t("backupFrequency.automaticDesc") },
   ];
 
   const handleSave = async () => {
@@ -32,32 +34,32 @@ const BackupFrequency = () => {
 
       const selectedOption = options.find(o => o.value === selected);
       toast({
-        title: "Backup frequency updated!",
-        description: `Backups will be performed ${selectedOption?.label.toLowerCase()}`,
+        title: t("backupFrequency.updated"),
+        description: `${t("backupFrequency.willBePerformed")} ${selectedOption?.label.toLowerCase()}`,
       });
       navigate("/settings");
     } catch (error) {
       console.error('Error updating backup frequency:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to update backup frequency",
+        title: t("common.error"),
+        description: t("backupFrequency.updateFailed"),
       });
     }
   };
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="bg-primary/20 text-foreground p-6 pt-14 rounded-b-3xl">
+      <div className="bg-primary/20 text-foreground p-6 pt-4 rounded-b-3xl">
         <div className="flex items-center gap-4">
           <BackButton to="/settings" />
-          <h1 className="text-2xl font-bold">Backup Frequency</h1>
+          <h1 className="text-2xl font-bold">{t("backupFrequency.title")}</h1>
         </div>
       </div>
 
       <div className="p-6 space-y-6">
         <p className="text-muted-foreground">
-          Choose how often your vault data should be backed up automatically.
+          {t("backupFrequency.description")}
         </p>
 
         <div className="bg-card rounded-2xl overflow-hidden divide-y divide-border">
@@ -82,7 +84,7 @@ const BackupFrequency = () => {
           onClick={handleSave}
           className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12"
         >
-          Save Changes
+          {t("backupFrequency.saveChanges")}
         </Button>
       </div>
     </div>

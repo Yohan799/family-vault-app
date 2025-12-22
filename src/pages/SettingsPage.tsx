@@ -1,4 +1,4 @@
-import { Lock, Mail, Bell, HelpCircle, LogOut, Trash2, Home, ChevronRight, Vault, Settings, Globe, Fingerprint, KeyRound, MonitorSmartphone } from "lucide-react";
+import { Lock, Mail, Bell, HelpCircle, LogOut, Trash2, ChevronRight, Globe, Fingerprint, KeyRound, MonitorSmartphone } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Switch } from "@/components/ui/switch";
@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { SettingsSkeleton } from "@/components/skeletons";
 import { registerDevice, unregisterDevice, isPushAvailable } from "@/services/pushNotificationService";
+import BottomNavigation from "@/components/BottomNavigation";
 
 const SettingsPage = () => {
   const navigate = useNavigate();
@@ -196,7 +197,7 @@ const SettingsPage = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="bg-primary/20 text-foreground p-6 pt-14 rounded-b-3xl mb-4">
+      <div className="bg-primary/20 text-foreground p-6 pt-4 rounded-b-3xl mb-4">
         <div className="text-center">
           <h1 className="text-2xl font-bold">{t("settings.title")}</h1>
           <p className="text-sm text-muted-foreground mt-1">{t("settings.subtitle")}</p>
@@ -207,7 +208,7 @@ const SettingsPage = () => {
         {/* Profile Card */}
         <button
           onClick={() => navigate("/profile")}
-          className="w-full bg-card rounded-xl p-4 flex items-center gap-4 hover:bg-accent transition-colors mb-2"
+          className="w-full bg-card rounded-xl p-4 flex items-center gap-4 shadow-premium-sm card-lift mb-3"
         >
           <Avatar className="w-12 h-12 bg-primary">
             {profile.profile_image_url && <AvatarImage src={profile.profile_image_url} alt="Profile" />}
@@ -219,7 +220,7 @@ const SettingsPage = () => {
             <h3 className="font-semibold text-foreground">{displayName}</h3>
             <p className="text-sm text-muted-foreground">{profile.email}</p>
           </div>
-          <ChevronRight className="w-5 h-5 text-muted-foreground" />
+          <ChevronRight className="w-5 h-5 text-muted-foreground transition-transform duration-200 group-hover:translate-x-0.5" />
         </button>
 
         {/* Settings List */}
@@ -231,7 +232,7 @@ const SettingsPage = () => {
               <div
                 key={index}
                 onClick={() => setting.path && navigate(setting.path)}
-                className={`w-full bg-card rounded-xl p-3 flex items-center gap-3 ${setting.path ? 'cursor-pointer hover:bg-accent transition-colors' : ''}`}
+                className={`w-full bg-card rounded-xl p-3 flex items-center gap-3 shadow-premium-sm transition-all duration-200 ${setting.path ? 'cursor-pointer hover:shadow-premium-md active:scale-[0.99]' : ''}`}
               >
                 <div className={`w-10 h-10 ${setting.color} rounded-full flex items-center justify-center flex-shrink-0`}>
                   <Icon className="w-5 h-5 text-primary" />
@@ -249,7 +250,7 @@ const SettingsPage = () => {
                     className="scale-90"
                   />
                 ) : setting.path ? (
-                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                  <ChevronRight className="w-5 h-5 text-muted-foreground transition-transform duration-200" />
                 ) : null}
               </div>
             );
@@ -260,10 +261,10 @@ const SettingsPage = () => {
         <div className="pt-4 space-y-2">
           <button
             onClick={handleSignOut}
-            className="w-full bg-card rounded-xl p-3 flex items-center gap-3 hover:bg-accent transition-colors text-foreground"
+            className="w-full bg-card rounded-xl p-3 flex items-center gap-3 shadow-premium-sm transition-all duration-200 hover:shadow-premium-md active:scale-[0.99] text-foreground"
           >
-            <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
-              <LogOut className="w-5 h-5 text-gray-600" />
+            <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center flex-shrink-0">
+              <LogOut className="w-5 h-5 text-muted-foreground" />
             </div>
             <span className="font-semibold text-sm">{t("settings.signOut")}</span>
           </button>
@@ -271,9 +272,9 @@ const SettingsPage = () => {
           <button
             onClick={() => setShowDeleteDialog(true)}
             disabled={isDeleting}
-            className="w-full bg-card rounded-xl p-3 flex items-center gap-3 hover:bg-red-50 transition-colors text-destructive disabled:opacity-50"
+            className="w-full bg-card rounded-xl p-3 flex items-center gap-3 shadow-premium-sm transition-all duration-200 hover:shadow-premium-md hover:bg-destructive/5 active:scale-[0.99] text-destructive disabled:opacity-50"
           >
-            <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 bg-destructive/10 rounded-full flex items-center justify-center flex-shrink-0">
               <Trash2 className="w-5 h-5 text-destructive" />
             </div>
             <span className="font-semibold text-sm">
@@ -299,29 +300,7 @@ const SettingsPage = () => {
       </div>
 
       {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50">
-        <div className="flex justify-around items-center h-16 max-w-md mx-auto">
-          <button
-            onClick={() => navigate("/dashboard")}
-            className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
-          >
-            <Home className="w-6 h-6" />
-            <span className="text-xs font-medium">{t("nav.home")}</span>
-          </button>
-          <button
-            onClick={() => navigate("/vault")}
-            className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
-          >
-            <Vault className="w-6 h-6" />
-            <span className="text-xs font-medium">{t("nav.vault")}</span>
-          </button>
-          <button className="flex flex-col items-center gap-1 text-primary relative">
-            <Settings className="w-6 h-6" />
-            <span className="text-xs font-medium">{t("nav.settings")}</span>
-            <div className="absolute -bottom-2 w-12 h-1 bg-primary rounded-full" />
-          </button>
-        </div>
-      </div>
+      <BottomNavigation activeTab="settings" />
     </div>
   );
 };

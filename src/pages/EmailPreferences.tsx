@@ -186,7 +186,7 @@ const EmailPreferences = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background pb-safe">
-        <div className="bg-primary/20 text-foreground p-4 pt-14 sm:p-6 sm:pt-14 rounded-b-3xl">
+        <div className="bg-primary/20 text-foreground p-4 pt-4 sm:p-6 sm:pt-4 rounded-b-3xl">
           <div className="flex items-center gap-3">
             <BackButton to="/settings" />
             <h1 className="text-xl sm:text-2xl font-bold">{t("emailPrefs.title")}</h1>
@@ -201,7 +201,7 @@ const EmailPreferences = () => {
 
   return (
     <div className="min-h-screen bg-background pb-safe">
-      <div className="bg-primary/20 text-foreground p-4 pt-14 sm:p-6 sm:pt-14 rounded-b-3xl">
+      <div className="bg-primary/20 text-foreground p-4 pt-4 sm:p-6 sm:pt-4 rounded-b-3xl">
         <div className="flex items-center gap-3">
           <BackButton to="/settings" />
           <h1 className="text-xl sm:text-2xl font-bold">{t("emailPrefs.title")}</h1>

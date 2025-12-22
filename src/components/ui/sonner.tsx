@@ -1,17 +1,27 @@
 import { useTheme } from "next-themes";
 import { Toaster as Sonner, toast } from "sonner";
+import { Capacitor } from "@capacitor/core";
 
 type ToasterProps = React.ComponentProps<typeof Sonner>;
 
 const Toaster = ({ ...props }: ToasterProps) => {
   const { theme = "system" } = useTheme();
 
+  // Dynamic offset to account for status bar on Android/iOS
+  // Native apps need more padding for status bar (typically 24-30px)
+  const getToastOffset = (): string => {
+    if (Capacitor.isNativePlatform()) {
+      return "80px"; // Status bar (~30px) + header space (~50px)
+    }
+    return "60px"; // Web browsers
+  };
+
   return (
     <Sonner
       theme={theme as ToasterProps["theme"]}
       className="toaster group"
       position="top-center"
-      offset="72px"
+      offset={getToastOffset()}
       toastOptions={{
         classNames: {
           toast:
@@ -27,3 +37,4 @@ const Toaster = ({ ...props }: ToasterProps) => {
 };
 
 export { Toaster, toast };
+

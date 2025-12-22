@@ -8,64 +8,47 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { AppLockGate } from "@/components/AppLockGate";
-import LazyLoadErrorBoundary from "@/components/LazyLoadErrorBoundary";
 import { Capacitor } from "@capacitor/core";
 
-// Lazy load all pages for code splitting with retry logic
-const lazyWithRetry = (importFn: () => Promise<any>) => {
-  return lazy(() => 
-    importFn().catch((error) => {
-      // If chunk load fails, try refreshing once
-      console.error('Chunk load failed:', error);
-      const lastRefresh = sessionStorage.getItem('chunk_error_refresh');
-      const now = Date.now();
-      if (!lastRefresh || now - parseInt(lastRefresh) > 30000) {
-        sessionStorage.setItem('chunk_error_refresh', now.toString());
-        window.location.reload();
-      }
-      throw error;
-    })
-  );
-};
-
-const Onboarding = lazyWithRetry(() => import("./pages/Onboarding"));
-const SignUp = lazyWithRetry(() => import("./pages/SignUp"));
-const SignIn = lazyWithRetry(() => import("./pages/SignIn"));
-const ForgotPassword = lazyWithRetry(() => import("./pages/ForgotPassword"));
-const PasswordResetOTP = lazyWithRetry(() => import("./pages/PasswordResetOTP"));
-const ResetPassword = lazyWithRetry(() => import("./pages/ResetPassword"));
-const Dashboard = lazyWithRetry(() => import("./pages/Dashboard"));
-const Vault = lazyWithRetry(() => import("./pages/Vault"));
-const VaultHome = lazyWithRetry(() => import("./pages/vault/VaultHome"));
-const CategoryView = lazyWithRetry(() => import("./pages/vault/CategoryView"));
-const SubcategoryView = lazyWithRetry(() => import("./pages/vault/SubcategoryView"));
-const NestedFolderView = lazyWithRetry(() => import("./pages/vault/NestedFolderView"));
-const CreateCategory = lazyWithRetry(() => import("./pages/vault/CreateCategory"));
-const ManageAccess = lazyWithRetry(() => import("./pages/vault/ManageAccess"));
-const SettingsPage = lazyWithRetry(() => import("./pages/SettingsPage"));
-const NomineeCenter = lazyWithRetry(() => import("./pages/NomineeCenter"));
-const VerifyNominee = lazyWithRetry(() => import("./pages/VerifyNominee"));
-const EmergencyAccess = lazyWithRetry(() => import("./pages/EmergencyAccess"));
-const InactivityTriggers = lazyWithRetry(() => import("./pages/InactivityTriggers"));
-const TimeCapsule = lazyWithRetry(() => import("./pages/TimeCapsule"));
-const CustomizeQuickActions = lazyWithRetry(() => import("./pages/CustomizeQuickActions"));
-const Profile = lazyWithRetry(() => import("./pages/Profile"));
-const EditProfile = lazyWithRetry(() => import("./pages/EditProfile"));
-const ChangePassword = lazyWithRetry(() => import("./pages/ChangePassword"));
-const BackupFrequency = lazyWithRetry(() => import("./pages/BackupFrequency"));
-const BackupHistory = lazyWithRetry(() => import("./pages/BackupHistory"));
-const Notifications = lazyWithRetry(() => import("./pages/Notifications"));
-const EmailPreferences = lazyWithRetry(() => import("./pages/EmailPreferences"));
-const ActiveSessions = lazyWithRetry(() => import("./pages/ActiveSessions"));
-const HelpCenter = lazyWithRetry(() => import("./pages/HelpCenter"));
-const TwoFactorSetup = lazyWithRetry(() => import("./pages/TwoFactorSetup"));
-const TwoFactorVerify = lazyWithRetry(() => import("./pages/TwoFactorVerify"));
-const AppLockSetup = lazyWithRetry(() => import("./pages/AppLockSetup"));
-const SetupPIN = lazyWithRetry(() => import("./pages/SetupPIN"));
-const LanguageSettings = lazyWithRetry(() => import("./pages/LanguageSettings"));
-const VerifyEmailPending = lazyWithRetry(() => import("./pages/VerifyEmailPending"));
-const VerifyEmailConfirm = lazyWithRetry(() => import("./pages/VerifyEmailConfirm"));
-const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
+// Lazy load all pages for code splitting
+const Onboarding = lazy(() => import("./pages/Onboarding"));
+const SignUp = lazy(() => import("./pages/SignUp"));
+const SignIn = lazy(() => import("./pages/SignIn"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const PasswordResetOTP = lazy(() => import("./pages/PasswordResetOTP"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Vault = lazy(() => import("./pages/Vault"));
+const VaultHome = lazy(() => import("./pages/vault/VaultHome"));
+const CategoryView = lazy(() => import("./pages/vault/CategoryView"));
+const SubcategoryView = lazy(() => import("./pages/vault/SubcategoryView"));
+const NestedFolderView = lazy(() => import("./pages/vault/NestedFolderView"));
+const CreateCategory = lazy(() => import("./pages/vault/CreateCategory"));
+const ManageAccess = lazy(() => import("./pages/vault/ManageAccess"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const NomineeCenter = lazy(() => import("./pages/NomineeCenter"));
+const VerifyNominee = lazy(() => import("./pages/VerifyNominee"));
+const EmergencyAccess = lazy(() => import("./pages/EmergencyAccess"));
+const InactivityTriggers = lazy(() => import("./pages/InactivityTriggers"));
+const TimeCapsule = lazy(() => import("./pages/TimeCapsule"));
+const CustomizeQuickActions = lazy(() => import("./pages/CustomizeQuickActions"));
+const Profile = lazy(() => import("./pages/Profile"));
+const EditProfile = lazy(() => import("./pages/EditProfile"));
+const ChangePassword = lazy(() => import("./pages/ChangePassword"));
+const BackupFrequency = lazy(() => import("./pages/BackupFrequency"));
+const BackupHistory = lazy(() => import("./pages/BackupHistory"));
+const Notifications = lazy(() => import("./pages/Notifications"));
+const EmailPreferences = lazy(() => import("./pages/EmailPreferences"));
+const ActiveSessions = lazy(() => import("./pages/ActiveSessions"));
+const HelpCenter = lazy(() => import("./pages/HelpCenter"));
+const TwoFactorSetup = lazy(() => import("./pages/TwoFactorSetup"));
+const TwoFactorVerify = lazy(() => import("./pages/TwoFactorVerify"));
+const AppLockSetup = lazy(() => import("./pages/AppLockSetup"));
+const SetupPIN = lazy(() => import("./pages/SetupPIN"));
+const LanguageSettings = lazy(() => import("./pages/LanguageSettings"));
+const VerifyEmailPending = lazy(() => import("./pages/VerifyEmailPending"));
+const VerifyEmailConfirm = lazy(() => import("./pages/VerifyEmailConfirm"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Optimized QueryClient with caching
 const queryClient = new QueryClient({
@@ -158,9 +141,8 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <BackButtonHandler />
-              <LazyLoadErrorBoundary>
-                <Suspense fallback={<PageLoader />}>
-                  <Routes>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
                   <Route path="/" element={<AuthRedirect><Onboarding /></AuthRedirect>} />
                   <Route path="/onboarding" element={<AuthRedirect><Onboarding /></AuthRedirect>} />
                   <Route path="/signup" element={<AuthRedirect><SignUp /></AuthRedirect>} />
@@ -199,11 +181,9 @@ const App = () => (
                   <Route path="/app-lock-setup" element={<ProtectedRoute><AppLockSetup /></ProtectedRoute>} />
                   <Route path="/setup-pin" element={<ProtectedRoute><SetupPIN /></ProtectedRoute>} />
                   <Route path="/language-settings" element={<ProtectedRoute><LanguageSettings /></ProtectedRoute>} />
-                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </Suspense>
-              </LazyLoadErrorBoundary>
+                </Routes>
+              </Suspense>
             </BrowserRouter>
           </AppLockGate>
         </TooltipProvider>

@@ -5,17 +5,41 @@
 # For more details, see
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Capacitor Core
+-keep class com.getcapacitor.** { *; }
+-keep interface com.getcapacitor.** { *; }
+-dontwarn com.getcapacitor.**
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# WebView JavaScript Interface
+-keepclassmembers class * {
+    @android.webkit.JavascriptInterface <methods>;
+}
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Keep Capacitor plugin classes
+-keep @com.getcapacitor.annotation.CapacitorPlugin class * { *; }
+-keep class * extends com.getcapacitor.Plugin { *; }
+
+# Firebase (for push notifications)
+-keep class com.google.firebase.** { *; }
+-dontwarn com.google.firebase.**
+
+# Google Play Services
+-keep class com.google.android.gms.** { *; }
+-dontwarn com.google.android.gms.**
+
+# OkHttp (network requests)
+-dontwarn okhttp3.**
+-dontwarn okio.**
+-keep class okhttp3.** { *; }
+-keep interface okhttp3.** { *; }
+
+# Preserve line numbers for debugging stack traces
+-keepattributes SourceFile,LineNumberTable
+
+# Keep exception names
+-keepattributes Exceptions
+
+# Optimize aggressively
+-optimizationpasses 5
+-allowaccessmodification
+-repackageclasses ''

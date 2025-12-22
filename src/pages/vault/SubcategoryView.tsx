@@ -1,6 +1,6 @@
-import { Search, Filter, Upload, FileText, Home, Settings, Folder, Plus, X, AlertTriangle } from "lucide-react";
+import { Search, Upload, FileText, Folder, Plus, X, AlertTriangle } from "lucide-react";
 import BackButton from "@/components/BackButton";
-import { Vault as VaultIcon } from "lucide-react";
+
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useParams } from "react-router-dom";
@@ -23,6 +23,7 @@ import { getSubcategoryName } from "@/lib/categoryTranslations";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubcategoryViewData, useInvalidateVault } from "@/hooks/useVaultData";
 import { getDocuments, formatFileSize, deleteDocument, downloadDocument, incrementViewCount } from "@/lib/documentStorage";
+import BottomNavigation from "@/components/BottomNavigation";
 
 const SubcategoryView = () => {
   const navigate = useNavigate();
@@ -411,7 +412,7 @@ const SubcategoryView = () => {
   return (
     <>
       <div className="min-h-screen bg-[#FCFCF9] pb-20">
-        <div className="bg-[#FCFCF9] p-6 pt-14">
+        <div className="bg-[#FCFCF9] p-6 pt-4">
           <div className="flex items-center gap-4 mb-4">
             <BackButton />
             <div className="flex-1 text-center -ml-10">
@@ -424,12 +425,12 @@ const SubcategoryView = () => {
           </div>
 
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground transition-colors duration-200" />
             <Input
               placeholder={t("folder.searchPlaceholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 pr-12 h-12 bg-[#F5F5F5] border-none rounded-xl"
+              className="pl-12 pr-12 h-12 bg-card border-none rounded-xl shadow-premium-sm focus:shadow-premium-md"
             />
             {searchQuery && (
               <button
@@ -458,15 +459,15 @@ const SubcategoryView = () => {
                 <div key={folder.id} className="relative h-full">
                   <button
                     onClick={() => navigate(`/vault/${categoryId}/${subcategoryId}/${folder.id}`)}
-                    className="w-full h-full bg-[#DBEAFE] rounded-2xl p-5 flex flex-col items-center justify-between hover:opacity-80 transition-opacity min-h-[160px]"
+                    className="w-full h-full bg-accent rounded-2xl p-5 flex flex-col items-center justify-between tile-premium min-h-[160px]"
                   >
                     <div className="flex flex-col items-center">
                       <div className="w-14 h-14 flex items-center justify-center mb-3">
-                        <Folder className="w-8 h-8 text-[#2563EB]" />
+                        <Folder className="w-8 h-8 text-primary" />
                       </div>
-                      <h3 className="font-semibold text-[#1F2121] text-center mb-1 line-clamp-2">{folder.name}</h3>
+                      <h3 className="font-semibold text-foreground text-center mb-1 line-clamp-2">{folder.name}</h3>
                     </div>
-                    <p className="text-sm text-[#626C71]">{folder.documentCount || 0} {t("common.documents")}</p>
+                    <p className="text-sm text-muted-foreground">{folder.documentCount || 0} {t("common.documents")}</p>
                   </button>
 
                   {folder.isCustom && (
@@ -484,12 +485,12 @@ const SubcategoryView = () => {
               {!debouncedQuery && (
                 <button
                   onClick={() => setShowAddFolderDialog(true)}
-                  className="bg-[#DBEAFE] border-2 border-dashed border-[#2563EB] rounded-2xl p-5 flex flex-col items-center justify-center hover:opacity-80 transition-opacity min-h-[160px]"
+                  className="bg-accent border-2 border-dashed border-primary rounded-2xl p-5 flex flex-col items-center justify-center tile-premium min-h-[160px]"
                 >
                   <div className="w-14 h-14 flex items-center justify-center mb-3">
-                    <Plus className="w-8 h-8 text-[#2563EB]" />
+                    <Plus className="w-8 h-8 text-primary" />
                   </div>
-                  <h3 className="font-semibold text-[#1F2121]">{t("folder.addFolder")}</h3>
+                  <h3 className="font-semibold text-foreground">{t("folder.addFolder")}</h3>
                 </button>
               )}
             </div>
@@ -500,13 +501,13 @@ const SubcategoryView = () => {
           <div className="px-6 mb-6">
             <button
               onClick={() => setShowAddFolderDialog(true)}
-              className="w-full bg-[#DBEAFE] border-2 border-dashed border-[#2563EB] rounded-2xl p-6 flex flex-col items-center justify-center hover:opacity-80 transition-opacity"
+              className="w-full bg-accent border-2 border-dashed border-primary rounded-2xl p-6 flex flex-col items-center justify-center tile-premium"
             >
               <div className="w-16 h-16 flex items-center justify-center mb-3">
-                <Plus className="w-10 h-10 text-[#2563EB]" />
+                <Plus className="w-10 h-10 text-primary" />
               </div>
-              <h3 className="font-semibold text-[#1F2121] mb-1">{t("folder.createFolder")}</h3>
-              <p className="text-sm text-[#626C71]">{t("folder.organizeDocuments")}</p>
+              <h3 className="font-semibold text-foreground mb-1">{t("folder.createFolder")}</h3>
+              <p className="text-sm text-muted-foreground">{t("folder.organizeDocuments")}</p>
             </button>
           </div>
         )}
@@ -544,7 +545,7 @@ const SubcategoryView = () => {
                 {filteredDocuments.map((doc) => (
                   <div
                     key={doc.id}
-                    className="bg-card rounded-xl p-4 flex items-center justify-between hover:bg-accent/50 transition-colors"
+                    className="bg-card rounded-xl p-4 flex items-center justify-between shadow-premium-sm transition-all duration-200 hover:shadow-premium-md active:scale-[0.99]"
                   >
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -761,29 +762,7 @@ const SubcategoryView = () => {
         />
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50">
-        <div className="flex justify-around items-center h-16 max-w-md mx-auto">
-          <button
-            onClick={() => navigate("/dashboard")}
-            className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
-          >
-            <Home className="w-6 h-6" />
-            <span className="text-xs font-medium">{t("nav.home")}</span>
-          </button>
-          <button className="flex flex-col items-center gap-1 text-primary relative">
-            <VaultIcon className="w-6 h-6" />
-            <span className="text-xs font-medium">{t("nav.vault")}</span>
-            <div className="absolute -bottom-2 w-12 h-1 bg-primary rounded-full" />
-          </button>
-          <button
-            onClick={() => navigate("/settings")}
-            className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
-          >
-            <Settings className="w-6 h-6" />
-            <span className="text-xs font-medium">{t("nav.settings")}</span>
-          </button>
-        </div>
-      </div>
+      <BottomNavigation activeTab="vault" />
     </>
   );
 };

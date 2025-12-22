@@ -1,4 +1,4 @@
-import { Home, Settings, FileText, Users, Clock, Shield, ChevronRight, Bell, User, Vault, UserPlus, Timer, Plus } from "lucide-react";
+import { FileText, Users, Clock, Shield, ChevronRight, Bell, UserPlus, Timer, Plus, Vault } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useDashboardStats, useQuickActions, useUnreadNotifications, useInvalidateDashboard } from "@/hooks/useDashboardData";
 import { DashboardSkeleton } from "@/components/skeletons";
 import { getQuickActionText } from "@/lib/categoryTranslations";
+import BottomNavigation from "@/components/BottomNavigation";
 
 // Memoized icon map (created once, not on every render)
 const iconMap: Record<string, any> = {
@@ -125,18 +126,18 @@ const Dashboard = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-background pb-24">
-        <div className="bg-primary/20 text-foreground p-4 pt-14 rounded-b-3xl">
-          <div className="flex justify-between items-start mb-3">
+      <div className="min-h-screen bg-background pb-20">
+        <div className="bg-primary/20 text-foreground px-4 pt-4 pb-3 rounded-b-3xl">
+          <div className="flex justify-between items-start mb-2">
             <div id="tour-greeting">
-              <p className="text-xs text-muted-foreground mb-0.5">{t("dashboard.welcome")}</p>
-              <h1 className="text-xl font-bold text-foreground">{firstName}</h1>
+              <p className="text-xs text-muted-foreground">{t("dashboard.welcome")}</p>
+              <h1 className="text-lg font-bold text-foreground">{firstName}</h1>
             </div>
             <div className="flex gap-2">
               <Button variant="ghost" size="icon" className="text-foreground h-8 w-8 relative" onClick={() => navigate("/notifications")}>
-                <Bell className="w-4 h-4" />
+                <Bell className={`w-4 h-4 ${unreadNotifications > 0 ? 'animate-pulse' : ''}`} />
                 {unreadNotifications > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center animate-bounce">
                     {unreadNotifications > 99 ? '99+' : unreadNotifications}
                   </span>
                 )}
@@ -152,45 +153,47 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div id="tour-readiness-score" className="bg-card rounded-xl p-3 text-center">
-            <div className="relative inline-flex items-center justify-center mb-1">
-              <svg className="w-14 h-14 transform -rotate-90">
-                <circle cx="28" cy="28" r="24" stroke="currentColor" strokeWidth="5" fill="none" className="text-muted" />
-                <circle cx="28" cy="28" r="24" stroke="currentColor" strokeWidth="5" fill="none"
-                  strokeDasharray={`${2 * Math.PI * 24}`}
-                  strokeDashoffset={`${2 * Math.PI * 24 * (1 - readinessScore / 100)}`}
-                  className="text-blue-500" />
+          <div id="tour-readiness-score" className="bg-card rounded-xl p-2 text-center animate-in fade-in duration-500 shadow-premium-sm">
+            <div className="relative inline-flex items-center justify-center">
+              <div className="absolute inset-0 rounded-full bg-primary/10 blur-md animate-pulse" style={{ width: '48px', height: '48px', margin: 'auto' }} />
+              <svg className="w-12 h-12 transform -rotate-90 relative z-10">
+                <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="4" fill="none" className="text-muted" />
+                <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="4" fill="none"
+                  strokeDasharray={`${2 * Math.PI * 20}`}
+                  strokeDashoffset={`${2 * Math.PI * 20 * (1 - readinessScore / 100)}`}
+                  className="text-primary transition-all duration-1000 ease-out"
+                  style={{ strokeDashoffset: `${2 * Math.PI * 20 * (1 - readinessScore / 100)}` }} />
               </svg>
-              <span className="absolute text-lg font-bold text-blue-500">{readinessScore}</span>
+              <span className="absolute text-base font-bold text-primary z-10">{readinessScore}</span>
             </div>
-            <p className="text-foreground font-medium text-xs">{t("dashboard.securityScore")}</p>
+            <p className="text-foreground font-medium text-[11px] mt-0.5">{t("dashboard.securityScore")}</p>
           </div>
         </div>
 
-        <div className="p-4 space-y-4">
+        <div className="px-3 py-2 space-y-3">
           <div className="grid grid-cols-2 gap-2">
-            <div className="bg-card rounded-lg p-2.5 text-center flex flex-col items-center justify-center h-20">
-              <FileText className="w-5 h-5 text-primary mb-1.5" />
-              <span className="text-xs font-medium text-foreground truncate">{stats?.documents ?? 0} {t("dashboard.docs")}</span>
+            <div className="bg-card rounded-xl p-2.5 text-center flex flex-col items-center justify-center h-16 shadow-premium-sm card-lift cursor-pointer animate-in fade-in slide-in-from-bottom-2" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
+              <FileText className="w-4 h-4 text-primary mb-1" />
+              <span className="text-[11px] font-medium text-foreground">{stats?.documents ?? 0} {t("dashboard.docs")}</span>
             </div>
 
-            <div className="bg-card rounded-lg p-2.5 text-center flex flex-col items-center justify-center h-20">
-              <Users className="w-5 h-5 text-primary mb-1.5" />
-              <span className="text-xs font-medium text-foreground truncate">{stats?.nominees ?? 0} {t("dashboard.nominees")}</span>
+            <div className="bg-card rounded-xl p-2.5 text-center flex flex-col items-center justify-center h-16 shadow-premium-sm card-lift cursor-pointer animate-in fade-in slide-in-from-bottom-2" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
+              <Users className="w-4 h-4 text-primary mb-1" />
+              <span className="text-[11px] font-medium text-foreground">{stats?.nominees ?? 0} {t("dashboard.nominees")}</span>
             </div>
 
-            <div className="bg-card rounded-lg p-2.5 text-center flex flex-col items-center justify-center h-20">
-              <Clock className="w-5 h-5 text-primary mb-1.5" />
-              <span className="text-xs font-medium text-foreground truncate">{stats?.timeCapsules ?? 0} {t("dashboard.capsules")}</span>
+            <div className="bg-card rounded-xl p-2.5 text-center flex flex-col items-center justify-center h-16 shadow-premium-sm card-lift cursor-pointer animate-in fade-in slide-in-from-bottom-2" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
+              <Clock className="w-4 h-4 text-primary mb-1" />
+              <span className="text-[11px] font-medium text-foreground">{stats?.timeCapsules ?? 0} {t("dashboard.capsules")}</span>
             </div>
 
-            <div className="bg-card rounded-lg p-2.5 text-center flex flex-col items-center justify-center h-20">
-              <Shield className="w-5 h-5 text-primary mb-0.5" />
-              <span className="text-[10px] font-medium text-foreground truncate mb-0.5">{t("dashboard.trigger")}</span>
+            <div className="bg-card rounded-xl p-2.5 text-center flex flex-col items-center justify-center h-16 shadow-premium-sm card-lift animate-in fade-in slide-in-from-bottom-2" style={{ animationDelay: '250ms', animationFillMode: 'both' }}>
+              <Shield className="w-4 h-4 text-primary" />
+              <span className="text-[11px] font-medium text-foreground leading-tight">{t("dashboard.trigger")}</span>
               <Switch
                 checked={effectiveInactivityActive}
                 onCheckedChange={handleInactivityToggle}
-                className="scale-75"
+                className="scale-[0.65] mt-0.5"
               />
             </div>
           </div>
@@ -201,27 +204,28 @@ const Dashboard = () => {
               {quickActions.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-4">{t("dashboard.noQuickActions")}</p>
               ) : (
-                quickActions.map((action) => {
+                quickActions.map((action, index) => {
                   const Icon = iconMap[action.icon || 'Plus'] || Plus;
                   return (
                     <button
                       key={action.id}
                       id={`tour-${action.action_key}`}
                       onClick={() => action.route && navigate(action.route)}
-                      className="w-full bg-card rounded-lg p-2.5 flex items-center gap-2.5 hover:bg-accent transition-colors"
+                      className="w-full bg-card rounded-xl p-3 flex items-center gap-3 shadow-premium-sm card-lift animate-in slide-in-from-bottom-2 fade-in"
+                      style={{ animationDelay: `${index * 75}ms`, animationFillMode: 'both' }}
                     >
-                      <div className="w-9 h-9 bg-accent rounded-full flex items-center justify-center flex-shrink-0">
-                        <Icon className="w-4 h-4 text-primary" />
+                      <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                        <Icon className="w-5 h-5 text-primary" />
                       </div>
                       <div className="flex-1 text-left min-w-0">
-                        <h3 className="font-semibold text-foreground text-xs truncate">
+                        <h3 className="font-semibold text-foreground text-sm truncate">
                           {getQuickActionText(action.action_key, "title", action.title, t)}
                         </h3>
-                        <p className="text-[10px] text-muted-foreground truncate">
+                        <p className="text-xs text-muted-foreground truncate">
                           {getQuickActionText(action.action_key, "subtitle", action.subtitle || "", t)}
                         </p>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                      <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0 transition-transform duration-200 group-hover:translate-x-0.5" />
                     </button>
                   );
                 })
@@ -234,23 +238,7 @@ const Dashboard = () => {
         <FeatureTour isOpen={showTour} onClose={handleTourClose} />
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50">
-        <div className="flex justify-around items-center h-16 max-w-md mx-auto">
-          <button className="flex flex-col items-center gap-1 text-primary relative">
-            <Home className="w-6 h-6" />
-            <span className="text-xs font-medium">{t("nav.home")}</span>
-            <div className="absolute -bottom-2 w-12 h-1 bg-primary rounded-full" />
-          </button>
-          <button onClick={() => navigate("/vault")} className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
-            <Vault className="w-6 h-6" />
-            <span className="text-xs font-medium">{t("nav.vault")}</span>
-          </button>
-          <button onClick={() => navigate("/settings")} className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
-            <Settings className="w-6 h-6" />
-            <span className="text-xs font-medium">{t("nav.settings")}</span>
-          </button>
-        </div>
-      </div>
+      <BottomNavigation activeTab="home" />
     </>
   );
 };

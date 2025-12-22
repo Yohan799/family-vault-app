@@ -87,7 +87,7 @@ const SetupPIN = () => {
     <div className="min-h-screen bg-background p-4 flex flex-col">
       <div className="max-w-md mx-auto w-full flex-1 flex flex-col">
         {/* Header */}
-        <div className="flex items-center gap-3 pt-14">
+        <div className="flex items-center gap-3 pt-4">
           <BackButton to={step === "confirm" ? undefined : "/app-lock-setup"} />
           <h1 className="text-2xl font-bold text-foreground">
             {step === "create" ? "Create PIN" : "Confirm PIN"}

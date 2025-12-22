@@ -121,7 +121,7 @@ const ManageAccess = () => {
     <>
       <div className="min-h-screen bg-[#FCFCF9] pb-20">
         {/* Header */}
-        <div className="bg-[#FCFCF9] p-6 pt-14 border-b">
+        <div className="bg-[#FCFCF9] p-6 pt-4 border-b">
           <div className="flex items-center justify-between">
             <BackButton />
             <h1 className="text-xl font-bold text-[#1F2121]">Manage Access</h1>

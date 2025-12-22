@@ -22,7 +22,7 @@ const LanguageSettings = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-primary/20 text-foreground p-6 pt-14 rounded-b-3xl">
+      <div className="bg-primary/20 text-foreground p-6 pt-4 rounded-b-3xl">
         <div className="flex items-center gap-4">
           <BackButton />
           <div>

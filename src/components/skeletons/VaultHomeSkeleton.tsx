@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 const VaultHomeSkeleton = () => {
   return (
     <div className="min-h-screen bg-[#FCFCF9] pb-20">
-      <div className="bg-[#FCFCF9] p-6 pt-14">
+      <div className="bg-[#FCFCF9] p-6 pt-4">
         <Skeleton className="h-7 w-24 mx-auto" />
         <Skeleton className="h-4 w-28 mx-auto mt-2" />
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Upload, Camera, Cloud, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +16,7 @@ import { GoogleDriveBrowser } from "@/components/GoogleDriveBrowser";
 import { ConnectGoogleDriveModal } from "@/components/ConnectGoogleDriveModal";
 import { Capacitor } from "@capacitor/core";
 import { useLanguage } from "@/contexts/LanguageContext";
+import SuccessCelebration from "@/components/ui/SuccessCelebration";
 
 interface UploadDocumentModalProps {
   open: boolean;
@@ -45,6 +46,7 @@ export const UploadDocumentModal = ({
   const [showDriveBrowser, setShowDriveBrowser] = useState(false);
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [driveAccessToken, setDriveAccessToken] = useState<string | null>(null);
+  const [showCelebration, setShowCelebration] = useState(false);
 
   const handleClose = () => {
     if (isUploading) return;
@@ -53,9 +55,22 @@ export const UploadDocumentModal = ({
   };
 
   const handleUploadSuccess = (fileName: string) => {
+    // Check if this is user's first document upload
+    const hasUploadedBefore = localStorage.getItem('hasUploadedFirstDocument');
+    const isFirstUpload = !hasUploadedBefore;
+
+    if (isFirstUpload) {
+      // Mark first upload as complete
+      localStorage.setItem('hasUploadedFirstDocument', 'true');
+      // Trigger celebration!
+      setShowCelebration(true);
+    }
+
     toast({
-      title: "Upload successful",
-      description: `${fileName} has been added to your vault`,
+      title: isFirstUpload ? "🎉 First Document Uploaded!" : "Upload successful",
+      description: isFirstUpload
+        ? `${fileName} - Your vault journey begins!`
+        : `${fileName} has been added to your vault`,
     });
     handleClose();
     if (onUploadComplete) {
@@ -296,10 +311,10 @@ export const UploadDocumentModal = ({
                   onClick={option.onClick}
                   disabled={isUploading}
                   className={`w-full flex items-center gap-4 p-4 rounded-xl transition-all duration-200 min-h-[72px] ${isDisabled
-                      ? "opacity-50 cursor-not-allowed bg-muted/30"
-                      : isLoading
-                        ? "bg-primary/10 border-2 border-primary"
-                        : "bg-muted/50 hover:bg-muted hover:scale-[1.02] active:scale-[0.98]"
+                    ? "opacity-50 cursor-not-allowed bg-muted/30"
+                    : isLoading
+                      ? "bg-primary/10 border-2 border-primary"
+                      : "bg-muted/50 hover:bg-muted hover:scale-[1.02] active:scale-[0.98]"
                     }`}
                 >
                   <div className={`w-12 h-12 rounded-full flex items-center justify-center ${option.iconBg}`}>
@@ -356,6 +371,12 @@ export const UploadDocumentModal = ({
         onClose={() => setShowConnectModal(false)}
         onUseNativePicker={handleUseNativePicker}
         onGoogleAuthSuccess={handleNativeGoogleAuthSuccess}
+      />
+
+      {/* First Upload Celebration */}
+      <SuccessCelebration
+        trigger={showCelebration}
+        onComplete={() => setShowCelebration(false)}
       />
     </>
   );

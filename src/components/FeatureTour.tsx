@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { X, ChevronRight, ChevronLeft, Vault, Users, Shield, Clock, Sparkles, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Capacitor } from "@capacitor/core";
 
 interface FeatureTourProps {
     isOpen: boolean;
@@ -83,6 +84,9 @@ const FeatureTour = ({ isOpen, onClose }: FeatureTourProps) => {
         onClose();
     };
 
+    // Note: Haptic feedback can be added by installing @capacitor/haptics
+    // For now, we just use the base navigation with visual animations
+
     const currentTourStep = tourSteps[currentStep];
     const Icon = currentTourStep.icon;
     const isLastStep = currentStep === tourSteps.length - 1;
@@ -115,10 +119,15 @@ const FeatureTour = ({ isOpen, onClose }: FeatureTourProps) => {
                         ))}
                     </div>
 
-                    {/* Icon */}
+                    {/* Icon - Animated on step change */}
                     <div className="flex justify-center mb-4">
-                        <div className={`w-20 h-20 ${currentTourStep.iconBg} rounded-full flex items-center justify-center`}>
-                            <Icon className={`w-10 h-10 ${currentTourStep.iconColor}`} strokeWidth={2} />
+                        <div
+                            key={currentStep}
+                            className={`w-20 h-20 ${currentTourStep.iconBg} rounded-full flex items-center justify-center animate-in zoom-in-75 duration-300 shadow-lg`}
+                        >
+                            <div className={`w-16 h-16 ${currentTourStep.iconBg} rounded-full flex items-center justify-center animate-pulse`}>
+                                <Icon className={`w-8 h-8 ${currentTourStep.iconColor}`} strokeWidth={2} />
+                            </div>
                         </div>
                     </div>
 
@@ -128,8 +137,11 @@ const FeatureTour = ({ isOpen, onClose }: FeatureTourProps) => {
                     </p>
                 </div>
 
-                {/* Content */}
-                <div className="p-6 pt-4">
+                {/* Content - Animated on step change */}
+                <div
+                    key={`content-${currentStep}`}
+                    className="p-6 pt-4 animate-in fade-in slide-in-from-bottom-2 duration-300"
+                >
                     <h2 className="text-2xl font-bold text-foreground mb-3 text-center">
                         {currentTourStep.title}
                     </h2>
@@ -143,26 +155,26 @@ const FeatureTour = ({ isOpen, onClose }: FeatureTourProps) => {
                             <Button
                                 variant="outline"
                                 onClick={handlePrevious}
-                                className="flex-1 h-12 rounded-xl border-2"
+                                className="flex-1 h-12 rounded-xl border-2 group"
                             >
-                                <ChevronLeft className="w-4 h-4 mr-1" />
+                                <ChevronLeft className="w-4 h-4 mr-1 transition-transform group-hover:-translate-x-1" />
                                 Previous
                             </Button>
                         )}
                         <Button
                             onClick={handleNext}
-                            className={`h-12 rounded-xl font-semibold ${currentStep === 0 ? "flex-1" : "flex-1"
+                            className={`h-12 rounded-xl font-semibold group ${currentStep === 0 ? "flex-1" : "flex-1"
                                 }`}
                         >
                             {isLastStep ? (
                                 <>
                                     Get Started
-                                    <Check className="w-4 h-4 ml-2" />
+                                    <Check className="w-4 h-4 ml-2 transition-transform group-hover:scale-110" />
                                 </>
                             ) : (
                                 <>
                                     Next
-                                    <ChevronRight className="w-4 h-4 ml-2" />
+                                    <ChevronRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
                                 </>
                             )}
                         </Button>

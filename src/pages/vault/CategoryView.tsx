@@ -1,4 +1,4 @@
-import { Search, Filter, Home, Settings, Plus, Folder, X, AlertTriangle } from "lucide-react";
+import { Search, Plus, Folder, X, AlertTriangle } from "lucide-react";
 import BackButton from "@/components/BackButton";
 import { Vault as VaultIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,7 @@ import { getCategoryName, getSubcategoryName } from "@/lib/categoryTranslations"
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubcategories, useInvalidateVault } from "@/hooks/useVaultData";
 import { deleteSubcategoryWithCascade } from "@/services/vaultService";
+import BottomNavigation from "@/components/BottomNavigation";
 
 const CategoryView = () => {
   const navigate = useNavigate();
@@ -212,7 +213,7 @@ const CategoryView = () => {
   return (
     <>
       <div className="min-h-screen bg-[#FCFCF9] pb-20">
-        <div className="bg-[#FCFCF9] p-6 pt-14">
+        <div className="bg-[#FCFCF9] p-6 pt-4">
           <div className="flex items-center gap-4 mb-4">
             <BackButton />
             <div className="flex-1 text-center -ml-10">
@@ -258,15 +259,15 @@ const CategoryView = () => {
                   <div key={subcategory.id} className="relative h-full">
                     <button
                       onClick={() => navigate(`/vault/${categoryId}/${subcategory.id}`)}
-                      className="w-full h-full bg-[#DBEAFE] rounded-2xl p-5 flex flex-col items-center justify-between hover:opacity-80 transition-opacity min-h-[160px]"
+                      className="w-full h-full bg-accent rounded-2xl p-5 flex flex-col items-center justify-between glass-subcategory min-h-[160px]"
                     >
                       <div className="flex flex-col items-center">
                         <div className="w-14 h-14 flex items-center justify-center mb-3">
-                          <SubIcon className="w-8 h-8 text-[#2563EB]" />
+                          <SubIcon className="w-8 h-8 text-primary" />
                         </div>
-                        <h3 className="font-semibold text-[#1F2121] text-center mb-1 line-clamp-2">{getSubcategoryName(subcategory.id, subcategory.name, t)}</h3>
+                        <h3 className="font-semibold text-foreground text-center mb-1 line-clamp-2">{getSubcategoryName(subcategory.id, subcategory.name, t)}</h3>
                       </div>
-                      <p className="text-sm text-[#626C71]">{subcategory.documentCount} {t("common.documents")}</p>
+                      <p className="text-sm text-muted-foreground">{subcategory.documentCount} {t("common.documents")}</p>
                     </button>
 
                     <div className="absolute top-2 right-2 z-10">
@@ -284,12 +285,12 @@ const CategoryView = () => {
               {!debouncedQuery && (
                 <button
                   onClick={() => setShowAddDialog(true)}
-                  className="bg-[#DBEAFE] border-2 border-dashed border-[#2563EB] rounded-2xl p-5 flex flex-col items-center justify-center hover:opacity-80 transition-opacity min-h-[160px]"
+                  className="bg-accent border-2 border-dashed border-primary rounded-2xl p-5 flex flex-col items-center justify-center glass-add-button min-h-[160px]"
                 >
                   <div className="w-14 h-14 flex items-center justify-center mb-3">
-                    <Plus className="w-8 h-8 text-[#2563EB]" />
+                    <Plus className="w-8 h-8 text-primary" />
                   </div>
-                  <h3 className="font-semibold text-[#1F2121]">{t("subcategory.add")}</h3>
+                  <h3 className="font-semibold text-foreground">{t("subcategory.add")}</h3>
                 </button>
               )}
             </div>
@@ -386,23 +387,7 @@ const CategoryView = () => {
         )}
 
         {/* Bottom Navigation */}
-        <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50">
-          <div className="flex justify-around items-center h-16 max-w-md mx-auto">
-            <button onClick={() => navigate("/dashboard")} className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
-              <Home className="w-6 h-6" />
-              <span className="text-xs font-medium">{t("nav.home")}</span>
-            </button>
-            <button onClick={() => navigate("/vault")} className="flex flex-col items-center gap-1 text-primary relative">
-              <VaultIcon className="w-6 h-6" />
-              <span className="text-xs font-medium">{t("nav.vault")}</span>
-              <div className="absolute -bottom-2 w-12 h-1 bg-primary rounded-full" />
-            </button>
-            <button onClick={() => navigate("/settings")} className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
-              <Settings className="w-6 h-6" />
-              <span className="text-xs font-medium">{t("nav.settings")}</span>
-            </button>
-          </div>
-        </div>
+        <BottomNavigation activeTab="vault" />
 
         {/* Access Control Modal */}
         {accessControlSubcategory && (

@@ -77,33 +77,60 @@ const Onboarding = () => {
         <div className="flex justify-end mb-8">
           <button
             onClick={handleSkip}
-            className="text-sm text-muted-foreground hover:text-foreground px-4 py-2 transition-colors"
+            className="text-sm text-muted-foreground hover:text-foreground px-4 py-2 transition-all duration-200 hover:scale-105"
           >
             {t("onboarding.skip")}
           </button>
         </div>
 
-        <div className="bg-card rounded-3xl shadow-xl p-8 space-y-8">
+        <div className="bg-card rounded-3xl shadow-xl p-8 space-y-8 animate-in fade-in zoom-in-95 duration-500">
+          {/* Animated Icon */}
           <div className="flex justify-center">
-            <div className="w-20 h-20 bg-accent rounded-full flex items-center justify-center">
-              <Icon className="w-10 h-10 text-primary" />
+            <div
+              key={currentStep}
+              className="w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/5 rounded-full flex items-center justify-center animate-in zoom-in-75 duration-500 shadow-lg shadow-primary/10"
+            >
+              <div className="w-16 h-16 bg-gradient-to-br from-primary/30 to-primary/10 rounded-full flex items-center justify-center animate-pulse">
+                <Icon className="w-8 h-8 text-primary" />
+              </div>
             </div>
           </div>
 
-          <div className="text-center space-y-4">
+          {/* Animated Text */}
+          <div
+            key={`text-${currentStep}`}
+            className="text-center space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500"
+          >
             <h2 className="text-2xl font-bold text-foreground">{step.title}</h2>
             <p className="text-muted-foreground leading-relaxed">{step.description}</p>
           </div>
 
-          <Button onClick={handleNext} className="w-full" size="lg">
-            {currentStep < onboardingSteps.length - 1 ? t("onboarding.next") : t("onboarding.getStarted")}
+          <Button
+            onClick={handleNext}
+            className="w-full group"
+            size="lg"
+          >
+            <span className="transition-transform duration-200 group-hover:translate-x-1">
+              {currentStep < onboardingSteps.length - 1 ? t("onboarding.next") : t("onboarding.getStarted")}
+            </span>
+            {currentStep < onboardingSteps.length - 1 && (
+              <svg className="w-4 h-4 ml-2 transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            )}
           </Button>
 
-          <div className="flex justify-center gap-2">
+          {/* Enhanced Progress Dots */}
+          <div className="flex justify-center gap-3">
             {onboardingSteps.map((_, index) => (
-              <div
+              <button
                 key={index}
-                className={`h-1 rounded-full transition-all ${index === currentStep ? "w-8 bg-primary" : "w-1 bg-border"
+                onClick={() => setCurrentStep(index)}
+                className={`h-2 rounded-full transition-all duration-300 ${index === currentStep
+                    ? "w-8 bg-primary shadow-md shadow-primary/30"
+                    : index < currentStep
+                      ? "w-2 bg-primary/50"
+                      : "w-2 bg-border hover:bg-muted-foreground/30"
                   }`}
               />
             ))}

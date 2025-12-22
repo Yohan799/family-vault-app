@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { fetchBackups, downloadBackupFile, createManualBackup, type Backup } from "@/services/backupService";
 import { format } from "date-fns";
 
@@ -14,6 +15,7 @@ const BackupHistory = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [showConfirm, setShowConfirm] = useState(false);
   const [selectedBackup, setSelectedBackup] = useState<Backup | null>(null);
   const [backups, setBackups] = useState<Backup[]>([]);
@@ -37,8 +39,8 @@ const BackupHistory = () => {
       console.error('Error loading backups:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to load backup history",
+        title: t("common.error"),
+        description: t("backupHistory.loadFailed"),
       });
     } finally {
       setIsLoading(false);
@@ -52,16 +54,16 @@ const BackupHistory = () => {
       setIsCreatingBackup(true);
       await createManualBackup(user.id);
       toast({
-        title: "Backup created successfully!",
-        description: "Your manual backup is now available",
+        title: t("backupHistory.createSuccess"),
+        description: t("backupHistory.createSuccessDesc"),
       });
       loadBackups();
     } catch (error) {
       console.error('Error creating backup:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to create backup",
+        title: t("common.error"),
+        description: t("backupHistory.createFailed"),
       });
     } finally {
       setIsCreatingBackup(false);
@@ -86,15 +88,15 @@ const BackupHistory = () => {
       link.click();
 
       toast({
-        title: "Backup downloaded!",
-        description: "You can restore it by importing the JSON file",
+        title: t("backupHistory.downloaded"),
+        description: t("backupHistory.downloadedDesc"),
       });
     } catch (error) {
       console.error('Error downloading backup:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to download backup",
+        title: t("common.error"),
+        description: t("backupHistory.downloadFailed"),
       });
     } finally {
       setShowConfirm(false);
@@ -112,15 +114,15 @@ const BackupHistory = () => {
       link.click();
 
       toast({
-        title: "Download started",
-        description: `Downloading backup from ${format(new Date(backup.created_at), 'PPP')}`,
+        title: t("backupHistory.downloadStarted"),
+        description: `${t("backupHistory.downloadingFrom")} ${format(new Date(backup.created_at), 'PPP')}`,
       });
     } catch (error) {
       console.error('Error downloading backup:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to download backup",
+        title: t("common.error"),
+        description: t("backupHistory.downloadFailed"),
       });
     }
   };
@@ -133,34 +135,34 @@ const BackupHistory = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="bg-primary/20 text-foreground p-6 pt-14 rounded-b-3xl">
+      <div className="bg-primary/20 text-foreground p-6 pt-4 rounded-b-3xl">
         <div className="flex items-center gap-4">
           <BackButton to="/settings" />
-          <h1 className="text-2xl font-bold">Backup History</h1>
+          <h1 className="text-2xl font-bold">{t("backupHistory.title")}</h1>
         </div>
       </div>
 
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <p className="text-muted-foreground">
-            View and manage your backup history. You can restore or download previous backups.
+            {t("backupHistory.description")}
           </p>
           <Button
             onClick={handleCreateBackup}
             disabled={isCreatingBackup}
             className="bg-primary hover:bg-primary/90"
           >
-            {isCreatingBackup ? "Creating..." : "Create Backup"}
+            {isCreatingBackup ? t("backupHistory.creating") : t("backupHistory.createBackup")}
           </Button>
         </div>
 
         {isLoading ? (
           <div className="text-center py-8 text-muted-foreground">
-            Loading backups...
+            {t("backupHistory.loading")}
           </div>
         ) : backups.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
-            No backups found. Create your first backup to get started.
+            {t("backupHistory.noBackups")}
           </div>
         ) : (
           <div className="space-y-3">
@@ -181,7 +183,7 @@ const BackupHistory = () => {
                         </Badge>
                         {backup.status === 'completed' && (
                           <Badge variant="default" className="text-xs bg-green-500/20 text-green-600">
-                            Completed
+                            {t("backupHistory.completed")}
                           </Badge>
                         )}
                       </div>
@@ -204,7 +206,7 @@ const BackupHistory = () => {
                     className="flex-1"
                   >
                     <RotateCcw className="w-4 h-4 mr-2" />
-                    Restore
+                    {t("backupHistory.restore")}
                   </Button>
                   <Button
                     variant="outline"
@@ -213,7 +215,7 @@ const BackupHistory = () => {
                     className="flex-1"
                   >
                     <Download className="w-4 h-4 mr-2" />
-                    Download
+                    {t("backupHistory.download")}
                   </Button>
                 </div>
               </div>
@@ -226,17 +228,17 @@ const BackupHistory = () => {
           variant="outline"
           className="w-full h-12 rounded-xl"
         >
-          Configure Backup Settings
+          {t("backupHistory.configureSettings")}
         </Button>
       </div>
 
       <ConfirmDialog
         open={showConfirm}
         onOpenChange={setShowConfirm}
-        title="Restore Backup?"
-        description={selectedBackup ? `Are you sure you want to restore backup from ${format(new Date(selectedBackup.created_at), 'PPP')}? This will download the backup file.` : ''}
+        title={t("backupHistory.restoreTitle")}
+        description={selectedBackup ? t("backupHistory.restoreDesc", { date: format(new Date(selectedBackup.created_at), 'PPP') }) : ''}
         onConfirm={confirmRestore}
-        confirmText="Download"
+        confirmText={t("backupHistory.downloadBtn")}
       />
     </div>
   );

@@ -4,7 +4,7 @@ const SettingsSkeleton = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="bg-primary/20 text-foreground p-6 pt-14 rounded-b-3xl mb-4">
+      <div className="bg-primary/20 text-foreground p-6 pt-4 rounded-b-3xl mb-4">
         <Skeleton className="h-7 w-20" />
         <Skeleton className="h-4 w-36 mt-1" />
       </div>

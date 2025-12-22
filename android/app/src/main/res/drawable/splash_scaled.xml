@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Splash screen drawable centered without stretching -->
+<!-- Center gravity preserves aspect ratio on all screen sizes -->
+<!-- White background fills any gaps on different aspect ratios -->
+<bitmap xmlns:android="http://schemas.android.com/apk/res/android"
+    android:src="@drawable/splash"
+    android:gravity="center" />
+

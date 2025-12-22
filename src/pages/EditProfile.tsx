@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { PhotoCropper } from "@/components/PhotoCropper";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -19,6 +20,7 @@ const EditProfile = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { profile, user, updateProfile, refreshProfile } = useAuth();
+  const { t } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [tempImageSrc, setTempImageSrc] = useState<string | null>(null);
   const [showCropper, setShowCropper] = useState(false);
@@ -55,8 +57,8 @@ const EditProfile = () => {
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
         toast({
-          title: "File too large",
-          description: "Please select an image smaller than 5MB",
+          title: t("editProfile.uploadFailed"),
+          description: t("document.maxSize"),
           variant: "destructive",
         });
         return;
@@ -91,14 +93,14 @@ const EditProfile = () => {
       await refreshProfile();
 
       toast({
-        title: "Photo uploaded!",
-        description: "Your profile picture has been updated",
+        title: t("profile.updated"),
+        description: t("toast.uploadSuccess"),
       });
     } catch (error: any) {
       console.error('Error uploading photo:', error);
       toast({
-        title: "Upload failed",
-        description: error.message || "Failed to upload photo",
+        title: t("editProfile.uploadFailed"),
+        description: error.message || t("toast.uploadFailed"),
         variant: "destructive",
       });
     } finally {
@@ -112,8 +114,8 @@ const EditProfile = () => {
     // Phone validation (if provided)
     if (formData.phone && !validatePhoneExact10(formData.phone)) {
       toast({
-        title: "Invalid phone number",
-        description: "Phone number must be exactly 10 digits",
+        title: t("editProfile.updateFailed"),
+        description: t("nominee.digitsOnly"),
         variant: "destructive"
       });
       return;
@@ -136,16 +138,16 @@ const EditProfile = () => {
       });
 
       toast({
-        title: "Profile updated!",
-        description: "Your changes have been saved successfully",
+        title: t("profile.updated"),
+        description: t("toast.updated"),
       });
 
       navigate("/profile");
     } catch (error: any) {
       console.error('Error updating profile:', error);
       toast({
-        title: "Update failed",
-        description: error.message || "Failed to update profile",
+        title: t("editProfile.updateFailed"),
+        description: error.message || t("editProfile.updateFailedDesc"),
         variant: "destructive",
       });
     } finally {
@@ -156,7 +158,7 @@ const EditProfile = () => {
   if (!profile || !user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">Loading...</p>
+        <p className="text-muted-foreground">{t("common.loading")}</p>
       </div>
     );
   }
@@ -172,10 +174,10 @@ const EditProfile = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-primary/20 text-foreground p-6 pt-14 rounded-b-3xl">
+      <div className="bg-primary/20 text-foreground p-6 pt-4 rounded-b-3xl">
         <div className="flex items-center gap-4 mb-8">
           <BackButton to="/profile" />
-          <h1 className="text-2xl font-bold">Edit Profile</h1>
+          <h1 className="text-2xl font-bold">{t("profile.edit")}</h1>
         </div>
 
         {/* Profile Avatar */}
@@ -204,14 +206,14 @@ const EditProfile = () => {
               {isUploading ? "..." : "✏️"}
             </Button>
           </div>
-          <p className="text-sm opacity-90 mt-4">Tap to change photo</p>
+          <p className="text-sm opacity-90 mt-4">{t("profile.changePhoto")}</p>
         </div>
       </div>
 
       <div className="p-6 space-y-6">
         <div className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Full Name</label>
+            <label className="text-sm font-medium text-foreground">{t("profile.fullName")}</label>
             <Input
               value={formData.fullName}
               onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
@@ -220,7 +222,7 @@ const EditProfile = () => {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Email</label>
+            <label className="text-sm font-medium text-foreground">{t("profile.email")}</label>
             <Button
               variant="outline"
               onClick={() => navigate("/email-preferences")}
@@ -228,14 +230,14 @@ const EditProfile = () => {
             >
               <div className="text-left">
                 <p className="text-sm font-medium text-foreground">{profile.email}</p>
-                <p className="text-xs text-muted-foreground">Tap to manage emails</p>
+                <p className="text-xs text-muted-foreground">{t("settings.emailPreferences.subtitle")}</p>
               </div>
               <ChevronRight className="w-5 h-5 text-muted-foreground" />
             </Button>
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Phone</label>
+            <label className="text-sm font-medium text-foreground">{t("profile.phone")}</label>
             <Input
               type="tel"
               value={formData.phone}
@@ -251,7 +253,7 @@ const EditProfile = () => {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Date of Birth</label>
+            <label className="text-sm font-medium text-foreground">{t("profile.dateOfBirth")}</label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -262,7 +264,7 @@ const EditProfile = () => {
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dateOfBirth && !isNaN(dateOfBirth.getTime()) ? format(dateOfBirth, "PPP") : <span>Pick a date</span>}
+                  {dateOfBirth && !isNaN(dateOfBirth.getTime()) ? format(dateOfBirth, "PPP") : <span>{t("timeCapsule.releaseDate")}</span>}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -286,7 +288,7 @@ const EditProfile = () => {
           disabled={isSaving}
           className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12"
         >
-          {isSaving ? "Saving..." : "Save Changes"}
+          {isSaving ? t("common.loading") : t("common.save")}
         </Button>
       </div>
 

@@ -127,3 +127,290 @@ All colors MUST be HSL.
     padding-right: env(safe-area-inset-right);
   }
 }
+
+/* Premium Mobile App Animations */
+@layer utilities {
+
+  /* Shimmer animation for skeleton loaders */
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  .animate-shimmer {
+    animation: shimmer 1.5s ease-in-out infinite;
+    background: linear-gradient(90deg,
+        hsl(var(--muted)) 0%,
+        hsl(var(--muted) / 0.5) 50%,
+        hsl(var(--muted)) 100%);
+    background-size: 200% 100%;
+  }
+
+  /* Subtle glow pulse for emphasis */
+  @keyframes glow-pulse {
+
+    0%,
+    100% {
+      box-shadow: 0 0 8px 2px hsl(var(--primary) / 0.2);
+    }
+
+    50% {
+      box-shadow: 0 0 16px 4px hsl(var(--primary) / 0.35);
+    }
+  }
+
+  .animate-glow-pulse {
+    animation: glow-pulse 2s ease-in-out infinite;
+  }
+
+  /* Press feedback class */
+  .press-effect {
+    transition: transform 150ms cubic-bezier(0.2, 0, 0.2, 1), box-shadow 150ms ease-out;
+  }
+
+  .press-effect:active {
+    transform: scale(0.97);
+  }
+
+  /* Card hover lift effect */
+  .card-lift {
+    transition: transform 200ms cubic-bezier(0.2, 0, 0.2, 1), box-shadow 200ms ease-out;
+  }
+
+  .card-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px -4px hsl(var(--primary) / 0.12);
+  }
+
+  .card-lift:active {
+    transform: translateY(0) scale(0.98);
+    box-shadow: 0 2px 8px -2px hsl(var(--primary) / 0.1);
+  }
+
+  /* Premium tile styling for vault tiles */
+  .tile-premium {
+    transition: all 200ms cubic-bezier(0.2, 0, 0.2, 1);
+    box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.1);
+  }
+
+  .tile-premium:hover {
+    box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.15);
+  }
+
+  .tile-premium:active {
+    transform: scale(0.98);
+    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Smooth focus ring for inputs */
+  .focus-ring-premium {
+    transition: box-shadow 200ms ease-out, border-color 200ms ease-out;
+  }
+
+  .focus-ring-premium:focus {
+    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.15);
+    border-color: hsl(var(--primary) / 0.5);
+  }
+
+  /* Staggered animation delays */
+  .stagger-1 {
+    animation-delay: 50ms;
+  }
+
+  .stagger-2 {
+    animation-delay: 100ms;
+  }
+
+  .stagger-3 {
+    animation-delay: 150ms;
+  }
+
+  .stagger-4 {
+    animation-delay: 200ms;
+  }
+
+  .stagger-5 {
+    animation-delay: 250ms;
+  }
+
+  /* Glassmorphism Effects for Vault */
+  
+  /* Level 1: Category Cards - Subtle Glass */
+  .glass-category {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    transition: backdrop-filter 200ms ease-in-out, 
+                box-shadow 200ms ease-in-out,
+                transform 150ms ease-in-out;
+  }
+
+  .glass-category:hover {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  }
+
+  .glass-category:active {
+    transform: scale(0.98);
+  }
+
+  /* Level 2: Subcategory Cards - Medium Glass */
+  .glass-subcategory {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    transition: backdrop-filter 200ms ease-in-out, 
+                box-shadow 200ms ease-in-out,
+                transform 150ms ease-in-out;
+  }
+
+  .glass-subcategory:hover {
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.18),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+
+  .glass-subcategory:active {
+    transform: scale(0.98);
+  }
+
+  /* Level 3: Folder Cards - Strong Glass */
+  .glass-folder {
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transition: backdrop-filter 200ms ease-in-out, 
+                box-shadow 200ms ease-in-out,
+                transform 150ms ease-in-out;
+  }
+
+  .glass-folder:hover {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  }
+
+  .glass-folder:active {
+    transform: scale(0.98);
+  }
+
+  /* Add Button - Light Glass */
+  .glass-add-button {
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    transition: backdrop-filter 200ms ease-in-out,
+                box-shadow 200ms ease-in-out,
+                transform 150ms ease-in-out;
+  }
+
+  .glass-add-button:hover {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  }
+
+  .glass-add-button:active {
+    transform: scale(0.98);
+  }
+
+  /* Mobile Optimization - Reduced Blur */
+  @media (max-width: 768px) {
+    .glass-category {
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+
+    .glass-category:hover {
+      backdrop-filter: blur(9px);
+      -webkit-backdrop-filter: blur(9px);
+    }
+
+    .glass-subcategory {
+      backdrop-filter: blur(9px);
+      -webkit-backdrop-filter: blur(9px);
+    }
+
+    .glass-subcategory:hover {
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .glass-folder {
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .glass-folder:hover {
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+    }
+
+    .glass-add-button {
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+
+    .glass-add-button:hover {
+      backdrop-filter: blur(7px);
+      -webkit-backdrop-filter: blur(7px);
+    }
+  }
+
+  /* Reduced Motion Support */
+  @media (prefers-reduced-motion: reduce) {
+    .glass-category,
+    .glass-subcategory,
+    .glass-folder,
+    .glass-add-button {
+      transition: none;
+    }
+  }
+
+  /* High Contrast Mode */
+  @media (prefers-contrast: high) {
+    .glass-category,
+    .glass-subcategory,
+    .glass-folder {
+      border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+  }
+
+  /* Fallback for browsers without backdrop-filter support */
+  @supports not (backdrop-filter: blur(1px)) {
+    .glass-category,
+    .glass-subcategory,
+    .glass-folder,
+    .glass-add-button {
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      /* Keep existing background colors, just remove blur */
+    }
+  }
+
+  /* Performance Optimization */
+  .glass-category,
+  .glass-subcategory,
+  .glass-folder,
+  .glass-add-button {
+    will-change: backdrop-filter, transform;
+    contain: layout style paint;
+  }
+}
