@@ -7,13 +7,13 @@ type ToasterProps = React.ComponentProps<typeof Sonner>;
 const Toaster = ({ ...props }: ToasterProps) => {
   const { theme = "system" } = useTheme();
 
-  // Dynamic offset to account for status bar on Android/iOS
-  // Native apps need more padding for status bar (typically 24-30px)
+  // Minimal offset for toast positioning
+  // CSS safe-area-inset automatically handles status bar spacing
   const getToastOffset = (): string => {
     if (Capacitor.isNativePlatform()) {
-      return "80px"; // Status bar (~30px) + header space (~50px)
+      return "16px"; // Minimal offset, safe-area-inset handles status bar
     }
-    return "60px"; // Web browsers
+    return "16px"; // Consistent minimal offset for web
   };
 
   return (

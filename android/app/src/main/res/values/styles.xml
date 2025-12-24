@@ -21,6 +21,8 @@
         <item name="windowSplashScreenBackground">@color/splashBackground</item>
         <!-- Hide Android 12+ animated icon that conflicts with custom splash -->
         <item name="windowSplashScreenAnimatedIcon">@android:color/transparent</item>
+        <!-- Theme to use after splash screen exits -->
+        <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
         <!-- Do NOT reserve space for status bar - let splash extend edge-to-edge -->
         <item name="android:fitsSystemWindows">false</item>
         <!-- Support display cutouts (notches) -->

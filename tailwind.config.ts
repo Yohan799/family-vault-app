@@ -103,6 +103,17 @@ export default {
         "premium-md": "0 4px 16px -4px rgba(0, 0, 0, 0.12)",
         "premium-lg": "0 8px 24px -8px rgba(0, 0, 0, 0.15)",
       },
+      fontFamily: {
+        sans: [
+          "-apple-system",
+          "BlinkMacSystemFont",
+          '"Segoe UI"',
+          "Roboto",
+          '"Helvetica Neue"',
+          "Arial",
+          "sans-serif",
+        ],
+      },
     },
   },
   plugins: [require("tailwindcss-animate")],

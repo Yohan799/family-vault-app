@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from "react";
 import { languageStorage } from "@/lib/languageStorage";
 
 export type Language = "en" | "te" | "kn" | "hi" | "ta";
@@ -3146,19 +3146,19 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
       }
     };
     loadLanguage();
-  }, []);
+  }, []); // Empty dependency array is correct - only run on mount
 
   useEffect(() => {
     // Update document lang attribute for accessibility
     document.documentElement.lang = language;
   }, [language]);
 
-  const setLanguage = async (lang: Language) => {
+  const setLanguage = useCallback(async (lang: Language) => {
     setLanguageState(lang);
     await languageStorage.set(lang);
-  };
+  }, []);
 
-  const t = (key: string, replacements?: Record<string, string | number>): string => {
+  const t = useCallback((key: string, replacements?: Record<string, string | number>): string => {
     let text = translations[language][key] || translations.en[key] || key;
 
     // Handle replacements like {count}
@@ -3169,12 +3169,22 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
 
     return text;
-  };
+  }, [language]); // Re-create when language changes
 
-  const currentLanguage = languages.find((l) => l.code === language) || languages[0];
+  const currentLanguage = useMemo(() => 
+    languages.find((l) => l.code === language) || languages[0],
+    [language]
+  );
+
+  const contextValue = useMemo(() => ({
+    language,
+    setLanguage,
+    t,
+    currentLanguage
+  }), [language, setLanguage, t, currentLanguage]);
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t, currentLanguage }}>
+    <LanguageContext.Provider value={contextValue}>
       {children}
     </LanguageContext.Provider>
   );
