@@ -14,19 +14,25 @@ import android.app.NotificationManager;
 import android.os.Build;
 import androidx.core.splashscreen.SplashScreen;
 import android.webkit.WebSettings;
+import android.os.Handler;
+import android.os.Looper;
 
 public class MainActivity extends BridgeActivity implements ModifiedMainActivityForSocialLoginPlugin {
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
-    // Install splash screen BEFORE calling super.onCreate()
-    // This is CRITICAL for splash screen to work on all Android versions
+    // 🔴 CRITICAL FIX: Install splash screen with proper dismissal
     SplashScreen splashScreen = SplashScreen.installSplashScreen(this);
     
-    // Keep splash screen visible until Capacitor explicitly hides it
-    // This fixes issues on devices with custom ROMs (Realme UI, MIUI, ColorOS)
-    // where the splash screen disappears too early
-    splashScreen.setKeepOnScreenCondition(() -> true);
+    // Control splash dismissal properly
+    final boolean[] isAppReady = {false};
+    
+    splashScreen.setKeepOnScreenCondition(() -> !isAppReady[0]);
+    
+    // Auto-dismiss after 2.5 seconds (allows web splash to show)
+    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+      isAppReady[0] = true;
+    }, 2500);
     
     super.onCreate(savedInstanceState);
     

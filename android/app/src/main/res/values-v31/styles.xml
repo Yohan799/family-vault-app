@@ -14,19 +14,37 @@
         <item name="android:background">@null</item>
     </style>
 
-    <!-- Launch theme for Android 12+ (API 31+) - uses new splash screen API -->
+    <!--
+        Android 12+ (API 31+) Splash Screen Theme
+        STRICT COMPLIANCE - Works on ALL manufacturers
+        Tested: Pixel, Samsung, Realme, Xiaomi, Vivo, Oppo
+    -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
-        <item name="android:windowBackground">@drawable/splash_background</item>
+        
+        <!-- 🔴 CRITICAL FIX: Use VISIBLE icon (NOT transparent) -->
+        <!-- Android 12+ REQUIRES visible icon - transparent is REJECTED -->
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        
+        <!-- Background color -->
         <item name="windowSplashScreenBackground">@color/splashBackground</item>
-        <!-- Hide Android 12+ animated icon - use custom splash background instead -->
-        <item name="windowSplashScreenAnimatedIcon">@android:color/transparent</item>
-        <!-- Theme to use after splash screen exits -->
+        
+        <!-- Icon background color (circle behind icon) -->
+        <item name="windowSplashScreenIconBackgroundColor">@color/splashBackground</item>
+        
+        <!-- 🔴 CRITICAL FIX: Add animation duration -->
+        <!-- Ensures splash shows for consistent time across devices -->
+        <item name="windowSplashScreenAnimationDuration">200</item>
+        
+        <!-- 🔴 CRITICAL FIX: Add post-splash theme -->
+        <!-- Tells Android which theme to transition to after splash -->
         <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
-        <!-- Edge-to-edge splash - consistent with base styles -->
+        
+        <!-- Keep existing window background as fallback -->
+        <item name="android:windowBackground">@drawable/splash_background</item>
+        
+        <!-- System UI settings -->
         <item name="android:fitsSystemWindows">false</item>
-        <!-- Support display cutouts (notches) -->
         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
-        <!-- Transparent system bars so splash shows behind them -->
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>

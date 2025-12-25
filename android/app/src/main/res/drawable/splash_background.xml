@@ -1,16 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Background color - fills entire screen including gaps on tall devices -->
+    <!-- Background color layer -->
     <item android:drawable="@color/splashBackground" />
     
-    <!-- Splash image centered on screen without stretching -->
-    <!-- Center gravity preserves aspect ratio; white background fills gaps -->
+    <!-- Splash image with proper scaling for all aspect ratios -->
     <item>
         <bitmap
             android:src="@drawable/splash"
-            android:gravity="center" />
+            android:gravity="center|fill_vertical"
+            android:tileMode="disabled" />
     </item>
 </layer-list>
-
-
-
