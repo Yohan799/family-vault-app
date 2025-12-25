@@ -3,11 +3,11 @@
     <!-- Background color layer -->
     <item android:drawable="@color/splashBackground" />
     
-    <!-- Splash image with proper scaling for all aspect ratios -->
+    <!-- Splash image - centered, no stretching -->
     <item>
         <bitmap
             android:src="@drawable/splash"
-            android:gravity="center|fill_vertical"
+            android:gravity="center"
             android:tileMode="disabled" />
     </item>
 </layer-list>

@@ -21,18 +21,26 @@ public class MainActivity extends BridgeActivity implements ModifiedMainActivity
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
-    // 🔴 CRITICAL FIX: Install splash screen with proper dismissal
-    SplashScreen splashScreen = SplashScreen.installSplashScreen(this);
-    
-    // Control splash dismissal properly
-    final boolean[] isAppReady = {false};
-    
-    splashScreen.setKeepOnScreenCondition(() -> !isAppReady[0]);
-    
-    // Auto-dismiss after 2.5 seconds (allows web splash to show)
-    new Handler(Looper.getMainLooper()).postDelayed(() -> {
-      isAppReady[0] = true;
-    }, 2500);
+    // Install splash screen with error handling for OEM compatibility
+    try {
+      SplashScreen splashScreen = SplashScreen.installSplashScreen(this);
+      
+      // Control splash dismissal properly
+      final boolean[] isAppReady = {false};
+      
+      splashScreen.setKeepOnScreenCondition(() -> !isAppReady[0]);
+      
+      // Auto-dismiss after 2.5 seconds
+      new Handler(Looper.getMainLooper()).postDelayed(() -> {
+        isAppReady[0] = true;
+      }, 2500);
+      
+      Log.d("MainActivity", "Splash screen initialized successfully");
+      
+    } catch (Exception e) {
+      // If splash screen fails on problematic OEM devices, continue anyway
+      Log.e("MainActivity", "Splash screen initialization failed, continuing without it", e);
+    }
     
     super.onCreate(savedInstanceState);
     
