@@ -65,17 +65,36 @@ const CategoryView = () => {
       };
     }
 
-    // For custom categories, we need basic info - the hook handles subcategories
-    // This is a simplified approach - category may need separate fetching for custom ones
+    // For custom categories, return placeholder - will be fetched separately
     return {
       id: categoryId,
-      name: categoryId, // This will be overwritten if we fetch from DB
+      name: "", // Will be set by useEffect
       icon: Folder,
       iconBgColor: "bg-yellow-100",
       subcategories: [],
       isCustom: true
     };
   }, [categoryId]);
+
+  // Fetch custom category name if needed
+  useEffect(() => {
+    if (category?.isCustom && userId && categoryId) {
+      supabase
+        .from('categories')
+        .select('name')
+        .eq('id', categoryId)
+        .eq('user_id', userId)
+        .single()
+        .then(({ data }) => {
+          if (data) {
+            // Update category name in state
+            setCustomCategoryName(data.name);
+          }
+        });
+    }
+  }, [category?.isCustom, userId, categoryId]);
+
+  const [customCategoryName, setCustomCategoryName] = useState<string>("");
 
   // Debounce search query
   useEffect(() => {
@@ -219,7 +238,11 @@ const CategoryView = () => {
             <div className="flex-1 text-center -ml-10">
               <div className="flex items-center justify-center gap-2">
                 <CategoryIcon className="w-6 h-6 text-[#1F2121]" />
-                <h1 className="text-2xl font-bold text-[#1F2121]">{getCategoryName(category.id, category.name, t)}</h1>
+                <h1 className="text-2xl font-bold text-[#1F2121]">
+                  {category.isCustom && customCategoryName 
+                    ? customCategoryName 
+                    : getCategoryName(category.id, category.name, t)}
+                </h1>
               </div>
               <p className="text-[#626C71] text-sm mt-1">{totalDocumentCount} {t("common.documents")}</p>
             </div>

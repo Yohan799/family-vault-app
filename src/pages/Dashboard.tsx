@@ -170,7 +170,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="px-3 py-2 space-y-3">
+        <div className="px-3 pt-2 space-y-3">
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-card rounded-xl p-2.5 text-center flex flex-col items-center justify-center h-16 shadow-premium-sm card-lift cursor-pointer animate-in fade-in slide-in-from-bottom-2" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
               <FileText className="w-4 h-4 text-primary mb-1" />

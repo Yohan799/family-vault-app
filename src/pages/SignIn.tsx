@@ -134,8 +134,10 @@ const SignIn = () => {
               {t("auth.signIn")}
             </h1>
             <div className="flex justify-center">
-              <div className="w-20 h-20 bg-accent rounded-full flex items-center justify-center">
-                <Shield className="w-10 h-10 text-primary" strokeWidth={2.5} />
+              <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/5 rounded-full flex items-center justify-center shadow-lg shadow-primary/10">
+                <div className="w-16 h-16 bg-gradient-to-br from-primary/30 to-primary/10 rounded-full flex items-center justify-center animate-pulse">
+                  <Shield className="w-8 h-8 text-primary" />
+                </div>
               </div>
             </div>
             <p className="text-muted-foreground text-base">{t("auth.secureFamily")}</p>

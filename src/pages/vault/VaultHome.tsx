@@ -38,6 +38,12 @@ const VaultHome = () => {
     category: null
   });
 
+  // Long-press state management
+  const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
+  const [showActionSheet, setShowActionSheet] = useState(false);
+  const [actionSheetCategory, setActionSheetCategory] = useState<any | null>(null);
+  const [isLongPressing, setIsLongPressing] = useState(false);
+
   const userId = user?.id;
 
   // Debounced search effect
@@ -53,6 +59,48 @@ const VaultHome = () => {
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  // Cleanup long-press timer on unmount
+  useEffect(() => {
+    return () => {
+      if (longPressTimer) {
+        clearTimeout(longPressTimer);
+      }
+    };
+  }, [longPressTimer]);
+
+  // Long-press event handlers
+  const handlePressStart = useCallback((category: any, e: React.TouchEvent | React.MouseEvent) => {
+    if (!category.isCustom) return;
+    
+    e.preventDefault();
+    setIsLongPressing(true);
+    
+    const timer = setTimeout(() => {
+      setActionSheetCategory(category);
+      setShowActionSheet(true);
+      setIsLongPressing(false);
+    }, 500);
+    
+    setLongPressTimer(timer);
+  }, []);
+
+  const handlePressEnd = useCallback(() => {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      setLongPressTimer(null);
+    }
+    setIsLongPressing(false);
+  }, [longPressTimer]);
+
+  const handlePressMove = useCallback(() => {
+    // Cancel long-press if finger moves
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      setLongPressTimer(null);
+      setIsLongPressing(false);
+    }
+  }, [longPressTimer]);
 
   const handleAddCategory = useCallback(async () => {
     const sanitizedName = sanitizeInput(categoryName);
@@ -291,8 +339,17 @@ const VaultHome = () => {
                     {/* Category Tile */}
                     <div className="relative h-full">
                       <button
-                        onClick={() => navigate(`/vault/${category.id}`)}
-                        className={`w-full bg-accent rounded-2xl glass-category ${searchQuery
+                        onClick={() => !isLongPressing && navigate(`/vault/${category.id}`)}
+                        onTouchStart={(e) => handlePressStart(category, e)}
+                        onTouchEnd={handlePressEnd}
+                        onTouchMove={handlePressMove}
+                        onMouseDown={(e) => handlePressStart(category, e)}
+                        onMouseUp={handlePressEnd}
+                        onMouseLeave={handlePressEnd}
+                        onContextMenu={(e) => e.preventDefault()}
+                        className={`w-full bg-accent rounded-2xl glass-category transition-transform duration-150 ${
+                          isLongPressing ? 'scale-95' : 'scale-100'
+                        } ${searchQuery
                           ? "p-4 flex items-center gap-4"
                           : "p-4 h-full flex flex-col items-center justify-between text-center min-h-[140px]"
                           }`}
@@ -386,6 +443,50 @@ const VaultHome = () => {
             </div>
           )}
         </div>
+
+        {/* Action Sheet for Long-Press */}
+        {showActionSheet && actionSheetCategory && (
+          <div 
+            className="fixed inset-0 bg-black/50 flex items-end justify-center z-50"
+            onClick={() => setShowActionSheet(false)}
+          >
+            <div 
+              className="bg-card rounded-t-3xl w-full max-w-md p-6 animate-in slide-in-from-bottom-4 duration-300"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="w-12 h-1 bg-border rounded-full mx-auto mb-4" />
+              
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                {getCategoryName(actionSheetCategory.id, actionSheetCategory.name, t)}
+              </h3>
+              
+              <p className="text-sm text-muted-foreground mb-4">
+                {actionSheetCategory.documentCount} {t("common.documents")}
+              </p>
+              
+              <div className="space-y-2">
+                <Button
+                  onClick={() => {
+                    setShowActionSheet(false);
+                    handleDeleteClick(actionSheetCategory, {} as any);
+                  }}
+                  variant="destructive"
+                  className="w-full"
+                >
+                  {t("vault.deleteCategory")}
+                </Button>
+                
+                <Button
+                  onClick={() => setShowActionSheet(false)}
+                  variant="outline"
+                  className="w-full"
+                >
+                  {t("common.cancel")}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Delete Confirmation Dialog */}
         {deleteConfirm.show && deleteConfirm.category && (
