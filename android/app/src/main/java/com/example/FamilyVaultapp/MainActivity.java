@@ -30,12 +30,12 @@ public class MainActivity extends BridgeActivity implements ModifiedMainActivity
       
       splashScreen.setKeepOnScreenCondition(() -> !isAppReady[0]);
       
-      // Auto-dismiss after 2.5 seconds
+      // Single splash screen - show for 2.5 seconds
       new Handler(Looper.getMainLooper()).postDelayed(() -> {
         isAppReady[0] = true;
       }, 2500);
       
-      Log.d("MainActivity", "Splash screen initialized successfully");
+      Log.d("MainActivity", "Native splash initialized - transitioning to web splash");
       
     } catch (Exception e) {
       // If splash screen fails on problematic OEM devices, continue anyway

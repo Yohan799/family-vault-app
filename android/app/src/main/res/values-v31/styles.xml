@@ -21,9 +21,8 @@
     -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         
-        <!-- 🔴 CRITICAL FIX: Use VISIBLE icon (NOT transparent) -->
-        <!-- Android 12+ REQUIRES visible icon - transparent is REJECTED -->
-        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <!-- ICON ONLY - No text (meets Android 12+ requirements) -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon_only</item>
         
         <!-- Background color -->
         <item name="windowSplashScreenBackground">@color/splashBackground</item>
@@ -31,16 +30,14 @@
         <!-- Icon background color (circle behind icon) -->
         <item name="windowSplashScreenIconBackgroundColor">@color/splashBackground</item>
         
-        <!-- 🔴 CRITICAL FIX: Add animation duration -->
-        <!-- Ensures splash shows for consistent time across devices -->
+        <!-- Quick animation - web splash will show the full branding -->
         <item name="windowSplashScreenAnimationDuration">200</item>
         
-        <!-- 🔴 CRITICAL FIX: Add post-splash theme -->
-        <!-- Tells Android which theme to transition to after splash -->
+        <!-- Transition to app theme -->
         <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
         
-        <!-- Keep existing window background as fallback -->
-        <item name="android:windowBackground">@drawable/splash_background</item>
+        <!-- Fallback for older compatibility library -->
+        <item name="android:windowBackground">@color/splashBackground</item>
         
         <!-- System UI settings -->
         <item name="android:fitsSystemWindows">false</item>

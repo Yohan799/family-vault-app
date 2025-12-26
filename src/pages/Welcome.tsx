@@ -20,7 +20,7 @@ const Welcome = () => {
     if (!isLoading && !user) {
       const timer = setTimeout(() => {
         navigate("/onboarding");
-      }, 1700);
+      }, 500);
 
       return () => clearTimeout(timer);
     }
@@ -34,7 +34,7 @@ const Welcome = () => {
             <img src={logo} alt="Family Vault Logo" className="w-full h-full object-contain" />
           </div>
         </div>
-        
+
         <div className="space-y-2">
           <h1 className="text-4xl font-bold text-foreground">
             {t("welcome.title")}

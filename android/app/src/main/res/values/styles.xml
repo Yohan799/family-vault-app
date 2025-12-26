@@ -15,19 +15,21 @@
         <item name="android:background">@null</item>
     </style>
 
-    <!-- Launch theme - fullscreen splash without status bar space reservation -->
+    <!-- Android 11 and below - Also use icon only for consistency -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
-        <item name="android:windowBackground">@drawable/splash_background</item>
+        <!-- Solid background color -->
+        <item name="android:windowBackground">@color/splashBackground</item>
+        
+        <!-- Icon only (consistent with Android 12+) -->
         <item name="windowSplashScreenBackground">@color/splashBackground</item>
-        <!-- Hide Android 12+ animated icon that conflicts with custom splash -->
-        <item name="windowSplashScreenAnimatedIcon">@android:color/transparent</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon_only</item>
+        
         <!-- Theme to use after splash screen exits -->
         <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
-        <!-- Do NOT reserve space for status bar - let splash extend edge-to-edge -->
+        
+        <!-- System UI settings -->
         <item name="android:fitsSystemWindows">false</item>
-        <!-- Support display cutouts (notches) -->
         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
-        <!-- Make system bars transparent so splash shows behind them -->
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>

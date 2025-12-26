@@ -430,7 +430,7 @@ const SubcategoryView = () => {
               placeholder={t("folder.searchPlaceholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 pr-12 h-12 bg-card border-none rounded-xl shadow-premium-sm focus:shadow-premium-md"
+              className="pl-12 pr-12 h-12 bg-card border-none rounded-xl"
             />
             {searchQuery && (
               <button
@@ -545,7 +545,7 @@ const SubcategoryView = () => {
                 {filteredDocuments.map((doc) => (
                   <div
                     key={doc.id}
-                    className="bg-card rounded-xl p-4 flex items-center justify-between shadow-premium-sm transition-all duration-200 hover:shadow-premium-md active:scale-[0.99]"
+                    className="bg-card rounded-xl p-4 flex items-center justify-between transition-all duration-200 active:scale-[0.99]"
                   >
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">

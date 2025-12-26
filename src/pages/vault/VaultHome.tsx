@@ -71,17 +71,20 @@ const VaultHome = () => {
 
   // Long-press event handlers
   const handlePressStart = useCallback((category: any, e: React.TouchEvent | React.MouseEvent) => {
+    // Debug: log category to identify if isCustom is set correctly
+    console.log('[VaultHome] Long-press on category:', category.id, 'isCustom:', category.isCustom);
+
     if (!category.isCustom) return;
-    
+
     e.preventDefault();
     setIsLongPressing(true);
-    
+
     const timer = setTimeout(() => {
       setActionSheetCategory(category);
       setShowActionSheet(true);
       setIsLongPressing(false);
     }, 500);
-    
+
     setLongPressTimer(timer);
   }, []);
 
@@ -347,11 +350,10 @@ const VaultHome = () => {
                         onMouseUp={handlePressEnd}
                         onMouseLeave={handlePressEnd}
                         onContextMenu={(e) => e.preventDefault()}
-                        className={`w-full bg-accent rounded-2xl glass-category transition-transform duration-150 ${
-                          isLongPressing ? 'scale-95' : 'scale-100'
-                        } ${searchQuery
-                          ? "p-4 flex items-center gap-4"
-                          : "p-4 h-full flex flex-col items-center justify-between text-center min-h-[140px]"
+                        className={`w-full bg-accent rounded-2xl glass-category transition-transform duration-150 ${isLongPressing ? 'scale-95' : 'scale-100'
+                          } ${searchQuery
+                            ? "p-4 flex items-center gap-4"
+                            : "p-4 h-full flex flex-col items-center justify-between text-center min-h-[140px]"
                           }`}
                       >
                         <div className={searchQuery ? "" : "flex flex-col items-center"}>
@@ -446,24 +448,24 @@ const VaultHome = () => {
 
         {/* Action Sheet for Long-Press */}
         {showActionSheet && actionSheetCategory && (
-          <div 
+          <div
             className="fixed inset-0 bg-black/50 flex items-end justify-center z-50"
             onClick={() => setShowActionSheet(false)}
           >
-            <div 
+            <div
               className="bg-card rounded-t-3xl w-full max-w-md p-6 animate-in slide-in-from-bottom-4 duration-300"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="w-12 h-1 bg-border rounded-full mx-auto mb-4" />
-              
+
               <h3 className="text-lg font-semibold text-foreground mb-2">
                 {getCategoryName(actionSheetCategory.id, actionSheetCategory.name, t)}
               </h3>
-              
+
               <p className="text-sm text-muted-foreground mb-4">
                 {actionSheetCategory.documentCount} {t("common.documents")}
               </p>
-              
+
               <div className="space-y-2">
                 <Button
                   onClick={() => {
@@ -475,7 +477,7 @@ const VaultHome = () => {
                 >
                   {t("vault.deleteCategory")}
                 </Button>
-                
+
                 <Button
                   onClick={() => setShowActionSheet(false)}
                   variant="outline"
