@@ -168,8 +168,8 @@ const VaultHome = () => {
     }
   }, [categoryName, customCategories, userId, toast, invalidateCategories, t]);
 
-  const handleDeleteClick = useCallback((category: any, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleDeleteClick = useCallback((category: any, e?: React.MouseEvent) => {
+    e?.stopPropagation?.();
 
     if (!category.isCustom) {
       toast({
@@ -470,7 +470,7 @@ const VaultHome = () => {
                 <Button
                   onClick={() => {
                     setShowActionSheet(false);
-                    handleDeleteClick(actionSheetCategory, {} as any);
+                    handleDeleteClick(actionSheetCategory);
                   }}
                   variant="destructive"
                   className="w-full"
