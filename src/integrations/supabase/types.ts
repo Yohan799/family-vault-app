@@ -229,6 +229,10 @@ export type Database = {
           category_id: string | null
           created_at: string
           deleted_at: string | null
+          description: string | null
+          folder_type: string | null
+          icon: string | null
+          icon_bg_color: string | null
           id: string
           name: string
           parent_folder_id: string | null
@@ -240,6 +244,10 @@ export type Database = {
           category_id?: string | null
           created_at?: string
           deleted_at?: string | null
+          description?: string | null
+          folder_type?: string | null
+          icon?: string | null
+          icon_bg_color?: string | null
           id?: string
           name: string
           parent_folder_id?: string | null
@@ -251,6 +259,10 @@ export type Database = {
           category_id?: string | null
           created_at?: string
           deleted_at?: string | null
+          description?: string | null
+          folder_type?: string | null
+          icon?: string | null
+          icon_bg_color?: string | null
           id?: string
           name?: string
           parent_folder_id?: string | null
