@@ -73,3 +73,14 @@ The fix ensures the splash screen shows both the logo and welcome text with prop
 2. THE Splash_Screen SHALL hide the default Android 12+ animated icon to prevent visual conflicts
 3. WHEN the native splash screen exits, THE Splash_Screen SHALL transition smoothly to the Capacitor splash or app content
 4. THE Splash_Screen configuration SHALL work consistently across Android 10, 11, 12, 13, and 14
+
+### Requirement 6: Fallback Splash Image for Undefined Resolutions
+
+**User Story:** As a user with any Android device, I want to see the splash screen even if my device's specific resolution isn't defined, so that I have a consistent app launch experience regardless of device model.
+
+#### Acceptance Criteria
+
+1. WHEN a device resolution doesn't match any density-specific drawable folder, THE Splash_Screen SHALL display a fallback image from the base drawable folder
+2. THE fallback splash image SHALL be placed in the base drawable folder (android/app/src/main/res/drawable/)
+3. THE fallback image SHALL be a universal resolution that scales appropriately for most devices
+4. WHEN the fallback image is used, THE Splash_Screen SHALL maintain proper aspect ratio and centering

@@ -240,47 +240,42 @@ All colors MUST be HSL.
   }
 
   /* Glassmorphism Effects for Vault */
-  
+
   /* Level 1: Category Cards - Subtle Glass */
   .glass-category {
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    transition: backdrop-filter 200ms ease-in-out, 
-                box-shadow 200ms ease-in-out,
-                transform 150ms ease-in-out;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    transition: backdrop-filter 200ms ease-in-out,
+      box-shadow 200ms ease-in-out,
+      transform 150ms ease-in-out;
   }
 
   .glass-category:hover {
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15),
-                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      inset 0 1px 0 rgba(255, 255, 255, 0.15);
   }
 
   .glass-category:active {
     transform: scale(0.98);
   }
 
-  /* Level 2: Subcategory Cards - Medium Glass */
+  /* Level 2: Subcategory Cards - Medium Glass (No Shadow) */
   .glass-subcategory {
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.25);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.12),
-                inset 0 1px 0 rgba(255, 255, 255, 0.15);
-    transition: backdrop-filter 200ms ease-in-out, 
-                box-shadow 200ms ease-in-out,
-                transform 150ms ease-in-out;
+    transition: backdrop-filter 200ms ease-in-out,
+      transform 150ms ease-in-out;
   }
 
   .glass-subcategory:hover {
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.18),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2);
   }
 
   .glass-subcategory:active {
@@ -293,17 +288,17 @@ All colors MUST be HSL.
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgba(255, 255, 255, 0.3);
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    transition: backdrop-filter 200ms ease-in-out, 
-                box-shadow 200ms ease-in-out,
-                transform 150ms ease-in-out;
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transition: backdrop-filter 200ms ease-in-out,
+      box-shadow 200ms ease-in-out,
+      transform 150ms ease-in-out;
   }
 
   .glass-folder:hover {
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2),
-                inset 0 1px 0 rgba(255, 255, 255, 0.25);
+      inset 0 1px 0 rgba(255, 255, 255, 0.25);
   }
 
   .glass-folder:active {
@@ -315,17 +310,17 @@ All colors MUST be HSL.
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
     transition: backdrop-filter 200ms ease-in-out,
-                box-shadow 200ms ease-in-out,
-                transform 150ms ease-in-out;
+      box-shadow 200ms ease-in-out,
+      transform 150ms ease-in-out;
   }
 
   .glass-add-button:hover {
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12),
-                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      inset 0 1px 0 rgba(255, 255, 255, 0.15);
   }
 
   .glass-add-button:active {
@@ -377,6 +372,7 @@ All colors MUST be HSL.
 
   /* Reduced Motion Support */
   @media (prefers-reduced-motion: reduce) {
+
     .glass-category,
     .glass-subcategory,
     .glass-folder,
@@ -387,6 +383,7 @@ All colors MUST be HSL.
 
   /* High Contrast Mode */
   @media (prefers-contrast: high) {
+
     .glass-category,
     .glass-subcategory,
     .glass-folder {
@@ -396,6 +393,7 @@ All colors MUST be HSL.
 
   /* Fallback for browsers without backdrop-filter support */
   @supports not (backdrop-filter: blur(1px)) {
+
     .glass-category,
     .glass-subcategory,
     .glass-folder,

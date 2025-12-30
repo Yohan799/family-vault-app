@@ -108,6 +108,7 @@ interface SplashScreenConfig {
 
 | Density | Folder | Recommended Size | Aspect Ratio |
 |---------|--------|------------------|--------------|
+| **Fallback** | **drawable** | **1080x1920** | **Variable** |
 | mdpi | drawable-port-mdpi | 320x480 | Variable |
 | hdpi | drawable-port-hdpi | 480x800 | Variable |
 | xhdpi | drawable-port-xhdpi | 720x1280 | Variable |
@@ -115,6 +116,8 @@ interface SplashScreenConfig {
 | xxxhdpi | drawable-port-xxxhdpi | 1440x2560 | Variable |
 
 **Key Design Principle:** The splash image should have a solid background color that matches `splashBackground` color, with the logo/branding centered. This ensures that on tall devices, the background color seamlessly extends to fill any gaps.
+
+**Fallback Image Strategy:** A universal splash image must be placed in the base `drawable` folder (not density-specific). This serves as a fallback when Android cannot find a matching density-specific image. The recommended size is 1080x1920 (xxhdpi equivalent) which provides good quality across most modern devices while keeping file size reasonable.
 
 ### Capacitor Configuration Model
 

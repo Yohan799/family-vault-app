@@ -37,9 +37,16 @@ This implementation plan fixes the splash screen display issue on Android device
   - Verify splash displays correctly on standard and tall aspect ratio devices
   - Ensure all tests pass, ask the user if questions arise
 
+- [x] 5. Add fallback splash image for undefined resolutions
+  - [x] 5.1 Copy splash_icon_only.png to base drawable folder
+    - Copy from any density folder (recommend xxhdpi for quality) to android/app/src/main/res/drawable/
+    - This provides a fallback when device resolution doesn't match any density-specific folder
+    - _Requirements: 6.1, 6.2, 6.3, 6.4_
+
 ## Notes
 
 - The key fix is using CENTER_CROP scale type which fills the entire screen
 - Background color (#FFFFFF) will fill any gaps on extreme aspect ratios
 - No code changes needed in React/TypeScript - this is purely native Android configuration
 - Testing should be done on actual devices with 20:9+ aspect ratios (e.g., Infinix Hot 30)
+- **Fallback image in base drawable folder ensures splash displays on all devices, including Pixel 5**

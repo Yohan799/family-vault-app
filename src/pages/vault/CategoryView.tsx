@@ -2,6 +2,7 @@ import { Search, Plus, Folder, X, AlertTriangle } from "lucide-react";
 import BackButton from "@/components/BackButton";
 import { Vault as VaultIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import AnimatedSearchInput, { CATEGORY_PLACEHOLDERS } from "@/components/ui/AnimatedSearchInput";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useParams } from "react-router-dom";
 import { vaultCategories } from "@/data/vaultCategories";
@@ -9,7 +10,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { categoryNameSchema, sanitizeInput } from "@/lib/validation";
 import { AccessControlModal } from "@/components/vault/AccessControlModal";
-import { ActionMenu, createSubcategoryActionMenu } from "@/components/vault/ActionMenu";
+
 import { supabase } from "@/integrations/supabase/client";
 import { filterItems } from "@/lib/searchUtils";
 import { CategoryViewSkeleton } from "@/components/skeletons";
@@ -239,8 +240,8 @@ const CategoryView = () => {
               <div className="flex items-center justify-center gap-2">
                 <CategoryIcon className="w-6 h-6 text-[#1F2121]" />
                 <h1 className="text-2xl font-bold text-[#1F2121]">
-                  {category.isCustom && customCategoryName 
-                    ? customCategoryName 
+                  {category.isCustom && customCategoryName
+                    ? customCategoryName
                     : getCategoryName(category.id, category.name, t)}
                 </h1>
               </div>
@@ -248,23 +249,11 @@ const CategoryView = () => {
             </div>
           </div>
 
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-            <Input
-              placeholder={t("subcategory.searchPlaceholder")}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 pr-12 h-12 bg-[#F5F5F5] border-none rounded-xl"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-4 top-1/2 -translate-y-1/2 hover:bg-accent rounded-full p-1"
-              >
-                <X className="w-4 h-4 text-muted-foreground" />
-              </button>
-            )}
-          </div>
+          <AnimatedSearchInput
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholders={CATEGORY_PLACEHOLDERS[categoryId || ''] || ['subcategories', 'folders', 'documents']}
+          />
         </div>
 
         <div className="px-6">
@@ -293,14 +282,6 @@ const CategoryView = () => {
                       <p className="text-sm text-muted-foreground">{subcategory.documentCount} {t("common.documents")}</p>
                     </button>
 
-                    <div className="absolute top-2 right-2 z-10">
-                      <ActionMenu
-                        items={createSubcategoryActionMenu(
-                          () => setAccessControlSubcategory(subcategory),
-                          subcategory.isCustom ? () => handleDeleteClick(subcategory, { stopPropagation: () => { } } as any) : undefined
-                        )}
-                      />
-                    </div>
                   </div>
                 );
               })}

@@ -16,28 +16,24 @@
 
     <!--
         Android 12+ (API 31+) Splash Screen Theme
-        STRICT COMPLIANCE - Works on ALL manufacturers
-        Tested: Pixel, Samsung, Realme, Xiaomi, Vivo, Oppo
+        Using windowBackground with layer-list to center the full image
     -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         
-        <!-- ICON ONLY - No text (meets Android 12+ requirements) -->
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon_only</item>
+        <!-- Use the layer-list drawable that centers the image -->
+        <item name="android:windowBackground">@drawable/splash_background</item>
+        
+        <!-- Use transparent icon to disable circular mask, logo shows via windowBackground -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon_transparent</item>
         
         <!-- Background color -->
         <item name="windowSplashScreenBackground">@color/splashBackground</item>
         
-        <!-- Icon background color (circle behind icon) -->
-        <item name="windowSplashScreenIconBackgroundColor">@color/splashBackground</item>
-        
-        <!-- Quick animation - web splash will show the full branding -->
-        <item name="windowSplashScreenAnimationDuration">200</item>
+        <!-- Remove the icon background circle - let the image show as-is -->
+        <!-- <item name="windowSplashScreenIconBackgroundColor">@color/splashBackground</item> -->
         
         <!-- Transition to app theme -->
         <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
-        
-        <!-- Fallback for older compatibility library -->
-        <item name="android:windowBackground">@color/splashBackground</item>
         
         <!-- System UI settings -->
         <item name="android:fitsSystemWindows">false</item>

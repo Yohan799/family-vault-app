@@ -3,6 +3,6 @@
 <!-- Center gravity preserves aspect ratio on all screen sizes -->
 <!-- White background fills any gaps on different aspect ratios -->
 <bitmap xmlns:android="http://schemas.android.com/apk/res/android"
-    android:src="@drawable/splash"
+    android:src="@drawable/splash_icon_only"
     android:gravity="center" />
 

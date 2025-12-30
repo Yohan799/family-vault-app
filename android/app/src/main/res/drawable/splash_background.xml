@@ -1,13 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Background color layer -->
-    <item android:drawable="@color/splashBackground" />
-    
-    <!-- Splash image - centered, no stretching -->
-    <item>
-        <bitmap
-            android:src="@drawable/splash"
-            android:gravity="center"
-            android:tileMode="disabled" />
-    </item>
+    <!-- 9-patch background with centered logo -->
+    <item android:drawable="@drawable/splash" />
 </layer-list>
