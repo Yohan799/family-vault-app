@@ -1,4 +1,4 @@
-export type AccessLevel = 'category' | 'subcategory' | 'folder' | 'document';
+export type AccessLevel = 'category' | 'subcategory' | 'document';
 
 export interface NomineeAccess {
     nomineeId: string;

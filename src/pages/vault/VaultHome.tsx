@@ -1,7 +1,6 @@
 import { Search, Plus, Folder, X, AlertTriangle, FileX, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
-import AnimatedSearchInput, { VAULT_HOME_PLACEHOLDERS } from "@/components/ui/AnimatedSearchInput";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { vaultCategories } from "@/data/vaultCategories";
@@ -289,12 +288,23 @@ const VaultHome = () => {
           <h1 className="text-2xl font-bold text-center text-[#1F2121]">{t("vault.title")}</h1>
           <p className="text-center text-[#626C71] text-sm mt-1">{totalDocuments} {t("common.documents")}</p>
 
-          <div className="mt-6">
-            <AnimatedSearchInput
+          <div className="relative mt-6">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground transition-colors duration-200" />
+            <Input
+              ref={searchInputRef}
+              placeholder={t("vault.searchPlaceholder")}
               value={searchQuery}
-              onChange={setSearchQuery}
-              placeholders={VAULT_HOME_PLACEHOLDERS}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-12 pr-12 h-12 bg-card border-none rounded-xl shadow-premium-sm focus:shadow-premium-md"
             />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
           </div>
           {searchQuery && (
             <p className="text-sm text-[#626C71] mt-2">

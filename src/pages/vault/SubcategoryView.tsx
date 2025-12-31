@@ -1,8 +1,7 @@
-import { Search, Upload, FileText, Folder, Plus, X, AlertTriangle, CheckSquare, Square, FolderPlus } from "lucide-react";
+import { Search, Upload, FileText, Folder, Plus, X, AlertTriangle } from "lucide-react";
 import BackButton from "@/components/BackButton";
 
 import { Input } from "@/components/ui/input";
-import AnimatedSearchInput, { DOCUMENT_PLACEHOLDERS } from "@/components/ui/AnimatedSearchInput";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useParams } from "react-router-dom";
 import { vaultCategories } from "@/data/vaultCategories";
@@ -25,11 +24,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSubcategoryViewData, useInvalidateVault } from "@/hooks/useVaultData";
 import { getDocuments, formatFileSize, deleteDocument, downloadDocument, incrementViewCount } from "@/lib/documentStorage";
 import BottomNavigation from "@/components/BottomNavigation";
-import CreateGroupModal from "@/components/vault/CreateGroupModal";
-import MoveToGroupModal from "@/components/vault/MoveToGroupModal";
-import GroupCard from "@/components/vault/GroupCard";
-import { groupService } from "@/services/groupService";
-import { DocumentGroup, GroupWithDocuments, CreateGroupInput } from "@/types/groups";
 
 const SubcategoryView = () => {
   const navigate = useNavigate();
@@ -52,14 +46,6 @@ const SubcategoryView = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [renameOpen, setRenameOpen] = useState(false);
-
-  // Group feature state
-  const [groups, setGroups] = useState<GroupWithDocuments[]>([]);
-  const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
-  const [showMoveToGroupModal, setShowMoveToGroupModal] = useState(false);
-  const [selectMode, setSelectMode] = useState(false);
-  const [selectedDocIds, setSelectedDocIds] = useState<string[]>([]);
-  const [groupAccessControl, setGroupAccessControl] = useState<DocumentGroup | null>(null);
 
   const userId = user?.id;
 
@@ -134,69 +120,6 @@ const SubcategoryView = () => {
 
     debouncedSearch(searchQuery);
   }, [searchQuery]);
-
-  // Fetch groups for this subcategory
-  const fetchGroups = useCallback(async () => {
-    if (!subcategoryId) return;
-    try {
-      const fetchedGroups = await groupService.getGroupsBySubcategory(subcategoryId);
-      setGroups(fetchedGroups);
-    } catch (error) {
-      console.error('Error fetching groups:', error);
-    }
-  }, [subcategoryId]);
-
-  useEffect(() => {
-    fetchGroups();
-  }, [fetchGroups]);
-
-  // Group handlers
-  const handleCreateGroup = async (input: CreateGroupInput) => {
-    await groupService.createGroup(input);
-    await fetchGroups();
-    toast({
-      title: "Group created!",
-      description: `${input.name} has been created`
-    });
-  };
-
-  const handleMoveToGroup = async (groupId: string) => {
-    if (selectedDocIds.length === 0) return;
-    await groupService.moveDocumentsToGroup(selectedDocIds, groupId);
-    setSelectedDocIds([]);
-    setSelectMode(false);
-    if (userId && categoryId && subcategoryId) {
-      invalidateSubcategoryView(userId, categoryId, subcategoryId);
-    }
-    await fetchGroups();
-    toast({
-      title: "Documents moved",
-      description: `${selectedDocIds.length} document(s) moved to group`
-    });
-  };
-
-  const toggleDocSelection = (docId: string) => {
-    setSelectedDocIds(prev =>
-      prev.includes(docId)
-        ? prev.filter(id => id !== docId)
-        : [...prev, docId]
-    );
-  };
-
-  const toggleSelectMode = () => {
-    if (selectMode) {
-      setSelectedDocIds([]);
-    }
-    setSelectMode(!selectMode);
-  };
-
-  const selectAllDocs = () => {
-    if (selectedDocIds.length === documents.length) {
-      setSelectedDocIds([]);
-    } else {
-      setSelectedDocIds(documents.map(doc => doc.id));
-    }
-  };
 
   const handleAddFolder = async () => {
     const sanitizedName = sanitizeInput(folderName);
@@ -501,11 +424,23 @@ const SubcategoryView = () => {
             </div>
           </div>
 
-          <AnimatedSearchInput
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholders={DOCUMENT_PLACEHOLDERS}
-          />
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground transition-colors duration-200" />
+            <Input
+              placeholder={t("folder.searchPlaceholder")}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-12 pr-12 h-12 bg-card border-none rounded-xl"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-4 top-1/2 -translate-y-1/2 hover:bg-accent rounded-full p-1"
+              >
+                <X className="w-4 h-4 text-muted-foreground" />
+              </button>
+            )}
+          </div>
         </div>
 
         {showNoResults && (
@@ -577,89 +512,19 @@ const SubcategoryView = () => {
           </div>
         )}
 
-        {/* Groups Section */}
-        {!showNoResults && !debouncedQuery && (
-          <div className="px-6 mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-semibold text-[#1F2121]">Groups</h2>
-              <button
-                onClick={() => setShowCreateGroupModal(true)}
-                className="flex items-center gap-1 text-sm text-primary font-medium"
-              >
-                <FolderPlus className="w-4 h-4" />
-                Create Group
-              </button>
-            </div>
-
-            {groups.length > 0 ? (
-              <div className="space-y-3">
-                {groups.map((group) => (
-                  <GroupCard
-                    key={group.id}
-                    group={group}
-                    documentCount={group.document_count}
-                    onClick={() => navigate(`/vault/${categoryId}/${subcategoryId}/group/${group.id}`)}
-                    onAccessClick={(e) => {
-                      e.stopPropagation();
-                      setGroupAccessControl(group);
-                    }}
-                  />
-                ))}
-              </div>
-            ) : (
-              <button
-                onClick={() => setShowCreateGroupModal(true)}
-                className="w-full bg-accent border-2 border-dashed border-primary/50 rounded-xl p-4 flex items-center gap-3 hover:bg-accent/80 transition-colors"
-              >
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <FolderPlus className="w-5 h-5 text-primary" />
-                </div>
-                <div className="text-left">
-                  <p className="font-medium text-foreground">Create your first group</p>
-                  <p className="text-sm text-muted-foreground">Organize documents by family member or topic</p>
-                </div>
-              </button>
-            )}
-          </div>
-        )}
-
         {!showNoResults && (
           <div className="px-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-[#1F2121]">{t("common.documents")}</h2>
-              <div className="flex items-center gap-2">
-                {/* Multi-select toggle */}
-                {filteredDocuments.length > 0 && (
-                  <Button
-                    variant={selectMode ? "default" : "outline"}
-                    size="sm"
-                    onClick={toggleSelectMode}
-                    className="min-h-[36px]"
-                  >
-                    {selectMode ? (
-                      <>
-                        <X className="w-4 h-4 mr-1" />
-                        Cancel
-                      </>
-                    ) : (
-                      <>
-                        <CheckSquare className="w-4 h-4 mr-1" />
-                        Select
-                      </>
-                    )}
-                  </Button>
-                )}
-                {filteredDocuments.length > 0 && !selectMode && (
-                  <Button
-                    onClick={() => setUploadOpen(true)}
-                    className="bg-primary hover:bg-primary/90 text-primary-foreground min-h-[36px]"
-                    size="sm"
-                  >
-                    <Upload className="w-4 h-4 mr-2" />
-                    {t("folder.upload")}
-                  </Button>
-                )}
-              </div>
+              {filteredDocuments.length > 0 && (
+                <Button
+                  onClick={() => setUploadOpen(true)}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground min-h-[44px]"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  {t("folder.upload")}
+                </Button>
+              )}
             </div>
 
             {filteredDocuments.length === 0 && !debouncedQuery ? (
@@ -677,46 +542,12 @@ const SubcategoryView = () => {
               </div>
             ) : filteredDocuments.length > 0 ? (
               <div className="space-y-2">
-                {/* Select All / Move to Group actions when in select mode */}
-                {selectMode && (
-                  <div className="flex items-center justify-between py-2 px-3 bg-primary/5 rounded-lg mb-2">
-                    <button
-                      onClick={selectAllDocs}
-                      className="text-sm text-primary font-medium"
-                    >
-                      {selectedDocIds.length === documents.length ? 'Deselect All' : 'Select All'}
-                    </button>
-                    <span className="text-sm text-muted-foreground">
-                      {selectedDocIds.length} selected
-                    </span>
-                  </div>
-                )}
-
                 {filteredDocuments.map((doc) => (
                   <div
                     key={doc.id}
-                    onClick={() => selectMode && toggleDocSelection(doc.id)}
-                    className={`bg-card rounded-xl p-4 flex items-center justify-between transition-all duration-200 ${selectMode ? 'cursor-pointer active:scale-[0.98]' : 'active:scale-[0.99]'
-                      } ${selectedDocIds.includes(doc.id) ? 'ring-2 ring-primary bg-primary/5' : ''}`}
+                    className="bg-card rounded-xl p-4 flex items-center justify-between transition-all duration-200 active:scale-[0.99]"
                   >
                     <div className="flex items-center gap-3 flex-1 min-w-0">
-                      {/* Checkbox in select mode */}
-                      {selectMode && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleDocSelection(doc.id);
-                          }}
-                          className="flex-shrink-0"
-                        >
-                          {selectedDocIds.includes(doc.id) ? (
-                            <CheckSquare className="w-6 h-6 text-primary" />
-                          ) : (
-                            <Square className="w-6 h-6 text-muted-foreground" />
-                          )}
-                        </button>
-                      )}
-
                       <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
                         <FileText className="w-5 h-5 text-primary" />
                       </div>
@@ -727,16 +558,14 @@ const SubcategoryView = () => {
                         </p>
                       </div>
                     </div>
-                    {!selectMode && (
-                      <ActionMenu
-                        items={createDocumentActionMenu(
-                          () => handleViewDocument(doc),
-                          () => handleDownloadDocument(doc),
-                          () => setAccessControlDocument(doc),
-                          () => handleDeleteDocument(doc)
-                        )}
-                      />
-                    )}
+                    <ActionMenu
+                      items={createDocumentActionMenu(
+                        () => handleViewDocument(doc),
+                        () => handleDownloadDocument(doc),
+                        () => setAccessControlDocument(doc),
+                        () => handleDeleteDocument(doc)
+                      )}
+                    />
                   </div>
                 ))}
               </div>
@@ -921,18 +750,6 @@ const SubcategoryView = () => {
           />
         )}
 
-        {/* Group Access Control Modal */}
-        {groupAccessControl && (
-          <AccessControlModal
-            isOpen={!!groupAccessControl}
-            resourceType="folder"
-            resourceId={groupAccessControl.id}
-            resourceName={groupAccessControl.name}
-            onClose={() => setGroupAccessControl(null)}
-            onAccessChanged={fetchGroups}
-          />
-        )}
-
         <DocumentViewerModal
           isOpen={viewerOpen}
           onClose={() => {
@@ -943,47 +760,6 @@ const SubcategoryView = () => {
           documentName={viewingDoc?.name || ''}
           documentType={viewingDoc?.type || ''}
         />
-
-        {/* Create Group Modal */}
-        <CreateGroupModal
-          isOpen={showCreateGroupModal}
-          subcategoryId={subcategoryId!}
-          onClose={() => setShowCreateGroupModal(false)}
-          onCreateGroup={handleCreateGroup}
-        />
-
-        {/* Move to Group Modal */}
-        <MoveToGroupModal
-          isOpen={showMoveToGroupModal}
-          groups={groups}
-          selectedDocCount={selectedDocIds.length}
-          onClose={() => setShowMoveToGroupModal(false)}
-          onMoveToGroup={handleMoveToGroup}
-          onCreateNewGroup={() => {
-            setShowMoveToGroupModal(false);
-            setShowCreateGroupModal(true);
-          }}
-        />
-
-        {/* Floating Action Bar when documents are selected */}
-        {selectMode && selectedDocIds.length > 0 && (
-          <div className="fixed bottom-24 left-4 right-4 z-40">
-            <div className="bg-primary text-primary-foreground rounded-2xl p-4 flex items-center justify-between shadow-lg">
-              <span className="font-medium">
-                {selectedDocIds.length} document{selectedDocIds.length > 1 ? 's' : ''} selected
-              </span>
-              <Button
-                onClick={() => setShowMoveToGroupModal(true)}
-                variant="secondary"
-                size="sm"
-                className="bg-white text-primary hover:bg-gray-100"
-              >
-                <FolderPlus className="w-4 h-4 mr-2" />
-                Move to Group
-              </Button>
-            </div>
-          </div>
-        )}
       </div>
 
       <BottomNavigation activeTab="vault" />
@@ -992,4 +768,3 @@ const SubcategoryView = () => {
 };
 
 export default SubcategoryView;
-

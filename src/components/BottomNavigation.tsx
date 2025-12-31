@@ -29,14 +29,15 @@ const BottomNavigation = ({ activeTab }: BottomNavigationProps) => {
                         <button
                             key={tab.key}
                             onClick={() => !isActive && navigate(tab.path)}
-                            className={`flex flex-col items-center gap-1 transition-all duration-150 active:scale-95 ${isActive ? "text-primary relative" : "text-muted-foreground hover:text-foreground"
+                            className={`flex flex-col items-center gap-1 transition-all duration-150 active:scale-95 ${isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
                                 }`}
                         >
-                            <Icon className="w-6 h-6" />
-                            <span className="text-xs font-medium">{tab.label}</span>
-                            {isActive && (
-                                <div className="absolute -bottom-2 w-12 h-1 bg-primary rounded-full" />
-                            )}
+                            <Icon
+                                className="w-6 h-6"
+                                strokeWidth={isActive ? 2.5 : 2}
+                                fill={isActive ? "currentColor" : "none"}
+                            />
+                            <span className={`text-xs ${isActive ? "font-semibold" : "font-medium"}`}>{tab.label}</span>
                         </button>
                     );
                 })}
